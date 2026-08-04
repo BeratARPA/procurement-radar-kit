@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Entities, enums, value objects and the port interfaces the outer layers
+       implement. Deliberately has no dependencies at all: nothing in here may
+       know about HTTP, SQL, the file system or the clock. -->
+
+</Project>

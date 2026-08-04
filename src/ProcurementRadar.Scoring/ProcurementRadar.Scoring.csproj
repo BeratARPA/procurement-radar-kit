@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Rule-based scoring over config/keywords.json. No LLM in v1 (D-03). -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

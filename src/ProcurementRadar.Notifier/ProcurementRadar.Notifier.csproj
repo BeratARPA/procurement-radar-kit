@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Telegram Bot API client and message composition. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

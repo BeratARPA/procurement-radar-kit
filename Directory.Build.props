@@ -1,0 +1,26 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- One target framework for the whole solution. The host machine runs the
+         .NET 8 SDK (START-HERE step 2); do not raise this without updating it. -->
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- A warning we tolerate today is a bug we ship next month. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <!-- Pinned so that a machine with a newer SDK cannot fail a build that
+         passes on the .NET 8 host, or the other way round. -->
+    <AnalysisLevel>8.0</AnalysisLevel>
+
+    <!-- D-08 depends on the Europe/Istanbul time zone and on Turkish culture
+         data being available at runtime. Never turn this on. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- DbUp runner. Stays independent of the rest of the solution on purpose:
+       the migration scripts are the schema's only source of truth (D-02). -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+</Project>

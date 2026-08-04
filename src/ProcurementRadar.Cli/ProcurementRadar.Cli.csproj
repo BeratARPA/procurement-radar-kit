@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Operator commands: `seed` (T-04) and `reparse` (T-10). -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Persistence\ProcurementRadar.Persistence.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Collector\ProcurementRadar.Collector.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Parsers\ProcurementRadar.Parsers.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Scoring\ProcurementRadar.Scoring.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+</Project>

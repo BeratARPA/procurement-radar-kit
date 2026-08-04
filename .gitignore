@@ -3,6 +3,10 @@
 # here. Never committed. Backup is manual: weekly tar czf to a second disk.
 data/
 
+# --- Serilog output (D-07) ---------------------------------------------------
+# Daily rolling files, 30 days retained. Written next to the working directory.
+logs/
+
 # --- Secrets (D-06) ----------------------------------------------------------
 .env
 *.env.local

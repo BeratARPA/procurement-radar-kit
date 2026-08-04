@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- GenericTableAdapter and the per-authority adapters.
+
+       This project intentionally does NOT reference ProcurementRadar.Collector.
+       Parsing must stay a pure function over a body somebody else fetched, so a
+       parser cannot reach an HttpClient even by accident. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

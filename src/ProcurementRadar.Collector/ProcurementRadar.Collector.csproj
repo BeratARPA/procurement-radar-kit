@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Network access only: HTTP fetching, politeness limits, robots.txt and the
+       raw archive writer. This is the only project allowed to hold an
+       HttpClient. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
