@@ -1,0 +1,66 @@
+{
+  "_comment": "Doldurulacak. url alanı TODO olan kayıtlar seed sırasında atlanır. Gerçek sayfayı ziyaret etmeden URL yazmayın.",
+  "_how_to_fill": "docs/source-collection.md dosyasına bakın.",
+  "sources": [
+    {
+      "authority_name": "EKAP - Doğrudan Temin Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "TODO",
+      "adapter_key": "ekap_direct_procurement",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "T-16 tamamlanana kadar pasif. İhale İşlemleri menüsü altındaki arama sayfası."
+    },
+    {
+      "authority_name": "EKAP - İhale Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "TODO",
+      "adapter_key": "ekap_tender",
+      "poll_interval_minutes": 60,
+      "is_active": false,
+      "notes": "Pazar istihbaratı için. Bildirim üretmez, sadece arşiv."
+    },
+    {
+      "authority_name": "Ankara Üniversitesi",
+      "authority_type": "university",
+      "province": "Ankara",
+      "district": "Çankaya",
+      "url": "TODO",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "adapter_config": {
+        "row_selector": "TODO",
+        "title_selector": "TODO",
+        "link_selector": "TODO",
+        "date_selector": "TODO",
+        "amount_selector": null,
+        "base_url": "TODO"
+      },
+      "notes": "İdari ve Mali İşler Daire Başkanlığı ilan sayfası"
+    },
+    {
+      "authority_name": "Çankaya Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Çankaya",
+      "url": "TODO",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "adapter_config": {
+        "row_selector": "TODO",
+        "title_selector": "TODO",
+        "link_selector": "TODO",
+        "date_selector": "TODO",
+        "amount_selector": null,
+        "base_url": "TODO"
+      },
+      "notes": ""
+    }
+  ]
+}

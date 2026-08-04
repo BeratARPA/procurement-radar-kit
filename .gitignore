@@ -1,0 +1,34 @@
+# --- Local data (D-04, D-05) -------------------------------------------------
+# Raw fetch archive, downloaded documents and the PostgreSQL volume all live
+# here. Never committed. Backup is manual: weekly tar czf to a second disk.
+data/
+
+# --- Secrets (D-06) ----------------------------------------------------------
+.env
+*.env.local
+
+# --- .NET build output -------------------------------------------------------
+bin/
+obj/
+artifacts/
+*.nupkg
+
+# --- Test and tooling output -------------------------------------------------
+TestResults/
+*.trx
+*.coverage
+coverage/
+
+# --- IDE / editor ------------------------------------------------------------
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# --- Claude Code local overrides ---------------------------------------------
+.claude/settings.local.json
+
+# --- OS noise ----------------------------------------------------------------
+Thumbs.db
+.DS_Store

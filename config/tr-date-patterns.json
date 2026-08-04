@@ -1,0 +1,49 @@
+{
+  "_comment": "Data, not code. Feeds TurkishDateParser. All results are converted from Europe/Istanbul to UTC.",
+  "timezone": "Europe/Istanbul",
+  "months": {
+    "ocak": 1, "şubat": 2, "subat": 2, "mart": 3, "nisan": 4,
+    "mayıs": 5, "mayis": 5, "haziran": 6, "temmuz": 7,
+    "ağustos": 8, "agustos": 8, "eylül": 9, "eylul": 9,
+    "ekim": 10, "kasım": 11, "kasim": 11, "aralık": 12, "aralik": 12
+  },
+  "weekdays_to_strip": [
+    "pazartesi", "salı", "sali", "çarşamba", "carsamba",
+    "perşembe", "persembe", "cuma", "cumartesi", "pazar"
+  ],
+  "noise_to_strip": [
+    "tarihinde", "tarihine kadar", "saatine kadar", "saat",
+    "günü", "gunu", "'a kadar", "'e kadar", "son teklif verme tarihi",
+    "son teklif tarihi", "ihale tarihi", ":"
+  ],
+  "patterns": [
+    {
+      "name": "dotted_date_time",
+      "regex": "(\\d{1,2})[.\\-/](\\d{1,2})[.\\-/](\\d{4})\\s*(\\d{1,2})[:.](\\d{2})",
+      "groups": ["day", "month", "year", "hour", "minute"]
+    },
+    {
+      "name": "dotted_date_only",
+      "regex": "(\\d{1,2})[.\\-/](\\d{1,2})[.\\-/](\\d{4})",
+      "groups": ["day", "month", "year"],
+      "default_time": "23:59"
+    },
+    {
+      "name": "long_month_time",
+      "regex": "(\\d{1,2})\\s+([a-zçğıöşü]+)\\s+(\\d{4})\\s*(\\d{1,2})[:.](\\d{2})",
+      "groups": ["day", "month_name", "year", "hour", "minute"]
+    },
+    {
+      "name": "long_month_only",
+      "regex": "(\\d{1,2})\\s+([a-zçğıöşü]+)\\s+(\\d{4})",
+      "groups": ["day", "month_name", "year"],
+      "default_time": "23:59"
+    },
+    {
+      "name": "iso",
+      "regex": "(\\d{4})-(\\d{2})-(\\d{2})[T ](\\d{2}):(\\d{2})",
+      "groups": ["year", "month", "day", "hour", "minute"]
+    }
+  ],
+  "_default_time_note": "Saat verilmemişse 23:59 kabul edilir ve WARN loglanır. Bildirimde 'saat belirtilmemiş' uyarısı gösterilir — bu bir tahmin, güvenilir veri değil."
+}
