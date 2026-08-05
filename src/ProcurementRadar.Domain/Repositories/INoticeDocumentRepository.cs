@@ -22,4 +22,10 @@ public interface INoticeDocumentRepository
 
     /// <summary>Counts one failure against a document.</summary>
     Task RecordFailureAsync(long documentId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Records that a document will not be fetched at all, and why. Unlike a
+    /// failure this is not retried: the row is never listed as pending again.
+    /// </summary>
+    Task MarkUnavailableAsync(long documentId, string reason, CancellationToken cancellationToken);
 }

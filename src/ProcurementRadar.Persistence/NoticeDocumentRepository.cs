@@ -88,4 +88,20 @@ public sealed class NoticeDocumentRepository : INoticeDocumentRepository
                 cancellationToken: cancellationToken))
             .ConfigureAwait(false);
     }
+
+    public async Task MarkUnavailableAsync(long documentId, string reason, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                NoticeDocumentSql.MarkUnavailable,
+                new { DocumentId = documentId, Reason = reason },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
 }

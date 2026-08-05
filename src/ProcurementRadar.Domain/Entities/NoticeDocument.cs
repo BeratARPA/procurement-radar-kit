@@ -27,4 +27,12 @@ public sealed record NoticeDocument
     /// few, so a url that will never resolve stops costing requests.
     /// </summary>
     public int FailedAttempts { get; init; }
+
+    /// <summary>
+    /// Why this file will never be fetched, or null while it is still pending.
+    /// Distinct from <see cref="FailedAttempts"/>: that counts things that went
+    /// wrong, this records a settled answer - most often that robots.txt puts
+    /// the file server out of bounds.
+    /// </summary>
+    public string? UnavailableReason { get; init; }
 }

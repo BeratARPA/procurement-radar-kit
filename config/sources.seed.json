@@ -21,7 +21,7 @@
         "document_selector": "a",
         "base_url": "https://ankaraism.saglik.gov.tr"
       },
-      "notes": "Doğrudan temin listesi — projenin asıl hedefi. robots.txt yok (RFC 9309: serbest), 5 Ağustos 2026'da kontrol edildi. Tabloda ilk satır boş, ikinci satır başlık; row_selector üçüncü satırdan başlıyor. Detay sayfası yok, satırdaki linkler doğrudan teklif cetveli ve teknik şartname. Birinci kolon 'İLGİLİ KİŞİ' baş harf taşıyor ve kişisel veri olduğu için hiçbir selector'la seçilmiyor. Fixture: ankara-il-saglik-mudurlugu-dogrudan-temin.html, 13 ilan."
+      "notes": "Doğrudan temin listesi — projenin asıl hedefi. robots.txt yok (RFC 9309: serbest), 5 Ağustos 2026'da kontrol edildi. Tabloda ilk satır boş, ikinci satır başlık; row_selector üçüncü satırdan başlıyor. Detay sayfası yok, satırdaki linkler doğrudan teklif cetveli ve teknik şartname. Birinci kolon 'İLGİLİ KİŞİ' baş harf taşıyor ve kişisel veri olduğu için hiçbir selector'la seçilmiyor. Fixture: ankara-il-saglik-mudurlugu-dogrudan-temin.html, 13 ilan. DİKKAT: şartname dosyaları dosyaism.saglik.gov.tr'de ve o hostun robots.txt'i 'User-agent: * / Disallow: /' diyor — dosyalar indirilmiyor, indirilmeyecek. İlan linki kaydediliyor, notice_document.unavailable_reason alanına sebebi yazılıyor. Şartnameyi görmek isteyen tarayıcıdan açar. Bu bir hata değil, sitenin kararı."
     },
     {
       "authority_name": "Ankara İl Sağlık Müdürlüğü",
@@ -41,7 +41,7 @@
         "document_selector": "a",
         "base_url": "https://ankaraism.saglik.gov.tr"
       },
-      "notes": "Aynı kurumun büyük ihale listesi. Tarih hücresi serbest metin ('Son Başvuru Tarihi ve Saati: 14/08/2026 Saat 17:00') ve TurkishDateParser bunu doğru okuyor. Fixture: ankara-il-saglik-mudurlugu-guncel-ihaleler.html, 1 ilan."
+      "notes": "Aynı kurumun büyük ihale listesi. Tarih hücresi serbest metin ('Son Başvuru Tarihi ve Saati: 14/08/2026 Saat 17:00') ve TurkishDateParser bunu doğru okuyor. Fixture: ankara-il-saglik-mudurlugu-guncel-ihaleler.html, 1 ilan. Şartname dosyaları için yukarıdaki kaynağın robots.txt notu buraya da geçerli: aynı dosya sunucusu, aynı yasak."
     },
     {
       "authority_name": "Çankaya Belediyesi",

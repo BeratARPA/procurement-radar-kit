@@ -203,7 +203,9 @@ internal sealed class FakeNoticeDocumentRepository : INoticeDocumentRepository
         int limit,
         CancellationToken cancellationToken)
         => Task.FromResult<IReadOnlyList<NoticeDocument>>(Documents
-            .Where(d => d.DownloadedAt is null && d.FailedAttempts < maximumAttempts)
+            .Where(d => d.DownloadedAt is null
+                && d.UnavailableReason is null
+                && d.FailedAttempts < maximumAttempts)
             .OrderBy(d => d.Id)
             .Take(limit)
             .ToList());
@@ -225,6 +227,17 @@ internal sealed class FakeNoticeDocumentRepository : INoticeDocumentRepository
         if (index >= 0)
         {
             Documents[index] = Documents[index] with { FailedAttempts = Documents[index].FailedAttempts + 1 };
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task MarkUnavailableAsync(long documentId, string reason, CancellationToken cancellationToken)
+    {
+        var index = Documents.FindIndex(d => d.Id == documentId);
+        if (index >= 0)
+        {
+            Documents[index] = Documents[index] with { UnavailableReason = reason };
         }
 
         return Task.CompletedTask;

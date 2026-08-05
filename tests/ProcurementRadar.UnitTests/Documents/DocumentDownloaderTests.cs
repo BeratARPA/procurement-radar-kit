@@ -87,6 +87,36 @@ public sealed class DocumentDownloaderTests : IDisposable
     }
 
     [Fact]
+    public async Task A_document_robots_forbids_is_recorded_as_such_and_never_asked_for_again()
+    {
+        // Not hypothetical. Both live sources link every specification file to
+        // dosyaism.saglik.gov.tr, whose robots.txt is "User-agent: * /
+        // Disallow: /", so all thirty-two of them land here.
+        const string Url = "https://dosyaism.example.gov.tr/Eklenti/1/0/teknik-sartname.pdf";
+        _fetcher.Forbids(Url);
+        await _documents.RecordUrlAsync(7, Url, CancellationToken.None);
+
+        var summary = await _downloader.RunAsync(10, CancellationToken.None);
+
+        Assert.Equal(1, summary.NotPermitted);
+
+        // The distinction that matters: this is a settled answer, not something
+        // that went wrong. Counting it as a failure would make a source whose
+        // file server is closed look, to the alarms in T-15, like a source that
+        // is breaking.
+        Assert.Equal(0, summary.Failed);
+
+        var document = Assert.Single(_documents.Documents);
+
+        Assert.Equal(0, document.FailedAttempts);
+        Assert.Equal("robots.txt disallows it", document.UnavailableReason);
+
+        // And it is gone from the queue immediately - not after three more
+        // rounds of asking a server that has already said no.
+        Assert.Equal(0, (await _downloader.RunAsync(10, CancellationToken.None)).Considered);
+    }
+
+    [Fact]
     public async Task A_file_larger_than_the_limit_is_recorded_but_not_kept()
     {
         const string Url = "https://example.gov.tr/kocaman.zip";
@@ -184,6 +214,8 @@ public sealed class DocumentDownloaderTests : IDisposable
                 ContentType: contentType);
 
         public void Fails(string url) => _responses[url] = FetchResult.Failed(404);
+
+        public void Forbids(string url) => _responses[url] = FetchResult.SkippedByRobots();
 
         public Task<FetchResult> FetchAsync(FetchRequest request, CancellationToken cancellationToken)
             => Task.FromResult(_responses.GetValueOrDefault(request.Url) ?? FetchResult.Failed(0));

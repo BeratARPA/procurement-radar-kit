@@ -13,7 +13,8 @@ internal static class NoticeDocumentSql
                     storage_path   AS "StoragePath",
                     downloaded_at  AS "DownloadedAt",
                     extracted_text AS "ExtractedText",
-                    failed_attempts AS "FailedAttempts"
+                    failed_attempts AS "FailedAttempts",
+                    unavailable_reason AS "UnavailableReason"
         """;
 
     // Reprocessing the archive parses the same page again and offers the same
@@ -29,6 +30,7 @@ internal static class NoticeDocumentSql
         SELECT {SelectColumns}
         FROM notice_document
         WHERE downloaded_at IS NULL
+          AND unavailable_reason IS NULL
           AND failed_attempts < @MaximumAttempts
         ORDER BY id ASC
         LIMIT @Limit
@@ -48,6 +50,12 @@ internal static class NoticeDocumentSql
     internal const string RecordFailure = """
         UPDATE notice_document
         SET failed_attempts = failed_attempts + 1
+        WHERE id = @DocumentId
+        """;
+
+    internal const string MarkUnavailable = """
+        UPDATE notice_document
+        SET unavailable_reason = @Reason
         WHERE id = @DocumentId
         """;
 }
