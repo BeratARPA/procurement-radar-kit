@@ -10,7 +10,7 @@ internal static class SourceSql
     internal const string SelectColumns = """
         id                    AS "Id",
                     authority_name        AS "AuthorityName",
-                    authority_type        AS "AuthorityType",
+                    replace(initcap(replace(authority_type, '_', ' ')), ' ', '') AS "AuthorityType",
                     province              AS "Province",
                     district              AS "District",
                     url                   AS "Url",

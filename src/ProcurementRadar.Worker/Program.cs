@@ -33,7 +33,9 @@ var contactEmail = Required(builder.Configuration, "PR_CONTACT_EMAIL");
 var dataDirectory = builder.Configuration["PR_DATA_DIR"] ?? StoragePathBuilder.DefaultDataDirectory;
 
 // The Turkish data files. Read once, here, so nothing on the parse path has to
-// touch the disk.
+// touch the disk. The directory is searched for rather than assumed: the two
+// hosts and systemd all start with a different working directory.
+var configDirectory = ConfigDirectory.Find();
 var datePatterns = TurkishDatePatterns.Load(ReadConfig("tr-date-patterns.json"));
 var normalization = NormalizationRules.Load(ReadConfig("tr-normalization.json"));
 var personalData = PersonalDataRules.Load(ReadConfig("tr-personal-data.json"));
@@ -145,14 +147,4 @@ static string Required(IConfiguration configuration, string key)
         : throw new InvalidOperationException(
             $"{key} is not set. See docs/decisions.md D-06.");
 
-static string ReadConfig(string fileName)
-{
-    var path = Path.GetFullPath(Path.Combine("config", fileName));
-
-    return File.Exists(path)
-        ? File.ReadAllText(path)
-        : throw new FileNotFoundException(
-            $"Config file not found at {path}. The worker's working directory has to be the "
-            + "repository root, or the deployment root that contains config/.",
-            path);
-}
+string ReadConfig(string fileName) => ConfigDirectory.Read(configDirectory, fileName);

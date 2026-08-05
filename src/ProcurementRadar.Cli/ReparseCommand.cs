@@ -58,9 +58,9 @@ internal static class ReparseCommand
         ConfigFiles config;
         try
         {
-            config = ConfigFiles.LoadFrom(ReadOption(args, "--config-dir") ?? ConfigFiles.DefaultDirectory);
+            config = ConfigFiles.LoadFrom(ReadOption(args, "--config-dir"));
         }
-        catch (Exception exception) when (exception is IOException or InvalidOperationException)
+        catch (Exception exception) when (exception is IOException or InvalidOperationException or DirectoryNotFoundException)
         {
             Log.Error(exception, "Could not load the config files");
             return 1;

@@ -1,37 +1,38 @@
-using Dapper;
 using ProcurementRadar.Domain.Enums;
 
 namespace ProcurementRadar.Persistence;
 
 /// <summary>
-/// One-time Dapper configuration. Call this once from the composition root
-/// before opening any connection.
+/// How enums cross the boundary. There is nothing to register.
 /// </summary>
+/// <remarks>
+/// Dapper handles enums itself, before it ever looks at a type handler, and it
+/// does so by name in both directions: an enum parameter becomes its underlying
+/// integer, and an enum column is read with Enum.Parse against the member names.
+/// Neither matches the snake_case text the schema stores, and a registered
+/// handler is simply ignored - which is worse than none, because it reads as if
+/// the problem were solved.
+///
+/// So both directions are explicit instead:
+///
+///   writing - the repositories pass <see cref="EnumText.ToText"/>, so
+///             AuthorityType.Municipality is sent as "municipality" rather than
+///             as 1;
+///   reading - the SELECT converts the stored text to the member name, so
+///             "provincial_directorate" arrives as "ProvincialDirectorate" and
+///             Enum.Parse finds it.
+///
+/// Single-word values such as "municipality" or "new" happen to work without any
+/// of this, which is exactly why the gap stayed hidden until a value with an
+/// underscore was read.
+/// </remarks>
 public static class PersistenceSetup
 {
-    private static readonly object Gate = new();
-    private static bool _registered;
-
     /// <summary>
-    /// Teaches Dapper how to move the domain enums to and from the snake_case
-    /// text columns the schema uses. Dapper's handler table is process-wide, so
-    /// this is idempotent and safe to call from several hosts.
+    /// Kept so the composition roots have one obvious place to call, and so this
+    /// explanation has somewhere to live.
     /// </summary>
     public static void RegisterTypeHandlers()
     {
-        lock (Gate)
-        {
-            if (_registered)
-            {
-                return;
-            }
-
-            SqlMapper.AddTypeHandler(new SnakeCaseEnumTypeHandler<AuthorityType>());
-            SqlMapper.AddTypeHandler(new SnakeCaseEnumTypeHandler<ProcurementType>());
-            SqlMapper.AddTypeHandler(new SnakeCaseEnumTypeHandler<NoticeStatus>());
-            SqlMapper.AddTypeHandler(new SnakeCaseEnumTypeHandler<NotificationChannel>());
-
-            _registered = true;
-        }
     }
 }

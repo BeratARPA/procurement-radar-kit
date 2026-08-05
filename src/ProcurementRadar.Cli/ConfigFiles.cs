@@ -1,3 +1,4 @@
+using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Parsers;
 using ProcurementRadar.Scoring;
@@ -14,9 +15,14 @@ internal sealed record ConfigFiles(
     PersonalDataRules PersonalData,
     KeywordRules Keywords)
 {
-    public const string DefaultDirectory = "config";
+    public static ConfigFiles LoadFrom(string? directory)
+    {
+        var resolved = ConfigDirectory.Find(directory);
 
-    public static ConfigFiles LoadFrom(string directory)
+        return Load(resolved);
+    }
+
+    private static ConfigFiles Load(string directory)
         => new(
             TurkishDatePatterns.Load(Read(directory, "tr-date-patterns.json")),
             NormalizationRules.Load(Read(directory, "tr-normalization.json")),
@@ -24,16 +30,5 @@ internal sealed record ConfigFiles(
             KeywordRules.Load(Read(directory, "keywords.json")));
 
     private static string Read(string directory, string fileName)
-    {
-        var path = Path.GetFullPath(Path.Combine(directory, fileName));
-
-        if (!File.Exists(path))
-        {
-            throw new FileNotFoundException(
-                $"Config file not found at {path}. Run from the repository root, or pass --config-dir.",
-                path);
-        }
-
-        return File.ReadAllText(path);
-    }
+        => ConfigDirectory.Read(directory, fileName);
 }

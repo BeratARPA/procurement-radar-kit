@@ -21,21 +21,55 @@ public enum HealthAlertKind
     WeeklySummary
 }
 
-public sealed record UnhealthySource(long SourceId, string AuthorityName, int ConsecutiveFailures);
+// Written with init properties rather than positionally, like every other
+// record Dapper materialises. A positional record makes Dapper match a
+// constructor by exact parameter type, and Npgsql hands a timestamptz back
+// as DateTime - so a constructor taking DateTimeOffset is never found and
+// the query throws at run time. Property setters convert.
+public sealed record UnhealthySource
+{
+    public required long SourceId { get; init; }
 
-public sealed record SilentSource(long SourceId, string AuthorityName, DateTimeOffset LastNewNoticeAt);
+    public required string AuthorityName { get; init; }
 
-public sealed record BrokenParser(long SourceId, string AuthorityName, int EmptyParses);
+    public required int ConsecutiveFailures { get; init; }
+}
+
+public sealed record SilentSource
+{
+    public required long SourceId { get; init; }
+
+    public required string AuthorityName { get; init; }
+
+    public required DateTimeOffset LastNewNoticeAt { get; init; }
+}
+
+public sealed record BrokenParser
+{
+    public required long SourceId { get; init; }
+
+    public required string AuthorityName { get; init; }
+
+    public required int EmptyParses { get; init; }
+}
 
 /// <summary>The numbers in the weekly summary (spec Bölüm 11).</summary>
-public sealed record WeeklySummary(
-    int ActiveSources,
-    int SourcesPolled,
-    int NoticesSeen,
-    int NoticesNotified,
-    int BidsSubmitted,
-    int NotRelevant,
-    int SourcesInTrouble);
+public sealed record WeeklySummary
+{
+    public int ActiveSources { get; init; }
+
+    public int SourcesPolled { get; init; }
+
+    public int NoticesSeen { get; init; }
+
+    public int NoticesNotified { get; init; }
+
+    public int BidsSubmitted { get; init; }
+
+    public int NotRelevant { get; init; }
+
+    public int SourcesInTrouble { get; init; }
+}
 
 public interface IHealthRepository
 {

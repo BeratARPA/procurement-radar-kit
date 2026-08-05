@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Network access only: HTTP fetching, politeness limits, robots.txt and the
-       raw archive writer. This is the only project allowed to hold an
-       HttpClient. -->
+  <!-- The collection side: HTTP fetching under the politeness rules, robots.txt,
+       the raw archive, where files live on disk, and feeding the archive back
+       through the parsers. The only project allowed to hold an HttpClient. -->
 
   <ItemGroup>
     <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />

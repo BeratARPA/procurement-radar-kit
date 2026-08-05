@@ -1,5 +1,4 @@
 using ProcurementRadar.Domain.Enums;
-using ProcurementRadar.Persistence;
 
 namespace ProcurementRadar.UnitTests;
 
@@ -55,13 +54,38 @@ public sealed class EnumTextMappingTests
     }
 
     [Fact]
-    public void A_value_the_code_does_not_model_fails_loudly()
+    public void A_value_the_code_does_not_model_is_refused()
     {
-        var handler = new SnakeCaseEnumTypeHandler<NoticeStatus>();
+        Assert.False(EnumText.TryParse<NoticeStatus>("archived", out _));
+    }
 
-        var exception = Assert.Throws<InvalidOperationException>(() => handler.Parse("archived"));
+    [Fact]
+    public void The_stored_text_turns_back_into_the_member_name_the_way_the_SELECT_does()
+    {
+        // Dapper reads an enum column with Enum.Parse against the member names,
+        // so every SELECT converts the stored snake_case first. This is that
+        // conversion, in C#, applied to every member of every mapped enum: if
+        // the two ever disagree, reading a notice throws.
+        AssertMemberNamesSurvive<AuthorityType>();
+        AssertMemberNamesSurvive<ProcurementType>();
+        AssertMemberNamesSurvive<NoticeStatus>();
+        AssertMemberNamesSurvive<NotificationChannel>();
+    }
 
-        Assert.Contains("archived", exception.Message, StringComparison.Ordinal);
+    /// <summary>
+    /// The C# equivalent of replace(initcap(replace(x, '_', ' ')), ' ', '').
+    /// </summary>
+    private static string AsPostgresWould(string storedText)
+        => string.Concat(storedText
+            .Split('_', StringSplitOptions.RemoveEmptyEntries)
+            .Select(word => char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant()));
+
+    private static void AssertMemberNamesSurvive<T>() where T : struct, Enum
+    {
+        foreach (var value in Enum.GetValues<T>())
+        {
+            Assert.Equal(value.ToString(), AsPostgresWould(EnumText.ToText(value)));
+        }
     }
 
     private static string[] DatabaseTextOf<T>() where T : struct, Enum
@@ -69,11 +93,10 @@ public sealed class EnumTextMappingTests
 
     private static void AssertRoundTrips<T>() where T : struct, Enum
     {
-        var handler = new SnakeCaseEnumTypeHandler<T>();
-
         foreach (var value in Enum.GetValues<T>())
         {
-            Assert.Equal(value, handler.Parse(EnumText.ToText(value)));
+            Assert.True(EnumText.TryParse<T>(EnumText.ToText(value), out var parsed));
+            Assert.Equal(value, parsed);
         }
     }
 }

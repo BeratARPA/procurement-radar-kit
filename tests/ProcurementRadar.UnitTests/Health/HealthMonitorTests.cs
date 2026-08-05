@@ -39,7 +39,7 @@ public sealed class HealthMonitorTests
         // The acceptance criterion, and the failure the whole section exists for:
         // HTTP 200, no exception, no notices, and without this nobody would ever
         // find out.
-        _health.BrokenParsers.Add(new BrokenParser(12, "Çankaya Belediyesi", 3));
+        _health.BrokenParsers.Add(new BrokenParser { SourceId = 12, AuthorityName = "Çankaya Belediyesi", EmptyParses = 3 });
 
         var summary = await Monitor().RunAsync(CancellationToken.None);
 
@@ -53,7 +53,7 @@ public sealed class HealthMonitorTests
     [Fact]
     public async Task A_source_silent_for_a_month_raises_the_silent_alarm()
     {
-        _health.SilentSources.Add(new SilentSource(12, "Ankara Üniversitesi", Now.AddDays(-45)));
+        _health.SilentSources.Add(new SilentSource { SourceId = 12, AuthorityName = "Ankara Üniversitesi", LastNewNoticeAt = Now.AddDays(-45) });
 
         await Monitor().RunAsync(CancellationToken.None);
 
@@ -65,7 +65,7 @@ public sealed class HealthMonitorTests
     [Fact]
     public async Task Ten_failures_in_a_row_take_the_source_out_of_the_rotation()
     {
-        _health.Failing.Add(new UnhealthySource(12, "Çankaya Belediyesi", 10));
+        _health.Failing.Add(new UnhealthySource { SourceId = 12, AuthorityName = "Çankaya Belediyesi", ConsecutiveFailures = 10 });
 
         await Monitor().RunAsync(CancellationToken.None);
 
@@ -76,7 +76,7 @@ public sealed class HealthMonitorTests
     [Fact]
     public async Task Three_failures_warn_without_taking_the_source_out()
     {
-        _health.Failing.Add(new UnhealthySource(12, "Çankaya Belediyesi", 3));
+        _health.Failing.Add(new UnhealthySource { SourceId = 12, AuthorityName = "Çankaya Belediyesi", ConsecutiveFailures = 3 });
 
         await Monitor().RunAsync(CancellationToken.None);
 
@@ -110,7 +110,7 @@ public sealed class HealthMonitorTests
     {
         // An alarm every minute gets the channel muted, and a muted channel costs
         // the alarms that matter.
-        _health.BrokenParsers.Add(new BrokenParser(12, "Çankaya Belediyesi", 3));
+        _health.BrokenParsers.Add(new BrokenParser { SourceId = 12, AuthorityName = "Çankaya Belediyesi", EmptyParses = 3 });
 
         await Monitor().RunAsync(CancellationToken.None);
         await Monitor().RunAsync(CancellationToken.None);
@@ -122,7 +122,7 @@ public sealed class HealthMonitorTests
     [Fact]
     public async Task The_alarm_comes_back_once_the_cooldown_has_passed()
     {
-        _health.BrokenParsers.Add(new BrokenParser(12, "Çankaya Belediyesi", 3));
+        _health.BrokenParsers.Add(new BrokenParser { SourceId = 12, AuthorityName = "Çankaya Belediyesi", EmptyParses = 3 });
 
         await Monitor().RunAsync(CancellationToken.None);
         _time.Advance(TimeSpan.FromHours(25));
@@ -134,8 +134,8 @@ public sealed class HealthMonitorTests
     [Fact]
     public async Task Two_sources_with_the_same_problem_are_two_alarms()
     {
-        _health.BrokenParsers.Add(new BrokenParser(12, "Çankaya Belediyesi", 3));
-        _health.BrokenParsers.Add(new BrokenParser(13, "Keçiören Belediyesi", 2));
+        _health.BrokenParsers.Add(new BrokenParser { SourceId = 12, AuthorityName = "Çankaya Belediyesi", EmptyParses = 3 });
+        _health.BrokenParsers.Add(new BrokenParser { SourceId = 13, AuthorityName = "Keçiören Belediyesi", EmptyParses = 2 });
 
         await Monitor().RunAsync(CancellationToken.None);
 
@@ -145,14 +145,16 @@ public sealed class HealthMonitorTests
     [Fact]
     public async Task The_weekly_summary_carries_the_figures_spec_bölüm_11_asks_for()
     {
-        _health.Summary = new WeeklySummary(
-            ActiveSources: 62,
-            SourcesPolled: 60,
-            NoticesSeen: 14,
-            NoticesNotified: 9,
-            BidsSubmitted: 3,
-            NotRelevant: 5,
-            SourcesInTrouble: 2);
+        _health.Summary = new WeeklySummary
+        {
+            ActiveSources = 62,
+            SourcesPolled = 60,
+            NoticesSeen = 14,
+            NoticesNotified = 9,
+            BidsSubmitted = 3,
+            NotRelevant = 5,
+            SourcesInTrouble = 2
+        };
 
         await Monitor().SendWeeklySummaryAsync(CancellationToken.None);
 
@@ -194,7 +196,7 @@ public sealed class HealthMonitorTests
 
         public int NoticesSinceWindow { get; set; } = 1;
 
-        public WeeklySummary Summary { get; set; } = new(0, 0, 0, 0, 0, 0, 0);
+        public WeeklySummary Summary { get; set; } = new();
 
         public Task<IReadOnlyList<UnhealthySource>> ListFailingAsync(
             int minimumFailures,

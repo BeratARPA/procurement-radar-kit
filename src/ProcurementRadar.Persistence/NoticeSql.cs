@@ -12,7 +12,7 @@ internal static class NoticeSql
                     authority_name   AS "AuthorityName",
                     title            AS "Title",
                     description      AS "Description",
-                    procurement_type AS "ProcurementType",
+                    replace(initcap(replace(procurement_type, '_', ' ')), ' ', '') AS "ProcurementType",
                     procedure_code   AS "ProcedureCode",
                     okas_codes       AS "OkasCodes",
                     estimated_cost   AS "EstimatedCost",
@@ -22,7 +22,7 @@ internal static class NoticeSql
                     source_url       AS "SourceUrl",
                     first_seen_at    AS "FirstSeenAt",
                     last_seen_at     AS "LastSeenAt",
-                    status           AS "Status"
+                    replace(initcap(replace(status, '_', ' ')), ' ', '') AS "Status"
         """;
 
     // The conflict branch touches last_seen_at and nothing else. first_seen_at is
