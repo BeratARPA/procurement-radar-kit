@@ -1,0 +1,17 @@
+{
+  "_comment": "Akyurt Belediyesi. https://www.akyurt.bel.tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Doğru liste `/ihaleler`; arama motorlarında çıkan `/ihale-duyurulari` yolu HTTP 200 dönüyor ama ana sayfayı gösteriyor (soft 404), o adres kullanılmamalı. Soldaki `div.e-tarih` tarih kutusu üç ilanın hepsinde '00 / 0000' yer tutucusu basıyor, yani listede kullanılabilir tarih yok — bu yüzden date_selector null bırakıldı ve son teklif tarihi detay sayfasından alınmalı. Detay bağlantıları göreli (`ihale/...`), base_url ile çözülüyor.",
+  "adapter_config": {
+    "row_selector": "div.etkinlik-box > div.col-lg-12",
+    "title_selector": "div.e-content h5",
+    "link_selector": "div.e-content a",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.akyurt.bel.tr"
+  },
+  "captured_bytes": 151657,
+  "captured_sha256": "e111427ade69e21e77caad01a530e53867a1d84c833b23a80727198a1a39b9a3",
+  "expected_notice_count": 3,
+  "expected_first_title": "ATM KURULMASI İHALE İLANI"
+}

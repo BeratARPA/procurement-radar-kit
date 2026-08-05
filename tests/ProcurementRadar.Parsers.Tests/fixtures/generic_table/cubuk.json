@@ -1,0 +1,17 @@
+{
+  "_comment": "Çubuk Belediyesi. https://www.cubuk.bel.tr/category/guncel-ihaleler/ adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "WordPress kategori arşivi; sayfada tema widget'larından gelen 28 adet <article> var, gerçek ihale satırları yalnızca `main.loop-posts` içindekiler — selector mutlaka bu kapsayıcıya bağlanmalı yoksa alakasız proje ve haber kartları da satır sayılır. Satırdaki tarih ilanın yayın tarihi, son teklif tarihi değil; sayfada 10 kayıt gösteriliyor ve devamı sayfalamada.",
+  "adapter_config": {
+    "row_selector": "main.loop-posts article",
+    "title_selector": "h4.post-title a",
+    "link_selector": "h4.post-title a",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.cubuk.bel.tr"
+  },
+  "captured_bytes": 255073,
+  "captured_sha256": "98ef6b2c1b93ede9a644a6a2a9e43cb881a7500dfb84c74421e64d77a2c5323b",
+  "expected_notice_count": 10,
+  "expected_first_title": "Söğütözü 3. Etap Bisiklet ve Yürüyüş Yolu Yapım İşine ait ihale ilanı"
+}

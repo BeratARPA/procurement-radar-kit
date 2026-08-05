@@ -1,0 +1,17 @@
+{
+  "_comment": "Haymana Belediyesi. https://www.haymana.bel.tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Belediyenin kendine ait ihale listesi sayfası; her satır başlık, kısa özet metni ve detay linkinden oluşuyor, başlık dışında sütun yok. Listede tarih ve tutar alanı bulunmadığı için bid_deadline_at yalnızca detay sayfasından çıkarılabilir; sayfalama yok, tüm ilanlar tek sayfada geliyor.",
+  "adapter_config": {
+    "row_selector": ".common-list.single > ul > li",
+    "title_selector": "h3.title",
+    "link_selector": "a.common-list__wrapper",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.haymana.bel.tr"
+  },
+  "captured_bytes": 114266,
+  "captured_sha256": "9b26fa45aa0465f9d4e5696fbcac292fe0adda840dcf4590a908a9a35b66085c",
+  "expected_notice_count": 6,
+  "expected_first_title": "AMBALAJ ATIKLARININ TOPLANMASI, TAŞINMASI VE DEĞERLENDİRİLMESİ İŞİ İHALE İLANI"
+}

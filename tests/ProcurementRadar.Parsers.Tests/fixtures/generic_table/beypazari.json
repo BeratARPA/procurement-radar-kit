@@ -1,0 +1,17 @@
+{
+  "_comment": "Beypazarı Belediyesi. https://beypazari.bel.tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Kurumun kendi sitesindeki ihale listesi; her satır başlık, kısa metin özeti ve detay linkinden oluşuyor, sayfada tarih sütunu yok. Son teklif tarihi listeden okunamaz, detay sayfasındaki serbest metinden çıkarılması gerekir.",
+  "adapter_config": {
+    "row_selector": ".common-list ul li",
+    "title_selector": "h3.title",
+    "link_selector": "a.common-list__wrapper",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://beypazari.bel.tr"
+  },
+  "captured_bytes": 123995,
+  "captured_sha256": "7ead04f26b86273a226e1c9903e3b7df08720e7dbe28b65ba8f073976e55ec16",
+  "expected_notice_count": 10,
+  "expected_first_title": "Taşınmaz Satış İhale İlanı"
+}

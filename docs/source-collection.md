@@ -34,6 +34,32 @@ bulunamadı" yazın — üç ay sonra tekrar bakarsınız, kurumlar sayfa açıy
 4. **robots.txt kontrolü** — `{domain}/robots.txt` açın. İlan sayfası
    `Disallow` altındaysa o kaynağı **listeye almayın**, notlara sebebini yazın.
 
+## Selector'ları canlıya dokunmadan deneyin
+
+Selector yazmak, başkasının HTML'i üzerine körlemesine tahmin yürütmektir.
+Kaynağı seed'e ekleyip taramayı beklemeyin: o yol ya ilan üretir ya hiçbir şey,
+ve **hiçbir şey**, o hafta işi olmayan sağlıklı bir kaynakla birebir aynı görünür.
+
+Kaydettiğiniz sayfayı gerçek adapter'a verin:
+
+```
+dotnet run --project src/ProcurementRadar.Cli -- check-source \
+  --html tests/ProcurementRadar.Parsers.Tests/fixtures/generic_table/ornek.html \
+  --config /tmp/ornek-config.json \
+  --url https://ornek.gov.tr/ihaleler
+```
+
+Veritabanı istemez, ağa çıkmaz, bir saniye sürer. Kaç ilan çıktığını, ilkinin
+başlığını, son teklif tarihini ve kaç doküman bağladığını yazar. Sıfır ilan
+çıkarsa bunu ayrıca söyler.
+
+**Tarih alanına dikkat edin.** `bid_deadline_at` bu projenin en kritik alanı ve
+belediye sitelerinin çoğunda satırdaki tarih **yayın tarihidir**, ihale tarihi
+değil. Sütun başlığında "İhale Tarihi", "Son Teklif Tarihi" veya "Son Başvuru"
+yazmıyorsa `date_selector`'ı `null` bırakın. Yanlış bir son teklif tarihi,
+boş bırakmaktan kötüdür: bildirim kapanmış bir işe "kalan 6 saat" yazar ve
+hatırlatma alarmını da yanlış saatte çalar.
+
 ## Hedef liste
 
 | Grup | Adet | authority_type |

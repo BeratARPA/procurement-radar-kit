@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging.Abstractions;
+using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Entities;
 using ProcurementRadar.Domain.Enums;
 using ProcurementRadar.Domain.Fetching;
@@ -61,7 +62,13 @@ public sealed class GenericTableAdapterFixtureTests
                 new TurkishDateParser(DatePatterns, NullLogger<TurkishDateParser>.Instance),
                 NullLogger<GenericTableAdapter>.Instance);
 
-            var notices = adapter.Parse(File.ReadAllText(htmlPath), source);
+            // Decoded the way the parse pipeline decodes (D-11), not read as
+            // UTF-8. Turkish public sites still serve windows-1254 and
+            // iso-8859-9, and a fixture read with the wrong encoding tests text
+            // that no production run will ever be handed.
+            var (body, _) = BodyDecoder.Decode(File.ReadAllBytes(htmlPath), expectation.CapturedCharSet);
+
+            var notices = adapter.Parse(body, source);
 
             Assert.Equal(expectation.ExpectedNoticeCount, notices.Count);
 
@@ -166,6 +173,15 @@ public sealed class GenericTableAdapterFixtureTests
 
         [JsonPropertyName("captured_sha256")]
         public string? CapturedSha256 { get; init; }
+
+        /// <summary>
+        /// The charset from the page's HTTP header, when the capture recorded
+        /// one. Null means the decoder falls back to the meta tag and the bytes
+        /// themselves, which is also what happens in production when a server
+        /// sends Content-Type without a charset.
+        /// </summary>
+        [JsonPropertyName("captured_charset")]
+        public string? CapturedCharSet { get; init; }
     }
 
     /// <summary>Parse must never reach the network, so this would throw if it did.</summary>

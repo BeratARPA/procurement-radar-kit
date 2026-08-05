@@ -1,6 +1,15 @@
+using System.Text;
 using ProcurementRadar.Cli;
 using Serilog;
 using Serilog.Formatting.Compact;
+
+// The sinks below write JSON so the logs can be grepped and fed to tools (D-07).
+// On Windows the console defaults to the system code page, and .NET's encoder
+// for a code page uses best-fit substitution: a Turkish “ becomes a plain ", and
+// a notice title containing one turns the log line into invalid JSON. The letters
+// go too - ş, ğ and İ all arrive as question marks. The file sink is unaffected,
+// which is what makes it easy to miss.
+Console.OutputEncoding = Encoding.UTF8;
 
 // D-07. Configured in code rather than from appsettings.json because this is a
 // short-lived command with nothing worth tuning at run time. The worker, which
@@ -31,6 +40,7 @@ try
     {
         "seed" => await SeedCommand.RunAsync(args[1..], shutdown.Token),
         "reparse" => await ReparseCommand.RunAsync(args[1..], shutdown.Token),
+        "check-source" => await CheckSourceCommand.RunAsync(args[1..], shutdown.Token),
         null => Usage("no command given"),
         var unknown => Usage($"unknown command '{unknown}'")
     };
@@ -54,7 +64,8 @@ static int Usage(string problem)
 {
     Log.Error(
         "{Problem}. Usage: dotnet run --project src/ProcurementRadar.Cli -- "
-        + "seed [--file <path>] | reparse [--source-id <id>] [--batch-size <n>] [--config-dir <path>]",
+        + "seed [--file <path>] | reparse [--source-id <id>] [--batch-size <n>] [--config-dir <path>] | "
+        + "check-source --html <path> --config <path> [--url <url>] [--charset <name>]",
         problem);
 
     return 1;

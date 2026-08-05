@@ -14,7 +14,8 @@
   "noise_to_strip": [
     "tarihinde", "tarihine kadar", "saatine kadar", "saat",
     "günü", "gunu", "'a kadar", "'e kadar", "son teklif verme tarihi",
-    "son teklif tarihi", "ihale tarihi", ":"
+    "son teklif tarihi", "ihale tarihi", ":",
+    "–", "—"
   ],
   "patterns": [
     {

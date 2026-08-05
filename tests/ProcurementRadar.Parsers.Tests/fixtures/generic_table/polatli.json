@@ -1,0 +1,17 @@
+{
+  "_comment": "Polatlı Belediyesi. https://www.polatli.bel.tr/ihaleler/1 adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Kart düzeninde listeleme; her kart yalnızca başlık ve detay bağlantısı taşıyor — listede tarih, tutar veya şartname bağlantısı yok, bu yüzden son teklif tarihi detay sayfasından okunmalı. Yol `/ihaleler/1` sayfa numarası içeriyor ancak belgede sayfalama bağlantısı yok; 10 ilanın tamamı bu ilk sayfada.",
+  "adapter_config": {
+    "row_selector": "div.duyurugrid",
+    "title_selector": "div.duyurubaslik",
+    "link_selector": "a.mlink2",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.polatli.bel.tr"
+  },
+  "captured_bytes": 144101,
+  "captured_sha256": "c1e897801b8f581b8f5d089ef5d40c043504e3d9c14639952d57e897f8934b6b",
+  "expected_notice_count": 10,
+  "expected_first_title": "Taşınmaz Satış İlanı"
+}

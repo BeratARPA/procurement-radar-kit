@@ -1,0 +1,17 @@
+{
+  "_comment": "Orta Doğu Teknik Üniversitesi (ODTÜ). https://yitdb.metu.edu.tr/tr/announcements adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Sayfa ODTÜ Yapı İşleri ve Teknik Daire Başkanlığı'nın duyuru listesidir ve şu an satırların tamamı Doğrudan Temin (22/d) ilanıdır; ağırlık yapım/teknik alımlarda olsa da otomasyon ve mühendislik hizmeti ilanları da çıkıyor. Dikkat: `.list-group-item__date` yayın tarihidir, son teklif tarihi değildir — son teklif tarihi ve DT kayıt numarası `.list-group-item__body` içinde serbest metin olarak geçer, şartname bağlantıları ise ilan detay sayfasındadır. ODTÜ İdari ve Mali İşler Daire Başkanlığı sitesinde ihale listesi bulunmadığı için bu sayfa seçildi.",
+  "adapter_config": {
+    "row_selector": ".views-row",
+    "title_selector": "a.list-group-item__title",
+    "link_selector": "a.list-group-item__title",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://yitdb.metu.edu.tr"
+  },
+  "captured_bytes": 33640,
+  "captured_sha256": "964ce4084bac7d925bb3d7abaa742f2810f48aeb04ca243b4bf7358fe9553239",
+  "expected_notice_count": 10,
+  "expected_first_title": "SAB 43/26 - Yapı İşleri ve Teknik Daire Başkanlığınca “ODTÜ Taşıt İşletme Müdürlüğü Hizmet Araçları İçin Adblue alımı” Doğrudan Temin (22/d) ile yaptırılacaktır."
+}

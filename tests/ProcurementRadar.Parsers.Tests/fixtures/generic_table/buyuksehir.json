@@ -1,0 +1,18 @@
+{
+  "_comment": "Ankara Büyükşehir Belediyesi. https://www.ankara.bel.tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Kurumun resmi ihale listesi; sayfa başına 20 ilan, ?page=N ile 204 sayfa. Seçiciler doğrulandı: 20/20 satırda başlık, link ve tarih dolu. Tarih her satırda ilk .attribute bloğudur ve 20/20 satırda 'İhale Tarihi'dir — :first-child güvenli. Bu tarih açılış tarihidir, son teklif saati değil; bildirimde bu ayrımı belirtin. İhale Kayıt No (IKN) 20 satırın yalnızca 16'sında var, bu yüzden IKN'yi nth-child ile konuma göre seçmeyin, label metnine bakın. DİKKAT (doğrulama sırasında eklendi): sayfadaki 'İhale Durumu' filtresi varsayılan olarak '- Tümü -' geliyor, yani liste açık ve kapanmış ihaleleri birlikte gösteriyor — bugün ilk sayfadaki 20 satırın yaklaşık 8'inin ihale tarihi çoktan geçmiş. Adapter kapanmış ilanları da yazacak; tekilleştirme ve skorlama buna dayanıklı olmalı. Doğrudan temin ayrı listelenmiyor; tutar ve şartname linkleri sadece detay sayfasında.",
+  "adapter_config": {
+    "row_selector": ".tender-list-item",
+    "title_selector": ".info > strong",
+    "link_selector": ".button a",
+    "date_selector": ".attributes .attribute:first-child span",
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.ankara.bel.tr"
+  },
+  "captured_bytes": 138896,
+  "captured_sha256": "d1ddfc99661268874cfc5310f9fd6e33164beef2c823ce2d717d65932ee9a5ae",
+  "expected_notice_count": 20,
+  "expected_first_title": "44 Kalem Yaş Meyve ve Sebze Alımı İşi",
+  "expected_first_deadline_utc": "2026-09-15T11:00:00Z"
+}

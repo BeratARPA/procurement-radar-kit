@@ -1,0 +1,19 @@
+{
+  "_comment": "Gazi Üniversitesi. https://ihale.gazi.edu.tr/ adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Sunucu tarafında render edilen kart listesi; her ilan bir div.bid-result-row, tablo ve başlık satırı yok. Detay sayfası yok — satırlar doğrudan ilan ve şartname PDF'lerine bağlanıyor (satır başına 2 dosya, /Public/DownloadFile/... altında). Tarih hücresi serbest metin: \"Son Teklif Tarihi: 06.08.2026\" biçiminde, etiketi ayrıştırıcıda kırpmak gerekir; aynı blokta \"Yayınlanma Tarihi\" ve \"Son Gösterim Tarihi\" de var, sıralamaya güvenilmiş durumda (nth-of-type(2)). Yaklaşık maliyet alanı sayfada yok. Şu anki 164 kaydın tamamı \"Hastane\" biriminden geliyor; birim bazlı sayfalar /Public/Index/{id} altında (Bilgi İşlem DB = 4, şu an 0 kayıt), kök sayfa tüm birimleri kapsadığı için kök sayfayı taramak yeterli.",
+  "adapter_config": {
+    "row_selector": "#ajax-result > div.bid-result-row",
+    "title_selector": "span.bid-title",
+    "link_selector": null,
+    "date_selector": "div.row.mb-2 > div.col-md-6:last-child div > div:nth-of-type(2)",
+    "amount_selector": null,
+    "document_selector": "a.down-cursor",
+    "base_url": "https://ihale.gazi.edu.tr"
+  },
+  "captured_bytes": 442205,
+  "captured_sha256": "8d86a39b4c3b37b9ad10afd254aca5b74d50634240fdd8c1795ac4b9c2b791b0",
+  "expected_notice_count": 164,
+  "expected_first_title": "Bilgi işlem teknik donanım tarafından istemi yapılan 2 kalem mal alımı(2287)",
+  "expected_first_deadline_utc": "2026-08-06T20:59:00Z",
+  "expected_first_document_count": 2
+}

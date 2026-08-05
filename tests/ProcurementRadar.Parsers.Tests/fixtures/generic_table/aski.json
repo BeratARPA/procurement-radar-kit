@@ -1,0 +1,18 @@
+{
+  "_comment": "ASKİ Genel Müdürlüğü. https://aski.gov.tr/tr/Ihale.aspx adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Doğrulamada beş kaynağın en sağlıklısı çıktı: 4 satırın tamamı açık ilan (ilan tarihleri 24-28.07.2026, ihale tarihleri 11-18.08.2026, hepsi gelecekte). Sadece güncel ilanlar listeleniyor, arşiv veya sayfalama yok — ilan listeden düşünce kaybolur, bu yüzden raw_fetch arşivi bu kaynakta özellikle kritik. Detay linkleri 'IhaleDetay.aspx?ID=3721' biçiminde ve başında eğik çizgi YOK: mutlaka sayfa adresine (https://aski.gov.tr/tr/Ihale.aspx) göre çözün. base_url şema+host olduğu için ona göre birleştirirseniz https://aski.gov.tr/IhaleDetay.aspx?ID=3721 elde edersiniz ve 404 alırsınız — GenericTableAdapter link çözümünü sayfa adresine göre yapmalı. 1. sütun ilan tarihi, 2. sütun ihale (açılış) tarihi, saat yok. 4. sütun IKN'dir. Başlık hücresi baştaki boşlukla geliyor, trim gerekli; başlıklar küçük harfle yazılmış. Host'ta gerçek robots.txt yok (/robots.txt ASP.NET 404 sayfası döndürüyor, içinde tek bir kural satırı yok).",
+  "adapter_config": {
+    "row_selector": "table.table-bordered tbody tr",
+    "title_selector": "td:nth-child(3)",
+    "link_selector": "td:nth-child(6) a",
+    "date_selector": "td:nth-child(2)",
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://aski.gov.tr"
+  },
+  "captured_bytes": 24650,
+  "captured_sha256": "bae68f3845f5bcefab1b73cf5f68231df176ff69f35a5eac572b5266507e8c81",
+  "expected_notice_count": 4,
+  "expected_first_title": "nallıhan (sarıyer-hıdırlar-emremsultan) arıtma tesisi projesi hizmet alımı",
+  "expected_first_deadline_utc": "2026-08-11T20:59:00Z"
+}

@@ -1,0 +1,17 @@
+{
+  "_comment": "Kalecik Belediyesi. https://www.kalecik.bel.tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Haymana Belediyesi ile birebir aynı CMS ve aynı `.common-list.single > ul > li` yapısı; iki kaynak tek adapter konfigürasyonunu paylaşabilir. Listede tarih ve tutar sütunu yok, son teklif tarihi detay sayfasından çıkarılmalı. Şu anki 7 kaydın tamamı taşınmaz/araç satışı — kaynak doğru sayfa ama yazılım ilanı çıkma oranı düşük olacaktır.",
+  "adapter_config": {
+    "row_selector": ".common-list.single > ul > li",
+    "title_selector": "h3.title",
+    "link_selector": "a.common-list__wrapper",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.kalecik.bel.tr"
+  },
+  "captured_bytes": 134609,
+  "captured_sha256": "0d099c77e870e91d28f4c3deebe308a4ac79cfd0b880115b8a1ca10183386b98",
+  "expected_notice_count": 7,
+  "expected_first_title": "MESKEN VE DÜKKAN SATIŞ İLANI"
+}

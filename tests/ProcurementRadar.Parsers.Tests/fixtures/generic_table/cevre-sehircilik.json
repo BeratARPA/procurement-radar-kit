@@ -1,0 +1,18 @@
+{
+  "_comment": "Ankara Çevre Şehircilik ve İklim Değişikliği İl Müdürlüğü. https://ankara.csb.gov.tr/ihaleler-i-111967 adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Sayfa elle düzenlenen serbest metin bloğu (div.page_content): her ilan bir <p> içinde tek bir <a> ve bağlantı doğrudan PDF/DOCX dosyasına gidiyor, detay sayfası yok — bu yüzden link_selector null, document_selector 'a'. İki tuzak var: bir <p> içinde <br /> ile ayrılmış iki ilan bulunuyor (o paragrafın ikinci ilanı okunamaz, 7 ilandan 6'sı yakalanır) ve sonda yalnızca &nbsp; içeren boş bir <p> var (adapter başlıksız satır olarak atlar, her taramada 1 'skipped row' WARN'ı üretir — bu bir hata değil). Tarih ve tutar sütunu yok, tarih ancak başlık metninden çıkarılabilir. Şu anki kayıtların tamamı Milli Emlak taşınmaz satış/müzayede ilanı, yani yazılım alımı bu sayfada beklenmemeli; hizmet ve yapım işi ilanları için kardeş sayfalar da izlenmeli: acilacak-ihaleler-i-4904 (tek paragraflık serbest metin, şu an Temmuz 2025 tarihli tek bir sondaj yapım işi) ve duyurular (tarihli kart listesi, a.duyurular-category-card-wrapper, ama başlıklar üç satırda kısaltılmış olarak veriliyor). Şartname dosyaları webdosya.csb.gov.tr alan adında duruyor; T-12 indirmesinden önce o host'un robots.txt'si ayrıca kontrol edilmeli.",
+  "adapter_config": {
+    "row_selector": "div.page_content p",
+    "title_selector": "a",
+    "link_selector": null,
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": "a",
+    "base_url": "https://ankara.csb.gov.tr"
+  },
+  "captured_bytes": 201528,
+  "captured_sha256": "6ed235675e4578d74e78efe7ee9a0ffd880227439d4b5fc8a30d684320dc3f4e",
+  "expected_notice_count": 6,
+  "expected_first_title": "17-18 Haziran 2026 Tarihinde 39 İlde 554 Arsa Müzayedesi",
+  "expected_first_document_count": 1
+}

@@ -1,0 +1,17 @@
+{
+  "_comment": "Kahramankazan Belediyesi. https://kahramankazan.bel.tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Basit `ul`/`li` listesi; başlık `h3.title`, tarih `p.duyurutarihc` içinde '3 Ağustos 2026' biçiminde ve bu ilan (yayın) tarihi, son teklif tarihi değil — kesin süre detay sayfasından doğrulanmalı. Sayfada bugün yalnızca 1 ilan var, dolayısıyla düşük satır sayısı normaldir; T-15'teki 'parser broken' alarmı bu kaynak için ayarlanırken bu göz önünde bulundurulmalı. Kurumun ayrıca `/ilanlar` ve `/duyurular` sayfaları var, ihale dışı duyurular oraya düşüyor.",
+  "adapter_config": {
+    "row_selector": "div.common-list ul li",
+    "title_selector": "h3.title",
+    "link_selector": "a.common-list__wrapper",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://kahramankazan.bel.tr"
+  },
+  "captured_bytes": 107517,
+  "captured_sha256": "e5054adebc8a0a59b5075a03e2548853ea7844cf39aeb34ccd650eac4d152bbf",
+  "expected_notice_count": 1,
+  "expected_first_title": "İlan Metni (Büfe, Kafeterya)(Kayı Mahallesi)"
+}

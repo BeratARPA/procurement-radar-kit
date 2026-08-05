@@ -1,0 +1,18 @@
+{
+  "_comment": "BELKA A.Ş.. https://www.belkaas.com.tr/ihale-duyurulari adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Seçiciler doğrulandı, 10/10 satırda başlık, link ve tarih dolu. Ninja Tables ile üretilen tablo 'nt_type_ajax_table' sınıfı taşıyor ama JS GEREKMİYOR: ?page=2 istendiğinde sunucu farklı 10 satır döndürdü, yani sayfalama sunucu tarafında ve statik satırlar gerçek veri. Tarih hücresi '05.05.2026 – 14:00' biçiminde ve ayırıcı normal tire değil EN DASH (U+2013) — tr-date-patterns.json'a bu deseni ekleyin. 3. sütun durum bilgisidir. EN ÖNEMLİ UYARI: bugün ilk sayfadaki 10 kaydın tamamı kapanmış (8 Tamamlandı, 2 İptal Edildi) ve en yeni ihale tarihi 05.05.2026 — bugün 05.08.2026, yani üç aydır açık ilan yok. Kaynak yapısal olarak çalışıyor ama fiilen uykuda; T-15'in 'silent source' alarmı bu kaynağı ilk tetikleyen olacaktır, bu beklenen davranıştır, parser kırıldı sanmayın. DOĞRULAMADA DÜZELTİLEN İKİ NOKTA: (1) sayfada 'Toplam 81 adet' diye bir metin YOK, toplam kayıt sayısı hiçbir yerde yazmıyor — yalnızca 9 sayfa × 10 satır çıkarımı yapılabilir; (2) liste tarihe göre azalan sıralı DEĞİL — 2. sayfa 22.04.2025, 05.08.2025, 08.04.2025, 12.03.2025 sırasıyla geliyor, dolayısıyla 'yeni ilan en üste düşer' varsayımına dayanmayın. IKN listede yok, external_key hash ile üretilmeli.",
+  "adapter_config": {
+    "row_selector": ".ihale-table table tbody tr",
+    "title_selector": "td:nth-child(2) a",
+    "link_selector": "td:nth-child(2) a",
+    "date_selector": "td:nth-child(1)",
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.belkaas.com.tr"
+  },
+  "captured_bytes": 93699,
+  "captured_sha256": "cd63ca40bef256b06c46a1ccb2a20da8fb81c72a9d1183758dc42c41cb9efe43",
+  "expected_notice_count": 10,
+  "expected_first_title": "700 Adet Araç Kasko Sigortası ve 154 Adet İş Makinesi Makine Kırılma Sigortası Yaptırılması Hizmet Alım İşi",
+  "expected_first_deadline_utc": "2026-05-05T11:00:00Z"
+}

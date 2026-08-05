@@ -1,0 +1,18 @@
+{
+  "_comment": "Evren Belediyesi. https://evren.bel.tr/sayfalar.asp?line=sayfalar/ilanlar.htm adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "UYARI: Bu sayfa FrontPage döneminden kalma, sınıfsız/id'siz tablo yapısı ve ASP include'ları yüzünden gövdenin ortasında ikinci bir <html><head><body> bloğu barındırıyor; ayrıca <p> etiketleri kapatılmamış. Sonuç olarak seçici sayıları HTML ayrıştırıcısına göre değişiyor (denediğim iki ayrıştırıcıdan biri 16 satır buldu, diğeri sayfayı iç <html> etiketinde kesip 0 buldu). Verdiğim row_selector <p> davranışına bağımlı olmadığı için en dayanıklı seçenek, ama MERGE ÖNCESİ mutlaka gerçek AngleSharp ile fixture testinde doğrulayın — sayı tutmazsa bu kaynak için ayrı bir adapter yazmak daha doğru olur. Diğer noktalar: sayfa windows-1254 kodlu (D-11 gereği çözümleme parse anında yapılmalı), detay sayfası yok — linkler doğrudan PDF/JPG dosyasına gidiyor, bu yüzden link_selector ve document_selector aynı <a>. Satırda tarih alanı yok; duyuru tarihi başlık metninin içinde geçiyor, o yüzden date_selector null. 16 satırın 6'sı sadece '( Duyuru Tarihi : … )' yazan, bir önceki ilanın PDF'ini tekrarlayan devam linkleri — bunlar tekrar kayıt üretir. Sayfa çok seyrek güncelleniyor (en yeni ilan 8.10.2025), bu yüzden T-15'in sessiz kaynak alarmını gereksiz tetikleyebilir. İkinci sayfa olarak https://evren.bel.tr/sayfalar.asp?line=sayfalar/ihaleler.htm var ama içeriği bunun alt kümesi ve iki ilanın da başlığı birebir aynı.",
+  "adapter_config": {
+    "row_selector": "font[face=\"Verdana\"]:has(a[href^=\"ilanlar/\"])",
+    "title_selector": "a",
+    "link_selector": "a",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": "a",
+    "base_url": "https://evren.bel.tr"
+  },
+  "captured_bytes": 35118,
+  "captured_sha256": "fb90d705c080eb3041f0b34c5077353de56dffa6b257fc11219a64c9062e736f",
+  "expected_notice_count": 16,
+  "expected_first_title": "İLAN / MÜLKİYETİ BELEDİYEMİZE AİT TAŞINMAZLARIN AÇIK ARTTIRMA SURETİYLE SATIŞINA DAİR ( Duyuru Tarihi : 8.10.2025 )",
+  "expected_first_document_count": 1
+}

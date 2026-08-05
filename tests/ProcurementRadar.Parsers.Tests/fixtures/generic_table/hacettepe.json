@@ -1,0 +1,18 @@
+{
+  "_comment": "Hacettepe Üniversitesi. https://imidb.hacettepe.edu.tr/tr/menu/ihale_ilan_duyurulari-61 adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "İdari ve Mali İşler Daire Başkanlığı'nın \"İhale İlan Duyuruları\" sayfası. Satırlar tablo değil, div.icerik içindeki serbest metin <p><span><a> blokları; aralarda boş <p>&nbsp;</p> satırları olduğu için satır seçicisi p değil \"div.icerik p > span\" olmalı. Detay sayfası yok, bağlantılar doğrudan PDF'e gidiyor; ayrı tarih hücresi yok, tarih başlığın sonunda parantez içinde (ör. \"(13.02.23)\"). Uyarı: sayfadaki beş kaydın tamamı \"Taşınmazların Kiraya Verilmesi İşi\" ve en yenisi 13.02.2023 — sayfa yıllardır güncellenmemiş ve yazılım ekibinin işine yarayacak mal/hizmet alımı ilanı hiç içermiyor, bu yüzden T-15'teki sessiz kaynak alarmını tetiklemesi beklenir. Hacettepe'nin gerçek doğrudan temin ilanları için hastane satın alma sayfası EKAP'a yönlendiriyor; kalıcı çözüm T-16'daki EkapAdapter.",
+  "adapter_config": {
+    "row_selector": "div.icerik p > span",
+    "title_selector": "a",
+    "link_selector": null,
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": "a",
+    "base_url": "https://imidb.hacettepe.edu.tr"
+  },
+  "captured_bytes": 11821,
+  "captured_sha256": "a0eacf75988c40adba0dc2eed928587812d65df0f6d375187967294f0a0ccc54",
+  "expected_notice_count": 5,
+  "expected_first_title": "Hacettepe Üniversitesi Taşınmazların Kiraya Verilmesi İşi (13.02.23)",
+  "expected_first_document_count": 1
+}

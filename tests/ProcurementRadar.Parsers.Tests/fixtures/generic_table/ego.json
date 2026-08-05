@@ -1,0 +1,18 @@
+{
+  "_comment": "EGO Genel Müdürlüğü. https://www.ego.gov.tr/tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Sayfada aynı 'datatable-default' id'sini taşıyan İKİ tablo var: #yeniIhale sekmesi 'İHALE İLANLARI' (27 satır), #ihaleSonuc sekmesi 'İHALE SONUÇLARI' (25 satır). Satır seçicisini mutlaka #yeniIhale ile sınırlayın: sınırlamazsanız seçici 52 satır döner. Doğrulama sırasında bulunan ek gerekçe — iki tablonun SÜTUN DÜZENİ farklı: #yeniIhale [İhale Türü, İhale Tarihi, İhale Adı, Kik No] (4 sütun), #ihaleSonuc [İhale Tarihi, İhale Adı, Kik No] (3 sütun). Yani kapsam dışı satırlar sadece 'sonuç ilanı yeni ilan sanılır' sorunu yaratmaz, nth-child seçicileri yanlış sütunu okur. 'Kik No' sütunu IKN'dir, external_key olarak doğrudan kullanılabilir. 2. sütun ihale (açılış) tarihi, saat bilgisi yok. Bu host'un robots.txt'i .pdf/.doc/.docx/.xls/.xlsx indirmeyi yasakladığı için doküman indirici bu kaynakta devre dışı bırakılmalı.",
+  "adapter_config": {
+    "row_selector": "#yeniIhale tbody tr",
+    "title_selector": "td:nth-child(3) a.ihale_link",
+    "link_selector": "td:nth-child(3) a.ihale_link",
+    "date_selector": "td:nth-child(2)",
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.ego.gov.tr"
+  },
+  "captured_bytes": 73410,
+  "captured_sha256": "fd8a5a68c4a26d221b817622cfeee05ffa16ad188d8e9db0852dcac3bc50453c",
+  "expected_notice_count": 27,
+  "expected_first_title": "ANKARAY İŞLETME ŞUBE MÜDÜRLÜĞÜ YÖNLENDİRME TABELASI, ETİKET VE İSTASYON EKİPMANLARI",
+  "expected_first_deadline_utc": "2026-09-03T20:59:00Z"
+}

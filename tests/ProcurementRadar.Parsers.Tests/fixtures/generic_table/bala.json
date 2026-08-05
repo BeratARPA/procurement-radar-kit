@@ -1,0 +1,17 @@
+{
+  "_comment": "Bala Belediyesi. https://www.bala.bel.tr/duyurular adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Sitede ayrı ihale sayfası yok; ihale ilanları genel Duyurular listesinde parselasyon planı gibi diğer duyurularla karışık geliyor. Dikkat: tarih hücresi gün ve ay olarak iki ayrı span'e bölünmüş ve YIL BİLGİSİ İÇERMİYOR (ör. \"17 Nis\") — date_selector olarak verilen .BAnouncement-left yalnızca gün+ay döndürür, yıl detay sayfasından alınmalı; aksi halde TurkishDateParser yanlış yıl üretir. Satır linkleri protokolsüz (\"//www.bala.bel.tr/...\") yazılmış, birleştirirken şema eklenmeli.",
+  "adapter_config": {
+    "row_selector": ".BAnouncement ul > li",
+    "title_selector": ".BAnouncement-right a",
+    "link_selector": ".BAnouncement-right a",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.bala.bel.tr"
+  },
+  "captured_bytes": 128968,
+  "captured_sha256": "5307ab53c20fc5264b01dafb86a9db47c6a5680a10c6a87c24db6a5fef9f92c3",
+  "expected_notice_count": 10,
+  "expected_first_title": "AŞIKOĞLU MAHALLESİ MAHALLE KONAĞI YAPIM İŞİ (NATAMAM) İHALESİ"
+}

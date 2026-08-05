@@ -75,6 +75,34 @@ public sealed class TurkishDateParserTests
             result.Value);
     }
 
+    [Theory]
+    [InlineData("05.05.2026 – 14:00")]
+    [InlineData("05.05.2026 — 14:00")]
+    public void A_dash_between_the_date_and_the_time_does_not_cost_the_time(string text)
+    {
+        // BELKA A.Ş. writes its İhale Tarihi ve Saati column exactly like this,
+        // with an en dash. Without the dash in the filler list the time pattern
+        // stops matching, the date-only pattern picks it up instead, and a
+        // 14:00 deadline silently becomes 23:59 - nine hours after bidding shut.
+        // The ascii hyphen is deliberately NOT filler: 05-05-2026 uses it as a
+        // date separator.
+        var result = Parser.TryParseDetailed(text);
+
+        Assert.Equal("dotted_date_time", result.PatternName);
+        Assert.False(result.TimeWasAssumed);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-05T11:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            result.Value);
+    }
+
+    [Fact]
+    public void An_ascii_hyphen_is_still_a_date_separator()
+    {
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-05T11:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            Parser.TryParseDetailed("05-05-2026 14:00").Value);
+    }
+
     [Fact]
     public void A_date_with_no_time_is_flagged_as_a_guess()
     {

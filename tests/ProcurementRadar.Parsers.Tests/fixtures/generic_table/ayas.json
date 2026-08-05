@@ -1,0 +1,17 @@
+{
+  "_comment": "Ayaş Belediyesi. https://ayas.bel.tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Kurumun kendi /ihaleler sayfası; şu an 3 ilan var ve üçü de taşınmaz satış/kiralama (2886 sayılı Kanun kapsamı), yazılım alımı değil. Listede tarih yok: satırdaki div.text alanı 'Devam Eden İhale' gibi bir durum etiketi, tarih değil — bu yüzden date_selector null bırakıldı, son teklif tarihi ancak detay sayfasından çıkar. Şartname/doküman linki de listede yok. Ayrıca https://ayas.bel.tr/duyurular sayfasında da ihale ilan metinleri yayınlanıyor; ileride ikinci bir kaynak olarak eklenebilir.",
+  "adapter_config": {
+    "row_selector": "li.ihalebkutu",
+    "title_selector": "h3.title",
+    "link_selector": "a.common-list__wrapper",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://ayas.bel.tr"
+  },
+  "captured_bytes": 101861,
+  "captured_sha256": "a2cf24502217042e47132942e73279d945ed37c022afb6c68efbf98eb4a553c9",
+  "expected_notice_count": 3,
+  "expected_first_title": "GAYRİMENKUL SATIŞ - İHALE İLANI"
+}

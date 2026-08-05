@@ -1,0 +1,17 @@
+{
+  "_comment": "Elmadağ Belediyesi. https://www.elmadag.bel.tr/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Beypazarı ile aynı CMS altyapısı, ek olarak her satırda `p.duyurutarihc` içinde yayın tarihi var — bu tarih son teklif tarihi değildir. Listedeki başlıklar yaklaşık 70 karakterde kesilip \"...\" ekleniyor, tam başlık yalnızca detay sayfasında bulunur.",
+  "adapter_config": {
+    "row_selector": ".common-list ul li",
+    "title_selector": "h3.title",
+    "link_selector": "a.common-list__wrapper",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.elmadag.bel.tr"
+  },
+  "captured_bytes": 112973,
+  "captured_sha256": "a6544028f48ce15f8ca52d1e1bf78be7a37f094a5f207f2614b42703270b5e37",
+  "expected_notice_count": 10,
+  "expected_first_title": "ANDAZİT KAPLAMA YAPIM İŞİ İhalesi"
+}

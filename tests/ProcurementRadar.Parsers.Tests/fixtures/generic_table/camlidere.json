@@ -1,0 +1,18 @@
+{
+  "_comment": "Çamlıdere Belediyesi. https://camlidere.bel.tr/guncel/ihaleler adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "En düzenli kaynaklardan biri: 13 ilan, hepsi tek sayfada, tarih alanı 'Tarih' etiketiyle ayrı bir <dd> içinde ve 'GG.AA.YYYY SS:dd' biçiminde (config/tr-date-patterns.json içindeki dotted_date_time deseni bunu karşılıyor). DİKKAT: satırın kendisi <a> etiketi, satırın içinde ayrı bir link yok. GenericTableAdapter link_selector'ı satırın ALTINDA aradığı için (QuerySelector torunlara bakar) detay linki bu konfigle okunamaz; bu yüzden link_selector null ve tüm ilanlar source_url olarak liste sayfasını alır. Her ilana kendi URL'sini vermek isterseniz adapter'a 'satırın kendisi link ise href'ini kullan' şeklinde küçük bir ekleme gerekir — external_key ve Telegram linki açısından bunu yapmakta fayda var. İlanların çoğu taşınmaz kiralama/satış; 2025/1905572 numaralı kent meydanı yapım işi gibi 4734 kapsamı işler de çıkıyor. Satırda şartname linki yok, tutar yok.",
+  "adapter_config": {
+    "row_selector": "a[href^=\"/guncel/ihaleler/\"]",
+    "title_selector": "h2",
+    "link_selector": null,
+    "date_selector": "dl > div:first-child > dd",
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://camlidere.bel.tr"
+  },
+  "captured_bytes": 189924,
+  "captured_sha256": "8e9685bde3bddd9ed6cc03abec1b66975008bf486704c33e380b2a57ab7cbba5",
+  "expected_notice_count": 13,
+  "expected_first_title": "Çamlıdere Belediyesi Çay Ocağı ve Şekerci İşletmesi Kiralama İhalesi",
+  "expected_first_deadline_utc": "2026-05-20T11:00:00Z"
+}

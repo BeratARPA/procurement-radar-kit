@@ -1,0 +1,17 @@
+{
+  "_comment": "ANFA A.Ş.. https://anfa.com.tr/tum-ihaleler/ adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Tablo değil, Elementor akordeon listesi; 50 kayıt tek sayfada, sayfalama linki yok. Akordeon gövdeleri kapalı öğelerde de HTML içinde geliyor, JS gerekmiyor — 50/50 satırda başlık ve link dolu. date_selector DOĞRULAMA SONUCU null'a ÇEKİLDİ: .uc_date değeri 50 kaydın 50'sinde kaydın kendi WordPress kalıcı bağlantısındaki tarihe birebir eşit, yani bu alan yayın tarihidir, ihale veya son teklif tarihi ile ilgisi yoktur; ayrıca ay adları İNGİLİZCE basılıyor (July, June, May, April, March, February, January) ve TurkishDateParser hepsinde null döner. Yanlış alanı bid_deadline_at'e yazmaktansa boş bırakmak doğrudur — spec Bölüm 7 gereği kayıt yine yazılır ve bildirimde 'son teklif tarihi okunamadı' uyarısı basılır. Gerçek tarih yalnızca detay sayfasından çıkarılabilir; ileride bir ANFA özel adapteri yazılırsa oradan alınmalı. Aynı başlık hem <em class=\"ue_heading_title\"> hem <div class=\"ue_post_title\"> içinde tekrarlanıyor, yalnızca birini seçin (ue_heading_title sonunda fazladan boşluk var, bu yüzden ue_post_title tercih edildi). .ue_post_text alanı ilanın kırpılmış özetidir, description için kullanılabilir. Detay linkleri mutlak adres olarak geliyor, birleştirme gerekmiyor.",
+  "adapter_config": {
+    "row_selector": ".uc_ac_box",
+    "title_selector": ".ue_post_title",
+    "link_selector": "a.uc_more_btn",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://anfa.com.tr"
+  },
+  "captured_bytes": 139927,
+  "captured_sha256": "6c0d3e23262a0e6e8836f073d84c23de6f1ba98d0b30d19302a3d8950c99f00d",
+  "expected_notice_count": 50,
+  "expected_first_title": "10.000 METREKARE GRAFİTİ ÇALIŞMASI HİZMETİ ALIMI"
+}

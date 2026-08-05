@@ -25,6 +25,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
     <ProjectReference Include="..\..\src\ProcurementRadar.Parsers\ProcurementRadar.Parsers.csproj" />
+    <!-- For BodyDecoder alone. A fixture is bytes, and the pipeline decodes them
+         just before Parse (D-11); reading them as UTF-8 here would feed the
+         parser text no production run ever sees. Evren Belediyesi's page is
+         served as windows-1254 and proves it. -->
+    <ProjectReference Include="..\..\src\ProcurementRadar.Collector\ProcurementRadar.Collector.csproj" />
   </ItemGroup>
 
   <ItemGroup>

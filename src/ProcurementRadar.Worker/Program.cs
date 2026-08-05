@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Adapters;
 using ProcurementRadar.Domain.Fetching;
@@ -14,6 +15,14 @@ using ProcurementRadar.Persistence;
 using ProcurementRadar.Scoring;
 using ProcurementRadar.Worker;
 using Serilog;
+
+// The console sink writes JSON so the logs can be grepped and fed to tools
+// (D-07). On Windows the console defaults to the system code page and .NET's
+// encoder for one substitutes a best fit: a Turkish “ in a notice title becomes
+// a plain ", which turns that log line into invalid JSON, and ş, ğ and İ all
+// arrive as question marks. The file sink writes correct UTF-8 either way, which
+// is exactly what makes the console version easy to miss.
+Console.OutputEncoding = Encoding.UTF8;
 
 var builder = Host.CreateApplicationBuilder(args);
 

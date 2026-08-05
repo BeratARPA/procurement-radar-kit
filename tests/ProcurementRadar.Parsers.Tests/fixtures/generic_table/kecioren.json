@@ -1,0 +1,17 @@
+{
+  "_comment": "Keçiören Belediyesi. https://www.kecioren.bel.tr/ihaleler.html adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Doğrulandı, 'ready' olarak korundu. Sayfa tablo değil Bootstrap kart ızgarası: her ilan tek bir .news-box kartı, .news-grid kapsayıcısı dokümanda bir kez geçiyor ve tam 5 kart eşleşiyor, başlık satırı yok. Üç selector de gerçek bir CSS motoruyla (soupsieve) test edildi: row_selector tam 5, title_selector 5 satırın hepsinde boş olmayan metin, link_selector 5 satırın hepsinde href veriyor. Kartlarda tarih YOK — bunu iki şekilde doğruladım: .news-meta li her kartta boş ve kartların tam metnine uygulanan Türkçe tarih regex'i 5 kartın hiçbirinde eşleşme vermiyor. Son teklif tarihi yalnızca detay sayfasından gelebilir; açtığım detay sayfasında 'İhale Tarih ve Saati : 27.08.2026 - 10:30' satırı var, yani T-10 parse hattında detay sayfasının da çekilmesi gerekecek. Detay linkleri göreli; base_url ile birleştirip fetch ettim, HTTP 200 döndü (100999 bayt) — çözümleme doğru çalışıyor. İlanlar sonuç ilanı değil: başlıklar 'İHALE İLANI' ile bitiyor, gövdede '4734 sayılı ... ihale edilecektir' gelecek zaman kipi var ve tarih bugünden ileride. Şartname dosyası listede doğrudan bağlanmamış, sadece detay sayfası var. Liste tek sayfa (page=1). Başlık metninde çift boşluk bulunabiliyor, normalizasyon gerekir.",
+  "adapter_config": {
+    "row_selector": ".news-grid .news-box",
+    "title_selector": ".new-txt h6 a",
+    "link_selector": ".new-txt h6 a",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.kecioren.bel.tr"
+  },
+  "captured_bytes": 80362,
+  "captured_sha256": "6ae1800cbdfc5c9503e678e39284e566a4afe8ae9e16d38e9056265afa307dfa",
+  "expected_notice_count": 5,
+  "expected_first_title": "İNŞAAT MALZEMELERİ ALIMI İŞİNE AİT İHALE İLANI"
+}

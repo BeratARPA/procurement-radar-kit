@@ -1,8 +1,28 @@
 {
   "_comment": "Kaynak kayıt defteri. url alanı TODO olan kayıtlar seed sırasında atlanır. Gerçek sayfayı ziyaret etmeden URL yazmayın.",
-  "_how_to_fill": "docs/source-collection.md dosyasına bakın.",
-  "_status": "5 Ağustos 2026: iki kaynak doğrulandı ve aktif. Her biri için robots.txt kontrol edildi, sayfa indirilip yapısı incelendi, selector'lar oradan çıkarıldı ve HTML fixture olarak tests/ProcurementRadar.Parsers.Tests/fixtures/generic_table/ altına kaydedildi. Aktif olmayan kayıtların sebebi tek tek notes alanında yazılı.",
+  "_how_to_fill": "docs/source-collection.md dosyasına bakın. Bir aday sayfayı canlıya dokunmadan denemek için: dotnet run --project src/ProcurementRadar.Cli -- check-source --html <kayıtlı sayfa> --config <adapter_config json>",
+  "_status": "5 Ağustos 2026: 26 kaynak aktif, 24 kaynak kayıtlı ama pasif. Aktif olan her kaynak için robots.txt okundu, sayfa indirildi, selector'lar o sayfadan çıkarıldı, gerçek GenericTableAdapter kaydedilmiş sayfaya karşı çalıştırıldı ve sayfa tests/ProcurementRadar.Parsers.Tests/fixtures/generic_table/ altına fixture olarak kondu. Pasif olanların sebebi tek tek notes alanında yazılı — hiçbiri unutulmuş değil.",
   "sources": [
+    {
+      "authority_name": "Ankara Çevre Şehircilik ve İklim Değişikliği İl Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ankara.csb.gov.tr/ihaleler-i-111967",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "div.page_content p",
+        "title_selector": "a",
+        "link_selector": null,
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": "a",
+        "base_url": "https://ankara.csb.gov.tr"
+      },
+      "notes": "Sayfa elle düzenlenen serbest metin bloğu (div.page_content): her ilan bir <p> içinde tek bir <a> ve bağlantı doğrudan PDF/DOCX dosyasına gidiyor, detay sayfası yok — bu yüzden link_selector null, document_selector 'a'. İki tuzak var: bir <p> içinde <br /> ile ayrılmış iki ilan bulunuyor (o paragrafın ikinci ilanı okunamaz, 7 ilandan 6'sı yakalanır) ve sonda yalnızca &nbsp; içeren boş bir <p> var (adapter başlıksız satır olarak atlar, her taramada 1 'skipped row' WARN'ı üretir — bu bir hata değil). Tarih ve tutar sütunu yok, tarih ancak başlık metninden çıkarılabilir. Şu anki kayıtların tamamı Milli Emlak taşınmaz satış/müzayede ilanı, yani yazılım alımı bu sayfada beklenmemeli; hizmet ve yapım işi ilanları için kardeş sayfalar da izlenmeli: acilacak-ihaleler-i-4904 (tek paragraflık serbest metin, şu an Temmuz 2025 tarihli tek bir sondaj yapım işi) ve duyurular (tarihli kart listesi, a.duyurular-category-card-wrapper, ama başlıklar üç satırda kısaltılmış olarak veriliyor). Şartname dosyaları webdosya.csb.gov.tr alan adında duruyor; T-12 indirmesinden önce o host'un robots.txt'si ayrıca kontrol edilmeli. Fixture: cevre-sehircilik.html."
+    },
     {
       "authority_name": "Ankara İl Sağlık Müdürlüğü",
       "authority_type": "provincial_directorate",
@@ -44,34 +64,464 @@
       "notes": "Aynı kurumun büyük ihale listesi. Tarih hücresi serbest metin ('Son Başvuru Tarihi ve Saati: 14/08/2026 Saat 17:00') ve TurkishDateParser bunu doğru okuyor. Fixture: ankara-il-saglik-mudurlugu-guncel-ihaleler.html, 1 ilan. Şartname dosyaları için yukarıdaki kaynağın robots.txt notu buraya da geçerli: aynı dosya sunucusu, aynı yasak."
     },
     {
-      "authority_name": "Çankaya Belediyesi",
-      "authority_type": "municipality",
-      "province": "Ankara",
-      "district": "Çankaya",
-      "url": "https://www.cankaya.bel.tr/ihaleler",
-      "adapter_key": "generic_table",
-      "poll_interval_minutes": 15,
-      "is_active": false,
-      "adapter_config": {
-        "row_selector": "TODO",
-        "title_selector": "TODO",
-        "link_selector": "TODO",
-        "date_selector": "TODO",
-        "amount_selector": null,
-        "base_url": "https://www.cankaya.bel.tr"
-      },
-      "notes": "URL doğrulandı, robots.txt serbest (5 Ağustos 2026). Ama sayfa o gün 'İhale bulunamadı' diyordu — ilan olmadan satır yapısı görülemez, o yüzden selector'lar TODO ve kaynak pasif. Sayfada ilan çıktığında yapıya bakıp doldurun; adapter_config TODO kaldığı sürece parser sıfır ilan döndürmek yerine gerekçeyi loglar."
-    },
-    {
-      "authority_name": "EKAP - İhale Arama",
-      "authority_type": "ekap",
+      "authority_name": "Gazi Üniversitesi",
+      "authority_type": "university",
       "province": "Ankara",
       "district": null,
-      "url": "https://ekapv2.kik.gov.tr/ekap/search",
-      "adapter_key": "ekap_tender",
-      "poll_interval_minutes": 60,
-      "is_active": false,
-      "notes": "URL doğrulandı, robots.txt serbest (5 Ağustos 2026). ekap.kik.gov.tr buraya yönlendiriyor. Sayfa tamamen JavaScript ile kuruluyor: ilk yanıtın gövdesi boş, yalnızca JS paketleri iniyor. GenericTableAdapter statik HTML okur, dolayısıyla bu kaynağı okuyamaz — T-16 gerekiyor ve spec'in 'en kırılgan bileşen' demesinin sebebi tam olarak bu. Arama yapılmadan JSON isteği de tetiklenmiyor, yani API'yi görmek için formun doldurulması gerekiyor."
+      "url": "https://ihale.gazi.edu.tr/",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "#ajax-result > div.bid-result-row",
+        "title_selector": "span.bid-title",
+        "link_selector": null,
+        "date_selector": "div.row.mb-2 > div.col-md-6:last-child div > div:nth-of-type(2)",
+        "amount_selector": null,
+        "document_selector": "a.down-cursor",
+        "base_url": "https://ihale.gazi.edu.tr"
+      },
+      "notes": "Sunucu tarafında render edilen kart listesi; her ilan bir div.bid-result-row, tablo ve başlık satırı yok. Detay sayfası yok — satırlar doğrudan ilan ve şartname PDF'lerine bağlanıyor (satır başına 2 dosya, /Public/DownloadFile/... altında). Tarih hücresi serbest metin: \"Son Teklif Tarihi: 06.08.2026\" biçiminde, etiketi ayrıştırıcıda kırpmak gerekir; aynı blokta \"Yayınlanma Tarihi\" ve \"Son Gösterim Tarihi\" de var, sıralamaya güvenilmiş durumda (nth-of-type(2)). Yaklaşık maliyet alanı sayfada yok. Şu anki 164 kaydın tamamı \"Hastane\" biriminden geliyor; birim bazlı sayfalar /Public/Index/{id} altında (Bilgi İşlem DB = 4, şu an 0 kayıt), kök sayfa tüm birimleri kapsadığı için kök sayfayı taramak yeterli. Fixture: gazi.html."
+    },
+    {
+      "authority_name": "Hacettepe Üniversitesi",
+      "authority_type": "university",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://imidb.hacettepe.edu.tr/tr/menu/ihale_ilan_duyurulari-61",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "div.icerik p > span",
+        "title_selector": "a",
+        "link_selector": null,
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": "a",
+        "base_url": "https://imidb.hacettepe.edu.tr"
+      },
+      "notes": "İdari ve Mali İşler Daire Başkanlığı'nın \"İhale İlan Duyuruları\" sayfası. Satırlar tablo değil, div.icerik içindeki serbest metin <p><span><a> blokları; aralarda boş <p>&nbsp;</p> satırları olduğu için satır seçicisi p değil \"div.icerik p > span\" olmalı. Detay sayfası yok, bağlantılar doğrudan PDF'e gidiyor; ayrı tarih hücresi yok, tarih başlığın sonunda parantez içinde (ör. \"(13.02.23)\"). Uyarı: sayfadaki beş kaydın tamamı \"Taşınmazların Kiraya Verilmesi İşi\" ve en yenisi 13.02.2023 — sayfa yıllardır güncellenmemiş ve yazılım ekibinin işine yarayacak mal/hizmet alımı ilanı hiç içermiyor, bu yüzden T-15'teki sessiz kaynak alarmını tetiklemesi beklenir. Hacettepe'nin gerçek doğrudan temin ilanları için hastane satın alma sayfası EKAP'a yönlendiriyor; kalıcı çözüm T-16'daki EkapAdapter. Fixture: hacettepe.html."
+    },
+    {
+      "authority_name": "Orta Doğu Teknik Üniversitesi (ODTÜ)",
+      "authority_type": "university",
+      "province": "Ankara",
+      "district": "Çankaya",
+      "url": "https://yitdb.metu.edu.tr/tr/announcements",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".views-row",
+        "title_selector": "a.list-group-item__title",
+        "link_selector": "a.list-group-item__title",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://yitdb.metu.edu.tr"
+      },
+      "notes": "Sayfa ODTÜ Yapı İşleri ve Teknik Daire Başkanlığı'nın duyuru listesidir ve şu an satırların tamamı Doğrudan Temin (22/d) ilanıdır; ağırlık yapım/teknik alımlarda olsa da otomasyon ve mühendislik hizmeti ilanları da çıkıyor. Dikkat: `.list-group-item__date` yayın tarihidir, son teklif tarihi değildir — son teklif tarihi ve DT kayıt numarası `.list-group-item__body` içinde serbest metin olarak geçer, şartname bağlantıları ise ilan detay sayfasındadır. ODTÜ İdari ve Mali İşler Daire Başkanlığı sitesinde ihale listesi bulunmadığı için bu sayfa seçildi. DİKKAT: tarih seçicisi kasten boş bırakıldı — Listedeki tarih yayın tarihi; gerçek son teklif ilan metninin içinde ('27/07/2026 saat 14:00'a kadar'). Yanlış bir son teklif tarihi, boş bırakmaktan kötüdür: bildirimde kapanmış bir işe kalan süre yazar. Fixture: odtu.html."
+    },
+    {
+      "authority_name": "Akyurt Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Akyurt",
+      "url": "https://www.akyurt.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "div.etkinlik-box > div.col-lg-12",
+        "title_selector": "div.e-content h5",
+        "link_selector": "div.e-content a",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.akyurt.bel.tr"
+      },
+      "notes": "Doğru liste `/ihaleler`; arama motorlarında çıkan `/ihale-duyurulari` yolu HTTP 200 dönüyor ama ana sayfayı gösteriyor (soft 404), o adres kullanılmamalı. Soldaki `div.e-tarih` tarih kutusu üç ilanın hepsinde '00 / 0000' yer tutucusu basıyor, yani listede kullanılabilir tarih yok — bu yüzden date_selector null bırakıldı ve son teklif tarihi detay sayfasından alınmalı. Detay bağlantıları göreli (`ihale/...`), base_url ile çözülüyor. Fixture: akyurt.html."
+    },
+    {
+      "authority_name": "Ankara Büyükşehir Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://www.ankara.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".tender-list-item",
+        "title_selector": ".info > strong",
+        "link_selector": ".button a",
+        "date_selector": ".attributes .attribute:first-child span",
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.ankara.bel.tr"
+      },
+      "notes": "Kurumun resmi ihale listesi; sayfa başına 20 ilan, ?page=N ile 204 sayfa. Seçiciler doğrulandı: 20/20 satırda başlık, link ve tarih dolu. Tarih her satırda ilk .attribute bloğudur ve 20/20 satırda 'İhale Tarihi'dir — :first-child güvenli. Bu tarih açılış tarihidir, son teklif saati değil; bildirimde bu ayrımı belirtin. İhale Kayıt No (IKN) 20 satırın yalnızca 16'sında var, bu yüzden IKN'yi nth-child ile konuma göre seçmeyin, label metnine bakın. DİKKAT (doğrulama sırasında eklendi): sayfadaki 'İhale Durumu' filtresi varsayılan olarak '- Tümü -' geliyor, yani liste açık ve kapanmış ihaleleri birlikte gösteriyor — bugün ilk sayfadaki 20 satırın yaklaşık 8'inin ihale tarihi çoktan geçmiş. Adapter kapanmış ilanları da yazacak; tekilleştirme ve skorlama buna dayanıklı olmalı. Doğrudan temin ayrı listelenmiyor; tutar ve şartname linkleri sadece detay sayfasında. Fixture: buyuksehir.html."
+    },
+    {
+      "authority_name": "Ayaş Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Ayaş",
+      "url": "https://ayas.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "li.ihalebkutu",
+        "title_selector": "h3.title",
+        "link_selector": "a.common-list__wrapper",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://ayas.bel.tr"
+      },
+      "notes": "Kurumun kendi /ihaleler sayfası; şu an 3 ilan var ve üçü de taşınmaz satış/kiralama (2886 sayılı Kanun kapsamı), yazılım alımı değil. Listede tarih yok: satırdaki div.text alanı 'Devam Eden İhale' gibi bir durum etiketi, tarih değil — bu yüzden date_selector null bırakıldı, son teklif tarihi ancak detay sayfasından çıkar. Şartname/doküman linki de listede yok. Ayrıca https://ayas.bel.tr/duyurular sayfasında da ihale ilan metinleri yayınlanıyor; ileride ikinci bir kaynak olarak eklenebilir. Fixture: ayas.html."
+    },
+    {
+      "authority_name": "Bala Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Bala",
+      "url": "https://www.bala.bel.tr/duyurular",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".BAnouncement ul > li",
+        "title_selector": ".BAnouncement-right a",
+        "link_selector": ".BAnouncement-right a",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.bala.bel.tr"
+      },
+      "notes": "Sitede ayrı ihale sayfası yok; ihale ilanları genel Duyurular listesinde parselasyon planı gibi diğer duyurularla karışık geliyor. Dikkat: tarih hücresi gün ve ay olarak iki ayrı span'e bölünmüş ve YIL BİLGİSİ İÇERMİYOR (ör. \"17 Nis\") — date_selector olarak verilen .BAnouncement-left yalnızca gün+ay döndürür, yıl detay sayfasından alınmalı; aksi halde TurkishDateParser yanlış yıl üretir. Satır linkleri protokolsüz (\"//www.bala.bel.tr/...\") yazılmış, birleştirirken şema eklenmeli. DİKKAT: tarih seçicisi kasten boş bırakıldı — Tarih hücresi '17 Nis' gibi kısaltılmış ay ve yılsız — güvenilir okunamaz. Yanlış bir son teklif tarihi, boş bırakmaktan kötüdür: bildirimde kapanmış bir işe kalan süre yazar. Fixture: bala.html."
+    },
+    {
+      "authority_name": "Beypazarı Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Beypazarı",
+      "url": "https://beypazari.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".common-list ul li",
+        "title_selector": "h3.title",
+        "link_selector": "a.common-list__wrapper",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://beypazari.bel.tr"
+      },
+      "notes": "Kurumun kendi sitesindeki ihale listesi; her satır başlık, kısa metin özeti ve detay linkinden oluşuyor, sayfada tarih sütunu yok. Son teklif tarihi listeden okunamaz, detay sayfasındaki serbest metinden çıkarılması gerekir. Fixture: beypazari.html."
+    },
+    {
+      "authority_name": "Elmadağ Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Elmadağ",
+      "url": "https://www.elmadag.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".common-list ul li",
+        "title_selector": "h3.title",
+        "link_selector": "a.common-list__wrapper",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.elmadag.bel.tr"
+      },
+      "notes": "Beypazarı ile aynı CMS altyapısı, ek olarak her satırda `p.duyurutarihc` içinde yayın tarihi var — bu tarih son teklif tarihi değildir. Listedeki başlıklar yaklaşık 70 karakterde kesilip \"...\" ekleniyor, tam başlık yalnızca detay sayfasında bulunur. DİKKAT: tarih seçicisi kasten boş bırakıldı — p.duyurutarihc duyuru tarihi — ihale tarihi değil. Yanlış bir son teklif tarihi, boş bırakmaktan kötüdür: bildirimde kapanmış bir işe kalan süre yazar. Fixture: elmadag.html."
+    },
+    {
+      "authority_name": "Evren Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Evren",
+      "url": "https://evren.bel.tr/sayfalar.asp?line=sayfalar/ilanlar.htm",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "font[face=\"Verdana\"]:has(a[href^=\"ilanlar/\"])",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": "a",
+        "base_url": "https://evren.bel.tr"
+      },
+      "notes": "UYARI: Bu sayfa FrontPage döneminden kalma, sınıfsız/id'siz tablo yapısı ve ASP include'ları yüzünden gövdenin ortasında ikinci bir <html><head><body> bloğu barındırıyor; ayrıca <p> etiketleri kapatılmamış. Sonuç olarak seçici sayıları HTML ayrıştırıcısına göre değişiyor (denediğim iki ayrıştırıcıdan biri 16 satır buldu, diğeri sayfayı iç <html> etiketinde kesip 0 buldu). Verdiğim row_selector <p> davranışına bağımlı olmadığı için en dayanıklı seçenek, ama MERGE ÖNCESİ mutlaka gerçek AngleSharp ile fixture testinde doğrulayın — sayı tutmazsa bu kaynak için ayrı bir adapter yazmak daha doğru olur. Diğer noktalar: sayfa windows-1254 kodlu (D-11 gereği çözümleme parse anında yapılmalı), detay sayfası yok — linkler doğrudan PDF/JPG dosyasına gidiyor, bu yüzden link_selector ve document_selector aynı <a>. Satırda tarih alanı yok; duyuru tarihi başlık metninin içinde geçiyor, o yüzden date_selector null. 16 satırın 6'sı sadece '( Duyuru Tarihi : … )' yazan, bir önceki ilanın PDF'ini tekrarlayan devam linkleri — bunlar tekrar kayıt üretir. Sayfa çok seyrek güncelleniyor (en yeni ilan 8.10.2025), bu yüzden T-15'in sessiz kaynak alarmını gereksiz tetikleyebilir. İkinci sayfa olarak https://evren.bel.tr/sayfalar.asp?line=sayfalar/ihaleler.htm var ama içeriği bunun alt kümesi ve iki ilanın da başlığı birebir aynı. Fixture: evren.html."
+    },
+    {
+      "authority_name": "Haymana Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Haymana",
+      "url": "https://www.haymana.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".common-list.single > ul > li",
+        "title_selector": "h3.title",
+        "link_selector": "a.common-list__wrapper",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.haymana.bel.tr"
+      },
+      "notes": "Belediyenin kendine ait ihale listesi sayfası; her satır başlık, kısa özet metni ve detay linkinden oluşuyor, başlık dışında sütun yok. Listede tarih ve tutar alanı bulunmadığı için bid_deadline_at yalnızca detay sayfasından çıkarılabilir; sayfalama yok, tüm ilanlar tek sayfada geliyor. Fixture: haymana.html."
+    },
+    {
+      "authority_name": "Kahramankazan Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Kahramankazan",
+      "url": "https://kahramankazan.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "div.common-list ul li",
+        "title_selector": "h3.title",
+        "link_selector": "a.common-list__wrapper",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://kahramankazan.bel.tr"
+      },
+      "notes": "Basit `ul`/`li` listesi; başlık `h3.title`, tarih `p.duyurutarihc` içinde '3 Ağustos 2026' biçiminde ve bu ilan (yayın) tarihi, son teklif tarihi değil — kesin süre detay sayfasından doğrulanmalı. Sayfada bugün yalnızca 1 ilan var, dolayısıyla düşük satır sayısı normaldir; T-15'teki 'parser broken' alarmı bu kaynak için ayarlanırken bu göz önünde bulundurulmalı. Kurumun ayrıca `/ilanlar` ve `/duyurular` sayfaları var, ihale dışı duyurular oraya düşüyor. DİKKAT: tarih seçicisi kasten boş bırakıldı — p.duyurutarihc duyuru tarihi — ihale tarihi değil. Yanlış bir son teklif tarihi, boş bırakmaktan kötüdür: bildirimde kapanmış bir işe kalan süre yazar. Fixture: kahramankazan.html."
+    },
+    {
+      "authority_name": "Kalecik Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Kalecik",
+      "url": "https://www.kalecik.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".common-list.single > ul > li",
+        "title_selector": "h3.title",
+        "link_selector": "a.common-list__wrapper",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.kalecik.bel.tr"
+      },
+      "notes": "Haymana Belediyesi ile birebir aynı CMS ve aynı `.common-list.single > ul > li` yapısı; iki kaynak tek adapter konfigürasyonunu paylaşabilir. Listede tarih ve tutar sütunu yok, son teklif tarihi detay sayfasından çıkarılmalı. Şu anki 7 kaydın tamamı taşınmaz/araç satışı — kaynak doğru sayfa ama yazılım ilanı çıkma oranı düşük olacaktır. Fixture: kalecik.html."
+    },
+    {
+      "authority_name": "Keçiören Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Keçiören",
+      "url": "https://www.kecioren.bel.tr/ihaleler.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".news-grid .news-box",
+        "title_selector": ".new-txt h6 a",
+        "link_selector": ".new-txt h6 a",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.kecioren.bel.tr"
+      },
+      "notes": "Doğrulandı, 'ready' olarak korundu. Sayfa tablo değil Bootstrap kart ızgarası: her ilan tek bir .news-box kartı, .news-grid kapsayıcısı dokümanda bir kez geçiyor ve tam 5 kart eşleşiyor, başlık satırı yok. Üç selector de gerçek bir CSS motoruyla (soupsieve) test edildi: row_selector tam 5, title_selector 5 satırın hepsinde boş olmayan metin, link_selector 5 satırın hepsinde href veriyor. Kartlarda tarih YOK — bunu iki şekilde doğruladım: .news-meta li her kartta boş ve kartların tam metnine uygulanan Türkçe tarih regex'i 5 kartın hiçbirinde eşleşme vermiyor. Son teklif tarihi yalnızca detay sayfasından gelebilir; açtığım detay sayfasında 'İhale Tarih ve Saati : 27.08.2026 - 10:30' satırı var, yani T-10 parse hattında detay sayfasının da çekilmesi gerekecek. Detay linkleri göreli; base_url ile birleştirip fetch ettim, HTTP 200 döndü (100999 bayt) — çözümleme doğru çalışıyor. İlanlar sonuç ilanı değil: başlıklar 'İHALE İLANI' ile bitiyor, gövdede '4734 sayılı ... ihale edilecektir' gelecek zaman kipi var ve tarih bugünden ileride. Şartname dosyası listede doğrudan bağlanmamış, sadece detay sayfası var. Liste tek sayfa (page=1). Başlık metninde çift boşluk bulunabiliyor, normalizasyon gerekir. Fixture: kecioren.html."
+    },
+    {
+      "authority_name": "Kızılcahamam Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Kızılcahamam",
+      "url": "https://kizilcahamam.bel.tr/Tum-Ilanlar",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".ordered-list > ul > li",
+        "title_selector": "h3.text",
+        "link_selector": "a",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://kizilcahamam.bel.tr"
+      },
+      "notes": "Bu gruptaki en iyi kaynak: \"Tüm İlanlar\" sayfası 62 ilanın tamamını sayfalama olmadan tek sayfada listeliyor ve tarih `div.date` içinde \"3.08.2026 00:00:00\" biçiminde temiz duruyor — ancak bu YAYIN tarihi, son teklif tarihi değil. Başlıkların büyük kısmı sadece \"İLAN\" olduğu için anahtar kelime filtresi liste başlığına güvenemez, detay sayfası metni gerekir. h3.text içinde bir <span class=\"icon\"> var, başlık metnini alırken ikon düğümü ayıklanmalı. Ana alan adı www'suz (https://kizilcahamam.bel.tr) ve www'lu istek oraya yönleniyor. robots.txt Cloudflare yönetimli: isimlendirilmiş AI botları (ClaudeBot, GPTBot vb.) kapalı, `*` grubu yalnızca /webcms/ dizinini kapatıyor. DİKKAT: tarih seçicisi kasten boş bırakıldı — div.date saati 00:00:00 olan yayın tarihi — ihale tarihi değil. Yanlış bir son teklif tarihi, boş bırakmaktan kötüdür: bildirimde kapanmış bir işe kalan süre yazar. Fixture: kizilcahamam.html."
+    },
+    {
+      "authority_name": "Nallıhan Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Nallıhan",
+      "url": "https://www.nallihan.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".space-y-4 a[href^=\"/ihaleler/\"]",
+        "title_selector": "h3",
+        "link_selector": null,
+        "date_selector": "span.text-stone-custom",
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.nallihan.bel.tr"
+      },
+      "notes": "Next.js tabanlı liste; satırın kendisi <a> etiketi olduğu için detay linki satır içinde değil, satır elemanının kendi href'inde ve \"/ihaleler/<uuid>\" biçiminde göreli — base_url ile birleştirilmeli. Liste hem \"Aktif\" hem \"Tamamlandı\" ihaleleri birlikte gösteriyor, durum rozeti span[data-slot=\"badge\"] içinde; tarih hücresinde saat varsa ikinci bir span olarak ayrı geliyor. Fixture: nallihan.html."
+    },
+    {
+      "authority_name": "Polatlı Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Polatlı",
+      "url": "https://www.polatli.bel.tr/ihaleler/1",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "div.duyurugrid",
+        "title_selector": "div.duyurubaslik",
+        "link_selector": "a.mlink2",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.polatli.bel.tr"
+      },
+      "notes": "Kart düzeninde listeleme; her kart yalnızca başlık ve detay bağlantısı taşıyor — listede tarih, tutar veya şartname bağlantısı yok, bu yüzden son teklif tarihi detay sayfasından okunmalı. Yol `/ihaleler/1` sayfa numarası içeriyor ancak belgede sayfalama bağlantısı yok; 10 ilanın tamamı bu ilk sayfada. Fixture: polatli.html."
+    },
+    {
+      "authority_name": "Çamlıdere Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Çamlıdere",
+      "url": "https://camlidere.bel.tr/guncel/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "a[href^=\"/guncel/ihaleler/\"]",
+        "title_selector": "h2",
+        "link_selector": null,
+        "date_selector": "dl > div:first-child > dd",
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://camlidere.bel.tr"
+      },
+      "notes": "En düzenli kaynaklardan biri: 13 ilan, hepsi tek sayfada, tarih alanı 'Tarih' etiketiyle ayrı bir <dd> içinde ve 'GG.AA.YYYY SS:dd' biçiminde (config/tr-date-patterns.json içindeki dotted_date_time deseni bunu karşılıyor). DİKKAT: satırın kendisi <a> etiketi, satırın içinde ayrı bir link yok. GenericTableAdapter link_selector'ı satırın ALTINDA aradığı için (QuerySelector torunlara bakar) detay linki bu konfigle okunamaz; bu yüzden link_selector null ve tüm ilanlar source_url olarak liste sayfasını alır. Her ilana kendi URL'sini vermek isterseniz adapter'a 'satırın kendisi link ise href'ini kullan' şeklinde küçük bir ekleme gerekir — external_key ve Telegram linki açısından bunu yapmakta fayda var. İlanların çoğu taşınmaz kiralama/satış; 2025/1905572 numaralı kent meydanı yapım işi gibi 4734 kapsamı işler de çıkıyor. Satırda şartname linki yok, tutar yok. Fixture: camlidere.html."
+    },
+    {
+      "authority_name": "Çubuk Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Çubuk",
+      "url": "https://www.cubuk.bel.tr/category/guncel-ihaleler/",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "main.loop-posts article",
+        "title_selector": "h4.post-title a",
+        "link_selector": "h4.post-title a",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.cubuk.bel.tr"
+      },
+      "notes": "WordPress kategori arşivi; sayfada tema widget'larından gelen 28 adet <article> var, gerçek ihale satırları yalnızca `main.loop-posts` içindekiler — selector mutlaka bu kapsayıcıya bağlanmalı yoksa alakasız proje ve haber kartları da satır sayılır. Satırdaki tarih ilanın yayın tarihi, son teklif tarihi değil; sayfada 10 kayıt gösteriliyor ve devamı sayfalamada. DİKKAT: tarih seçicisi kasten boş bırakıldı — WordPress yazı tarihi (.post-date-inline) — yayın tarihi, ihale tarihi değil. Yanlış bir son teklif tarihi, boş bırakmaktan kötüdür: bildirimde kapanmış bir işe kalan süre yazar. Fixture: cubuk.html."
+    },
+    {
+      "authority_name": "ANFA A.Ş.",
+      "authority_type": "soe_subsidiary",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://anfa.com.tr/tum-ihaleler/",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".uc_ac_box",
+        "title_selector": ".ue_post_title",
+        "link_selector": "a.uc_more_btn",
+        "date_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://anfa.com.tr"
+      },
+      "notes": "Tablo değil, Elementor akordeon listesi; 50 kayıt tek sayfada, sayfalama linki yok. Akordeon gövdeleri kapalı öğelerde de HTML içinde geliyor, JS gerekmiyor — 50/50 satırda başlık ve link dolu. date_selector DOĞRULAMA SONUCU null'a ÇEKİLDİ: .uc_date değeri 50 kaydın 50'sinde kaydın kendi WordPress kalıcı bağlantısındaki tarihe birebir eşit, yani bu alan yayın tarihidir, ihale veya son teklif tarihi ile ilgisi yoktur; ayrıca ay adları İNGİLİZCE basılıyor (July, June, May, April, March, February, January) ve TurkishDateParser hepsinde null döner. Yanlış alanı bid_deadline_at'e yazmaktansa boş bırakmak doğrudur — spec Bölüm 7 gereği kayıt yine yazılır ve bildirimde 'son teklif tarihi okunamadı' uyarısı basılır. Gerçek tarih yalnızca detay sayfasından çıkarılabilir; ileride bir ANFA özel adapteri yazılırsa oradan alınmalı. Aynı başlık hem <em class=\"ue_heading_title\"> hem <div class=\"ue_post_title\"> içinde tekrarlanıyor, yalnızca birini seçin (ue_heading_title sonunda fazladan boşluk var, bu yüzden ue_post_title tercih edildi). .ue_post_text alanı ilanın kırpılmış özetidir, description için kullanılabilir. Detay linkleri mutlak adres olarak geliyor, birleştirme gerekmiyor. Fixture: anfa.html."
+    },
+    {
+      "authority_name": "ASKİ Genel Müdürlüğü",
+      "authority_type": "soe_subsidiary",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://aski.gov.tr/tr/Ihale.aspx",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "table.table-bordered tbody tr",
+        "title_selector": "td:nth-child(3)",
+        "link_selector": "td:nth-child(6) a",
+        "date_selector": "td:nth-child(2)",
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://aski.gov.tr"
+      },
+      "notes": "Doğrulamada beş kaynağın en sağlıklısı çıktı: 4 satırın tamamı açık ilan (ilan tarihleri 24-28.07.2026, ihale tarihleri 11-18.08.2026, hepsi gelecekte). Sadece güncel ilanlar listeleniyor, arşiv veya sayfalama yok — ilan listeden düşünce kaybolur, bu yüzden raw_fetch arşivi bu kaynakta özellikle kritik. Detay linkleri 'IhaleDetay.aspx?ID=3721' biçiminde ve başında eğik çizgi YOK: mutlaka sayfa adresine (https://aski.gov.tr/tr/Ihale.aspx) göre çözün. base_url şema+host olduğu için ona göre birleştirirseniz https://aski.gov.tr/IhaleDetay.aspx?ID=3721 elde edersiniz ve 404 alırsınız — GenericTableAdapter link çözümünü sayfa adresine göre yapmalı. 1. sütun ilan tarihi, 2. sütun ihale (açılış) tarihi, saat yok. 4. sütun IKN'dir. Başlık hücresi baştaki boşlukla geliyor, trim gerekli; başlıklar küçük harfle yazılmış. Host'ta gerçek robots.txt yok (/robots.txt ASP.NET 404 sayfası döndürüyor, içinde tek bir kural satırı yok). Fixture: aski.html."
+    },
+    {
+      "authority_name": "BELKA A.Ş.",
+      "authority_type": "soe_subsidiary",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://www.belkaas.com.tr/ihale-duyurulari",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".ihale-table table tbody tr",
+        "title_selector": "td:nth-child(2) a",
+        "link_selector": "td:nth-child(2) a",
+        "date_selector": "td:nth-child(1)",
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.belkaas.com.tr"
+      },
+      "notes": "Seçiciler doğrulandı, 10/10 satırda başlık, link ve tarih dolu. Ninja Tables ile üretilen tablo 'nt_type_ajax_table' sınıfı taşıyor ama JS GEREKMİYOR: ?page=2 istendiğinde sunucu farklı 10 satır döndürdü, yani sayfalama sunucu tarafında ve statik satırlar gerçek veri. Tarih hücresi '05.05.2026 – 14:00' biçiminde ve ayırıcı normal tire değil EN DASH (U+2013) — tr-date-patterns.json'a bu deseni ekleyin. 3. sütun durum bilgisidir. EN ÖNEMLİ UYARI: bugün ilk sayfadaki 10 kaydın tamamı kapanmış (8 Tamamlandı, 2 İptal Edildi) ve en yeni ihale tarihi 05.05.2026 — bugün 05.08.2026, yani üç aydır açık ilan yok. Kaynak yapısal olarak çalışıyor ama fiilen uykuda; T-15'in 'silent source' alarmı bu kaynağı ilk tetikleyen olacaktır, bu beklenen davranıştır, parser kırıldı sanmayın. DOĞRULAMADA DÜZELTİLEN İKİ NOKTA: (1) sayfada 'Toplam 81 adet' diye bir metin YOK, toplam kayıt sayısı hiçbir yerde yazmıyor — yalnızca 9 sayfa × 10 satır çıkarımı yapılabilir; (2) liste tarihe göre azalan sıralı DEĞİL — 2. sayfa 22.04.2025, 05.08.2025, 08.04.2025, 12.03.2025 sırasıyla geliyor, dolayısıyla 'yeni ilan en üste düşer' varsayımına dayanmayın. IKN listede yok, external_key hash ile üretilmeli. Fixture: belka.html."
+    },
+    {
+      "authority_name": "EGO Genel Müdürlüğü",
+      "authority_type": "soe_subsidiary",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://www.ego.gov.tr/tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "#yeniIhale tbody tr",
+        "title_selector": "td:nth-child(3) a.ihale_link",
+        "link_selector": "td:nth-child(3) a.ihale_link",
+        "date_selector": "td:nth-child(2)",
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.ego.gov.tr"
+      },
+      "notes": "Sayfada aynı 'datatable-default' id'sini taşıyan İKİ tablo var: #yeniIhale sekmesi 'İHALE İLANLARI' (27 satır), #ihaleSonuc sekmesi 'İHALE SONUÇLARI' (25 satır). Satır seçicisini mutlaka #yeniIhale ile sınırlayın: sınırlamazsanız seçici 52 satır döner. Doğrulama sırasında bulunan ek gerekçe — iki tablonun SÜTUN DÜZENİ farklı: #yeniIhale [İhale Türü, İhale Tarihi, İhale Adı, Kik No] (4 sütun), #ihaleSonuc [İhale Tarihi, İhale Adı, Kik No] (3 sütun). Yani kapsam dışı satırlar sadece 'sonuç ilanı yeni ilan sanılır' sorunu yaratmaz, nth-child seçicileri yanlış sütunu okur. 'Kik No' sütunu IKN'dir, external_key olarak doğrudan kullanılabilir. 2. sütun ihale (açılış) tarihi, saat bilgisi yok. Bu host'un robots.txt'i .pdf/.doc/.docx/.xls/.xlsx indirmeyi yasakladığı için doküman indirici bu kaynakta devre dışı bırakılmalı. Fixture: ego.html."
     },
     {
       "authority_name": "EKAP - Doğrudan Temin Arama",
@@ -85,26 +535,257 @@
       "notes": "Doğrudan Temin aramasının ayrı bir adresi olup olmadığı doğrulanamadı — EKAP arayüzü JS ile kurulduğu için menü statik HTML'de görünmüyor. T-16'da arayüz üzerinden bulunacak. URL uydurulmadı."
     },
     {
-      "authority_name": "Ankara Büyükşehir Belediyesi",
-      "authority_type": "municipality",
+      "authority_name": "EKAP - İhale Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap/search",
+      "adapter_key": "ekap_tender",
+      "poll_interval_minutes": 60,
+      "is_active": false,
+      "notes": "URL doğrulandı, robots.txt serbest (5 Ağustos 2026). ekap.kik.gov.tr buraya yönlendiriyor. Sayfa tamamen JavaScript ile kuruluyor: ilk yanıtın gövdesi boş, yalnızca JS paketleri iniyor. GenericTableAdapter statik HTML okur, dolayısıyla bu kaynağı okuyamaz — T-16 gerekiyor ve spec'in 'en kırılgan bileşen' demesinin sebebi tam olarak bu. Arama yapılmadan JSON isteği de tetiklenmiyor, yani API'yi görmek için formun doldurulması gerekiyor."
+    },
+    {
+      "authority_name": "Ankara Aile ve Sosyal Hizmetler İl Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://www.aile.gov.tr/ankara/duyurular/",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "79 kayıt var ama hepsi personel/kura duyurusu. İhale sayfası değil."
+    },
+    {
+      "authority_name": "Ankara Gençlik ve Spor İl Müdürlüğü",
+      "authority_type": "provincial_directorate",
       "province": "Ankara",
       "district": null,
       "url": "TODO",
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "www.ankara.bel.tr otomatik isteklere HTTP 403 döndürüyor (5 Ağustos 2026). Sayfa görülemediği için URL de selector de yazılmadı. Denemeden önce robots.txt'i ve site kullanım şartlarını tekrar kontrol edin: 403 bir bot korumasıdır, aşmaya çalışmak nezaket kuralının da spec Bölüm 12'nin de dışına çıkar."
+      "notes": "İhale/duyuru sayfası bulunamadı. URL uydurulmadı."
+    },
+    {
+      "authority_name": "Ankara İl Afet ve Acil Durum Müdürlüğü (AFAD)",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ankara.afad.gov.tr/duyurular",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "/duyurular genel duyuru sayfası; ilk satır köpekli arama timleri sınav sonucu. İhale ilanı buradan yayınlanmıyor görünüyor."
+    },
+    {
+      "authority_name": "Ankara İl Kültür ve Turizm Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "TODO",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "İhale/duyuru sayfası bulunamadı. URL uydurulmadı."
+    },
+    {
+      "authority_name": "Ankara İl Milli Eğitim Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ankara.meb.gov.tr/www/duyurular/kategori/2",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Sayfa JavaScript ile kuruluyor. Ayrıca robots.txt'te 'User-agent: *' grubu yok, yalnızca isim verilmiş botlara (ClaudeBot, GPTBot vb.) 'Disallow: /' deniyor — bizim ajanımız o listede değil ama sitenin niyeti okunuyor, dikkatli olun."
+    },
+    {
+      "authority_name": "Ankara İl Tarım ve Orman Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ankara.tarimorman.gov.tr/Sayfalar/Detay.aspx?Liste=Ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Sayfa açılıyor, robots serbest, ama şu an ilan listesi boş. Tekrar bakılmalı."
+    },
+    {
+      "authority_name": "Ankara Hacı Bayram Veli Üniversitesi",
+      "authority_type": "university",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://hacibayram.edu.tr/web/duyurular",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Site Angular SPA; robots.txt isteği bile HTML kabuk döndürüyor. Statik HTML'de duyuru yok."
+    },
+    {
+      "authority_name": "Ankara Müzik ve Güzel Sanatlar Üniversitesi",
+      "authority_type": "university",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://www.mgu.edu.tr/mgu-duyurular/",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Genel haber/duyuru akışı — ilk satır özel yetenek sınavı toplantısı. İhale sayfası ayrıca aranmalı."
+    },
+    {
+      "authority_name": "Ankara Sosyal Bilimler Üniversitesi",
+      "authority_type": "university",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://imidb.asbu.edu.tr/tr/duyurular",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "imidb.asbu.edu.tr/tr/duyurular doğru daire (İdari ve Mali İşler) ama şu an sayfadaki 3 kayıt ihale değil, eğitim/haber duyurusu. İlan çıktığında yapısı görülüp aktif edilebilir."
+    },
+    {
+      "authority_name": "Ankara Yıldırım Beyazıt Üniversitesi",
+      "authority_type": "university",
+      "province": "Ankara",
+      "district": "Çubuk",
+      "url": "https://aybu.edu.tr/aybu/tr/duyurular",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Genel duyuru sayfası; 25 satırın ilki sınav sonucu duyurusu. İhale ilanları büyük ihtimalle İdari ve Mali İşler Daire Başkanlığı alt sitesinde."
     },
     {
       "authority_name": "Ankara Üniversitesi",
       "authority_type": "university",
       "province": "Ankara",
-      "district": "Çankaya",
+      "district": null,
+      "url": "https://ihale.ankara.edu.tr/Home/BidActiveList",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "ihale.ankara.edu.tr/Home/BidActiveList kuruma özel bir ihale uygulaması ve tamamen JavaScript ile kuruluyor; ilk yanıtın gövdesinde ilan yok. GenericTableAdapter statik HTML okur. Playwright gerekirse ilk aday bu."
+    },
+    {
+      "authority_name": "Sağlık Bilimleri Üniversitesi Gülhane (Ankara)",
+      "authority_type": "university",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://gulhaneeah.saglik.gov.tr/TR-190509/guncel-ilanlar.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "guncel-ilanlar.html açılıyor ama şu an kayıt yok. Ankara İl Sağlık Müdürlüğü ile aynı altyapı (saglik.gov.tr), ilan çıktığında selector'lar oradan uyarlanabilir."
+    },
+    {
+      "authority_name": "Altındağ Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Altındağ",
       "url": "TODO",
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "robots.txt serbest (5 Ağustos 2026). Ana sayfada ihale/duyuru bağlantısı statik HTML'de bulunamadı; ilan sayfası büyük ihtimalle İdari ve Mali İşler Daire Başkanlığı alt sitesinde. Elle bakılması gerekiyor."
+      "notes": "robots.txt tüm siteyi kapatıyor. Kaynak listesine alınmadı — spec Bölüm 12."
+    },
+    {
+      "authority_name": "Etimesgut Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Etimesgut",
+      "url": "TODO",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "robots.txt (Cloudflare yönetimli bölüm) tüm siteyi kapatıyor. Kaynak listesine alınmadı."
+    },
+    {
+      "authority_name": "Gölbaşı Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Gölbaşı",
+      "url": "https://www.ankaragolbasi.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Sayfa gerçek ihale listesi (9 ilan, 'Taşınmazlar Satılacak ve Kiraya Verilecektir') ama ilan başına saran bir eleman yok: başlık h3.title, gövde kardeş div.faaliyet-raporlari. GenericTableAdapter satır başına tek eleman ister. Bu kaynak ya özel adapter ister ya da satırın kendisini başlık olarak kullanmaya izin veren bir değişiklik."
+    },
+    {
+      "authority_name": "Güdül Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Güdül",
+      "url": "TODO",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Belediyenin çalışan bir ihale sayfası bulunamadı. URL uydurulmadı."
+    },
+    {
+      "authority_name": "Mamak Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Mamak",
+      "url": "https://www.mamak.bel.tr/ihale",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "URL ve robots doğrulandı, sayfada şu an ilan yok. İlan çıktığında yapıya bakılıp doldurulacak."
+    },
+    {
+      "authority_name": "Pursaklar Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Pursaklar",
+      "url": "https://www.pursaklar.bel.tr/duyurular-ve-etkinlikler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Sayfa ihale listesi değil, genel duyuru akışı: gerçek parser'la ilk satır 'Kedi Evi 7/24 Canlı Yayında!' çıkıyor. Belediyenin ayrı bir ihale sayfası varsa bulunup buraya yazılmalı."
+    },
+    {
+      "authority_name": "Sincan Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Sincan",
+      "url": "TODO",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "robots.txt tüm siteyi kapatıyor. Kaynak listesine alınmadı."
+    },
+    {
+      "authority_name": "Yenimahalle Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Yenimahalle",
+      "url": "https://www.yenimahalle.bel.tr/IhaleDuyurulari",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "IhaleDuyurulari sayfası JavaScript ile doluyor; statik gövdede satır yok."
+    },
+    {
+      "authority_name": "Çankaya Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Çankaya",
+      "url": "https://www.cankaya.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "URL ve robots.txt doğrulandı, sayfa çalışıyor ama o gün 'İhale bulunamadı' diyordu — satır yapısı görülmeden selector yazılmaz."
+    },
+    {
+      "authority_name": "Şereflikoçhisar Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Şereflikoçhisar",
+      "url": "https://www.sereflikochisar.bel.tr/duyurular.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "duyurular.html genel duyuru sayfası — ilk satır 'Kadına Yönelik Şiddetle Mücadelede Biz Varız'. İhaleye özel bir sayfa aranmalı."
     }
   ]
 }

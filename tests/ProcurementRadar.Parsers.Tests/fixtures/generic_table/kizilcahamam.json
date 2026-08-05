@@ -1,0 +1,17 @@
+{
+  "_comment": "Kızılcahamam Belediyesi. https://kizilcahamam.bel.tr/Tum-Ilanlar adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Bu gruptaki en iyi kaynak: \"Tüm İlanlar\" sayfası 62 ilanın tamamını sayfalama olmadan tek sayfada listeliyor ve tarih `div.date` içinde \"3.08.2026 00:00:00\" biçiminde temiz duruyor — ancak bu YAYIN tarihi, son teklif tarihi değil. Başlıkların büyük kısmı sadece \"İLAN\" olduğu için anahtar kelime filtresi liste başlığına güvenemez, detay sayfası metni gerekir. h3.text içinde bir <span class=\"icon\"> var, başlık metnini alırken ikon düğümü ayıklanmalı. Ana alan adı www'suz (https://kizilcahamam.bel.tr) ve www'lu istek oraya yönleniyor. robots.txt Cloudflare yönetimli: isimlendirilmiş AI botları (ClaudeBot, GPTBot vb.) kapalı, `*` grubu yalnızca /webcms/ dizinini kapatıyor.",
+  "adapter_config": {
+    "row_selector": ".ordered-list > ul > li",
+    "title_selector": "h3.text",
+    "link_selector": "a",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://kizilcahamam.bel.tr"
+  },
+  "captured_bytes": 84567,
+  "captured_sha256": "27806bc682079440ad41cf656c9f4a25ea18d4b5c10a78b078344cc1f02d4cce",
+  "expected_notice_count": 62,
+  "expected_first_title": "DOĞALGAZ DÖNÜŞÜM İŞİ İLANI"
+}
