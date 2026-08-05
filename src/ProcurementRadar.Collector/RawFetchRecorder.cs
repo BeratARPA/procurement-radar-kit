@@ -83,11 +83,11 @@ public sealed class RawFetchRecorder
             return new ArchiveRecord(ArchiveOutcome.Failed);
         }
 
-        var previousHash = await _rawFetches
-            .GetLatestContentHashAsync(source.Id, cancellationToken)
+        var previous = await _rawFetches
+            .GetLatestAsync(source.Id, cancellationToken)
             .ConfigureAwait(false);
 
-        if (string.Equals(previousHash, result.ContentHash, StringComparison.Ordinal))
+        if (string.Equals(previous?.ContentHash, result.ContentHash, StringComparison.Ordinal))
         {
             // Most pages sit unchanged for days. Archiving a byte-identical copy
             // every fifteen minutes would bury the ones that did change.

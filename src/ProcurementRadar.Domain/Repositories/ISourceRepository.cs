@@ -8,6 +8,13 @@ public interface ISourceRepository
     Task<IReadOnlyList<Source>> ListActiveAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// One source, active or not. The parse pipeline needs it to know which
+    /// adapter an archived body belongs to, and reprocessing has to work for a
+    /// source that was taken out of the rotation.
+    /// </summary>
+    Task<Source?> GetByIdAsync(long sourceId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Registers a source, or refreshes the definition of one already known
     /// under the same url. Returns true when the row was new.
     /// </summary>

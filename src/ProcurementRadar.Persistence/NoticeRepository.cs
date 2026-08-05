@@ -46,7 +46,8 @@ public sealed class NoticeRepository : INoticeRepository
             // Fills both first_seen_at and last_seen_at on insert, and only
             // last_seen_at on conflict. The caller's values are ignored by design.
             SeenAt = seenAt,
-            notice.Status
+            // Text, not the enum: see the note in SourceRepository.UpsertAsync.
+            Status = EnumText.ToText(notice.Status)
         };
 
         await using var connection = await _connectionFactory
@@ -69,7 +70,7 @@ public sealed class NoticeRepository : INoticeRepository
         var rows = await connection.QueryAsync<ProcurementNotice>(
             new CommandDefinition(
                 NoticeSql.ListByStatus,
-                new { Status = status },
+                new { Status = EnumText.ToText(status) },
                 cancellationToken: cancellationToken))
             .ConfigureAwait(false);
 
@@ -88,7 +89,7 @@ public sealed class NoticeRepository : INoticeRepository
         await connection.ExecuteAsync(
             new CommandDefinition(
                 NoticeSql.UpdateStatus,
-                new { NoticeId = noticeId, Status = status },
+                new { NoticeId = noticeId, Status = EnumText.ToText(status) },
                 cancellationToken: cancellationToken))
             .ConfigureAwait(false);
     }

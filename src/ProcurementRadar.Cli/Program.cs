@@ -30,6 +30,7 @@ try
     return (args.Length > 0 ? args[0] : null) switch
     {
         "seed" => await SeedCommand.RunAsync(args[1..], shutdown.Token),
+        "reparse" => await ReparseCommand.RunAsync(args[1..], shutdown.Token),
         null => Usage("no command given"),
         var unknown => Usage($"unknown command '{unknown}'")
     };
@@ -52,7 +53,8 @@ finally
 static int Usage(string problem)
 {
     Log.Error(
-        "{Problem}. Usage: dotnet run --project src/ProcurementRadar.Cli -- seed [--file <path>]",
+        "{Problem}. Usage: dotnet run --project src/ProcurementRadar.Cli -- "
+        + "seed [--file <path>] | reparse [--source-id <id>] [--batch-size <n>] [--config-dir <path>]",
         problem);
 
     return 1;

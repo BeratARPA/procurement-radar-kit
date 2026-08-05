@@ -22,11 +22,14 @@ public interface IRawFetchRepository
     Task InsertAsync(RawFetch rawFetch, CancellationToken cancellationToken);
 
     /// <summary>
-    /// The hash of the most recent body archived for this source, or null if
-    /// there is none yet. Most pages do not change for days, and an unchanged
-    /// page must not produce a second archive row.
+    /// The most recent archive row for this source, or null if there is none.
     /// </summary>
-    Task<string?> GetLatestContentHashAsync(long sourceId, CancellationToken cancellationToken);
+    /// <remarks>
+    /// Carries both things the next fetch needs: the hash, so an unchanged page
+    /// does not produce a second archive row, and the ETag and Last-Modified to
+    /// send back as conditional headers.
+    /// </remarks>
+    Task<RawFetch?> GetLatestAsync(long sourceId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Rows still waiting for the parser, oldest first. Pass a source id to

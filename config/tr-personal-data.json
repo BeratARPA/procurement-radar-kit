@@ -1,0 +1,30 @@
+{
+  "_comment": "Data, not code. İlanlarda geçen görevli ad-soyad ve telefonları veritabanına hiç girmemeli (spec Bölüm 12). Bu etiketlerden sonrası maskelenir.",
+  "mask": "***",
+  "contact_labels": [
+    "irtibat kişisi",
+    "irtibat telefonu",
+    "irtibat",
+    "iletişim kişisi",
+    "iletişim bilgileri",
+    "iletişim",
+    "bilgi için",
+    "ayrıntılı bilgi için",
+    "başvuru için",
+    "yetkili kişi",
+    "yetkili",
+    "sorumlu",
+    "telefon",
+    "tel",
+    "gsm",
+    "cep",
+    "faks",
+    "fax",
+    "e-posta",
+    "eposta",
+    "e-mail",
+    "mail"
+  ],
+  "_label_note": "Etiketten sonrası, cümle sonuna veya satır sonuna kadar maskelenir. Fazla maskelemek eksik maskelemekten iyidir: silinen bir cümle bilgi kaybı, kalan bir telefon numarası KVKK sorunudur.",
+  "_pattern_note": "Telefon ve e-posta desenleri koddadır çünkü Türkçe kelime değil biçim tanırlar. IKN (2026/123456) telefon sanılmamalı — bunu doğrulayan test var."
+}

@@ -1,5 +1,6 @@
 using Dapper;
 using ProcurementRadar.Domain.Entities;
+using ProcurementRadar.Domain.Enums;
 using ProcurementRadar.Domain.Repositories;
 
 namespace ProcurementRadar.Persistence;
@@ -28,12 +29,31 @@ public sealed class SourceRepository : ISourceRepository
         return rows.AsList();
     }
 
+    public async Task<Source?> GetByIdAsync(long sourceId, CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return await connection.QuerySingleOrDefaultAsync<Source>(
+            new CommandDefinition(
+                SourceSql.GetById,
+                new { SourceId = sourceId },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
     public async Task<bool> UpsertAsync(Source source, CancellationToken cancellationToken)
     {
         var parameters = new
         {
             source.AuthorityName,
-            source.AuthorityType,
+            // Sent as text, not as the enum. Dapper resolves an enum to its
+            // underlying integer before it ever consults a type handler, so
+            // passing NoticeStatus.New or AuthorityType.Municipality straight
+            // through writes "0" and "1" into a text column. The handler still
+            // does the reading; only the writing side needs saying out loud.
+            AuthorityType = EnumText.ToText(source.AuthorityType),
             source.Province,
             source.District,
             source.Url,

@@ -17,7 +17,11 @@ public sealed record RawNotice(
     string? Description = null,
     DateTimeOffset? BidDeadlineAt = null,
     decimal? EstimatedCost = null,
-    IReadOnlyList<string>? DocumentUrls = null)
+    IReadOnlyList<string>? DocumentUrls = null,
+    // Not in spec.md section 6, but deduplication turns on it: where a page
+    // carries the state's own tender number, that number is the identity and
+    // nothing computed can beat it (spec Bölüm 8). Only EKAP pages have one.
+    string? Ikn = null)
 {
     public IReadOnlyList<string> DocumentUrls { get; init; } = DocumentUrls ?? [];
 }

@@ -34,8 +34,8 @@ internal static class RawFetchSql
             @ContentType, @ContentHash, @BodyPath, @ParserVersion, @IsProcessed)
         """;
 
-    internal const string GetLatestContentHash = """
-        SELECT content_hash
+    internal const string GetLatest = $"""
+        SELECT {SelectColumns}
         FROM raw_fetch
         WHERE source_id = @SourceId
         ORDER BY fetched_at DESC, id DESC

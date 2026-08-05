@@ -61,6 +61,14 @@ internal static class SourceSql
         RETURNING (xmax = 0)
         """;
 
+    // Deliberately not filtered by is_active: reprocessing the archive has to
+    // work for a source that has since been switched off.
+    internal const string GetById = $"""
+        SELECT {SelectColumns}
+        FROM source
+        WHERE id = @SourceId
+        """;
+
     internal const string RecordFetchSuccess = """
         UPDATE source
         SET last_fetch_at        = @Now,

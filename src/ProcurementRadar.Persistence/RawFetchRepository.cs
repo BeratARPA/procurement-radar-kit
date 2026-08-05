@@ -56,15 +56,15 @@ public sealed class RawFetchRepository : IRawFetchRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<string?> GetLatestContentHashAsync(long sourceId, CancellationToken cancellationToken)
+    public async Task<RawFetch?> GetLatestAsync(long sourceId, CancellationToken cancellationToken)
     {
         await using var connection = await _connectionFactory
             .OpenConnectionAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return await connection.ExecuteScalarAsync<string?>(
+        return await connection.QuerySingleOrDefaultAsync<RawFetch>(
             new CommandDefinition(
-                RawFetchSql.GetLatestContentHash,
+                RawFetchSql.GetLatest,
                 new { SourceId = sourceId },
                 cancellationToken: cancellationToken))
             .ConfigureAwait(false);
