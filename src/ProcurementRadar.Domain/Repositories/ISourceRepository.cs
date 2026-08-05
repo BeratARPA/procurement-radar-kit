@@ -8,6 +8,17 @@ public interface ISourceRepository
     Task<IReadOnlyList<Source>> ListActiveAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// Registers a source, or refreshes the definition of one already known
+    /// under the same url. Returns true when the row was new.
+    /// </summary>
+    /// <remarks>
+    /// Only the definition is overwritten. The health columns are left exactly
+    /// as they are, so re-running the seed cannot reset a failure counter or
+    /// wipe <c>last_new_notice_at</c>, which the silent-source alarm reads.
+    /// </remarks>
+    Task<bool> UpsertAsync(Source source, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Records a fetch that reached the page. Clears the failure counter and
     /// moves <c>last_new_notice_at</c> only when the fetch actually produced a
     /// notice we had not seen before, because the silent-source alarm in T-15

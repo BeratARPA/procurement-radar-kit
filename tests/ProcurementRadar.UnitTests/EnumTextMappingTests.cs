@@ -65,7 +65,7 @@ public sealed class EnumTextMappingTests
     }
 
     private static string[] DatabaseTextOf<T>() where T : struct, Enum
-        => Enum.GetValues<T>().Select(SnakeCaseEnumTypeHandler<T>.ToDatabaseText).ToArray();
+        => Enum.GetValues<T>().Select(EnumText.ToText).ToArray();
 
     private static void AssertRoundTrips<T>() where T : struct, Enum
     {
@@ -73,7 +73,7 @@ public sealed class EnumTextMappingTests
 
         foreach (var value in Enum.GetValues<T>())
         {
-            Assert.Equal(value, handler.Parse(SnakeCaseEnumTypeHandler<T>.ToDatabaseText(value)));
+            Assert.Equal(value, handler.Parse(EnumText.ToText(value)));
         }
     }
 }

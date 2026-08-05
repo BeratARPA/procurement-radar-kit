@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Operator commands: `seed` (T-04) and `reparse` (T-10). -->
 
@@ -10,8 +10,25 @@
     <ProjectReference Include="..\ProcurementRadar.Scoring\ProcurementRadar.Scoring.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- SourceSeedReader is a pure function over the seed file's text and is
+         tested on its own, without a database. -->
+    <InternalsVisibleTo Include="ProcurementRadar.UnitTests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <UserSecretsId>d036717f-ad83-4f3b-a7a8-5f6bcb5cead0</UserSecretsId>
   </PropertyGroup>
 
 </Project>

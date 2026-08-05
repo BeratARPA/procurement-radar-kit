@@ -35,6 +35,32 @@ internal static class SourceSql
         ORDER BY last_fetch_at ASC NULLS FIRST, id ASC
         """;
 
+    // The conflict branch rewrites the definition and deliberately leaves every
+    // health column alone: robots_checked_at, last_fetch_at, last_success_at,
+    // last_new_notice_at and consecutive_failures survive a re-seed.
+    //
+    // xmax is zero only on a freshly inserted row, which is how one statement can
+    // report whether this source was already registered.
+    internal const string Upsert = """
+        INSERT INTO source (
+            authority_name, authority_type, province, district, url, adapter_key,
+            adapter_config, poll_interval_minutes, is_active, notes)
+        VALUES (
+            @AuthorityName, @AuthorityType, @Province, @District, @Url, @AdapterKey,
+            @AdapterConfig::jsonb, @PollIntervalMinutes, @IsActive, @Notes)
+        ON CONFLICT (url) DO UPDATE
+            SET authority_name        = EXCLUDED.authority_name,
+                authority_type        = EXCLUDED.authority_type,
+                province              = EXCLUDED.province,
+                district              = EXCLUDED.district,
+                adapter_key           = EXCLUDED.adapter_key,
+                adapter_config        = EXCLUDED.adapter_config,
+                poll_interval_minutes = EXCLUDED.poll_interval_minutes,
+                is_active             = EXCLUDED.is_active,
+                notes                 = EXCLUDED.notes
+        RETURNING (xmax = 0)
+        """;
+
     internal const string RecordFetchSuccess = """
         UPDATE source
         SET last_fetch_at        = @Now,

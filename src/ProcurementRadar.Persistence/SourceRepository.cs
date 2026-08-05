@@ -28,6 +28,31 @@ public sealed class SourceRepository : ISourceRepository
         return rows.AsList();
     }
 
+    public async Task<bool> UpsertAsync(Source source, CancellationToken cancellationToken)
+    {
+        var parameters = new
+        {
+            source.AuthorityName,
+            source.AuthorityType,
+            source.Province,
+            source.District,
+            source.Url,
+            source.AdapterKey,
+            source.AdapterConfig,
+            source.PollIntervalMinutes,
+            source.IsActive,
+            source.Notes
+        };
+
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return await connection.ExecuteScalarAsync<bool>(
+            new CommandDefinition(SourceSql.Upsert, parameters, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
     public Task RecordFetchSuccessAsync(long sourceId, bool foundNewNotice, CancellationToken cancellationToken)
         => ExecuteAsync(
             SourceSql.RecordFetchSuccess,
