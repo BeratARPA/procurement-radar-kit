@@ -46,6 +46,18 @@ public sealed record GenericTableAdapterConfig
     /// <summary>Optional: many listings carry no usable date.</summary>
     public string? DateSelector { get; init; }
 
+    /// <summary>
+    /// Optional: where a listing puts the time of day in its own column, apart
+    /// from the date. Its text is appended to the date before parsing.
+    /// </summary>
+    /// <remarks>
+    /// Ignored unless <see cref="DateSelector"/> is set. Leaving it out where
+    /// the site does split them is not a harmless simplification: the date alone
+    /// falls back to 23:59, so a deadline of 12:00 is stored as most of a day
+    /// later and the notifier counts down to an hour that has already passed.
+    /// </remarks>
+    public string? TimeSelector { get; init; }
+
     /// <summary>Optional: most listings carry no amount at all.</summary>
     public string? AmountSelector { get; init; }
 
@@ -114,6 +126,7 @@ public sealed record GenericTableAdapterConfig
             BaseUrl = shape.BaseUrl.Trim(),
             LinkSelector = Optional(shape.LinkSelector),
             DateSelector = Optional(shape.DateSelector),
+            TimeSelector = Optional(shape.TimeSelector),
             AmountSelector = Optional(shape.AmountSelector),
             DocumentSelector = Optional(shape.DocumentSelector)
         };
@@ -141,6 +154,9 @@ public sealed record GenericTableAdapterConfig
 
         [JsonPropertyName("date_selector")]
         public string? DateSelector { get; init; }
+
+        [JsonPropertyName("time_selector")]
+        public string? TimeSelector { get; init; }
 
         [JsonPropertyName("amount_selector")]
         public string? AmountSelector { get; init; }

@@ -66,6 +66,27 @@ public sealed class GenericTableAdapterConfigTests
     }
 
     [Fact]
+    public void A_time_selector_is_read_when_present()
+    {
+        var json = Complete
+            .Replace("\"amount_selector\": null",
+                "\"amount_selector\": null, \"time_selector\": \"td:nth-child(4)\"",
+                StringComparison.Ordinal);
+
+        Assert.True(GenericTableAdapterConfig.TryRead(json, out var config, out _));
+        Assert.Equal("td:nth-child(4)", config.TimeSelector);
+    }
+
+    [Fact]
+    public void A_config_without_a_time_selector_is_still_valid()
+    {
+        // Most listings keep the time in the same cell as the date, or have no
+        // time at all. This stays optional.
+        Assert.True(GenericTableAdapterConfig.TryRead(Complete, out var config, out _));
+        Assert.Null(config.TimeSelector);
+    }
+
+    [Fact]
     public void A_document_selector_is_read_when_present()
     {
         var json = Complete

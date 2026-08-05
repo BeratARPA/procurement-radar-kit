@@ -12,7 +12,7 @@
     "perşembe", "persembe", "cuma", "cumartesi", "pazar"
   ],
   "noise_to_strip": [
-    "tarihinde", "tarihine kadar", "saatine kadar", "saat",
+    "tarihinde", "tarihine kadar", "saatine kadar", "saat:", "saat",
     "günü", "gunu", "'a kadar", "'e kadar", "son teklif verme tarihi",
     "son teklif tarihi", "ihale tarihi", ":",
     "–", "—"

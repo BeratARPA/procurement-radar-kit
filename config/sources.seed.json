@@ -1,7 +1,7 @@
 {
   "_comment": "Kaynak kayıt defteri. url alanı TODO olan kayıtlar seed sırasında atlanır. Gerçek sayfayı ziyaret etmeden URL yazmayın.",
   "_how_to_fill": "docs/source-collection.md dosyasına bakın. Bir aday sayfayı canlıya dokunmadan denemek için: dotnet run --project src/ProcurementRadar.Cli -- check-source --html <kayıtlı sayfa> --config <adapter_config json>",
-  "_status": "5 Ağustos 2026: 26 kaynak aktif, 24 kaynak kayıtlı ama pasif. Aktif olan her kaynak için robots.txt okundu, sayfa indirildi, selector'lar o sayfadan çıkarıldı, gerçek GenericTableAdapter kaydedilmiş sayfaya karşı çalıştırıldı ve sayfa tests/ProcurementRadar.Parsers.Tests/fixtures/generic_table/ altına fixture olarak kondu. Pasif olanların sebebi tek tek notes alanında yazılı — hiçbiri unutulmuş değil.",
+  "_status": "5 Ağustos 2026: 31 kaynak aktif, 33 kaynak kayıtlı ama pasif. Aktif olan her kaynak için robots.txt okundu, sayfa indirildi, selector'lar o sayfadan çıkarıldı, gerçek GenericTableAdapter kaydedilmiş sayfaya karşı çalıştırıldı ve sayfa tests/ProcurementRadar.Parsers.Tests/fixtures/generic_table/ altına fixture olarak kondu. Pasif olanların sebebi tek tek notes alanında yazılı — hiçbiri unutulmuş değil.",
   "sources": [
     {
       "authority_name": "Ankara Çevre Şehircilik ve İklim Değişikliği İl Müdürlüğü",
@@ -786,6 +786,210 @@
       "poll_interval_minutes": 15,
       "is_active": false,
       "notes": "duyurular.html genel duyuru sayfası — ilk satır 'Kadına Yönelik Şiddetle Mücadelede Biz Varız'. İhaleye özel bir sayfa aranmalı."
+    },
+    {
+      "authority_name": "Ankara Bilkent Şehir Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Çankaya",
+      "url": "https://ankarasehir.saglik.gov.tr/TR-408391/dogrudan-temin-ilanlari.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".page-content-body-hc table.table-bordered thead tr:nth-child(n+2)",
+        "title_selector": "th:nth-child(3)",
+        "link_selector": null,
+        "date_selector": "th:nth-child(6)",
+        "time_selector": "th:nth-child(7)",
+        "amount_selector": null,
+        "document_selector": "th:nth-child(8) a",
+        "base_url": "https://ankarasehir.saglik.gov.tr"
+      },
+      "notes": "Doğrudan temin listesi — projenin asıl hedefi, tek statik tablo, JS gerekmiyor. Tabloda veri satırları <tbody> değil <thead> içinde ve hücreler <td> değil <th>; ilk satır başlık olduğu için seçici ikinciden başlıyor. 27 satırın tamamı 8 hücreli, sayfada hiç colspan/rowspan yok, bu yüzden konum tabanlı seçiciler güvenli. SON TEKLİF VERME TARİHİ (6. sütun) ile SAATİ (7. sütun) ayrı hücrelerde — time_selector bu yüzden var. Saat okunmazsa 12:00'lık son teklif 23:59 olarak yazılır, yani sistem size olduğundan on iki saat fazla süre olduğunu söyler. 5. sütun görevli baş harfleri ve dahili telefon içeriyor; hiçbir seçici onu seçmiyor, veritabanına girmiyor. Sunucu ETag göndermiyor ve Last-Modified'ı her istekte o ana ayarlıyor, If-Modified-Since'i de yok sayıyor — bu kaynakta 304 hiç oluşmayacak, değişim tespiti tamamen content_hash'e dayanıyor. Liste yalnızca ~4 günlük pencere tutuyor, ilanlar hızla düşüyor: kaçırılan tarama kalıcı veri kaybı demek. Fixture: bilkent-sehir-hastanesi.html."
+    },
+    {
+      "authority_name": "Ankara Atatürk Sanatoryum Eğitim ve Araştırma Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Keçiören",
+      "url": "https://sanatoryumdh.saglik.gov.tr/TR-646042/dogrudan-temin.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "ul#page_listed > li",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": null,
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://sanatoryumdh.saglik.gov.tr"
+      },
+      "notes": "Doğrudan temin ilanları; basit <li> listesi, her satır bir detay sayfasına gidiyor. Listede tarih sütunu yok ve başlıklarda da tarih geçmiyor, bu yüzden date_selector boş — son teklif tarihi ancak detay sayfasından okunabilir. Keçiören EAH ilanları da bu site üzerinden yayınlanıyor (K Blok), yani iki hastane tek kaynakta. Fixture: sanatoryum-dogrudan-temin.html."
+    },
+    {
+      "authority_name": "Ankara Atatürk Sanatoryum Eğitim ve Araştırma Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Keçiören",
+      "url": "https://sanatoryumdh.saglik.gov.tr/TR-646043/ihale.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "ul#page_listed > li",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "a",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://sanatoryumdh.saglik.gov.tr"
+      },
+      "notes": "Aynı hastanenin ihale listesi. Ayrı bir tarih sütunu yok ama ihale anı başlığın içinde parantezle veriliyor: '... İhalesi (02.04.2026 saat:10:00)'. date_selector bu yüzden başlığın kendisini gösteriyor; TurkishDateParser serbest metinden okuyor. 15 satırın 3'ünde tarih var, kalanında başlık tarih taşımıyor ve null dönüyor — bu beklenen davranış, hata değil. Fixture: sanatoryum-ihale.html."
+    },
+    {
+      "authority_name": "Ankara Eğitim ve Araştırma Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Altındağ",
+      "url": "https://ankaraeah.saglik.gov.tr/TR-1127915/ihale-on-hazirlik-yaklasik-maliyet-ilanlari.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".page-content-body-hc table tr[class*=\"telerik-reTableOddRow\"], .page-content-body-hc table tr[class*=\"telerik-reTableEvenRow\"]",
+        "title_selector": "td:nth-child(2)",
+        "link_selector": null,
+        "date_selector": "td:nth-child(5)",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": "td:nth-child(3) a, td:nth-child(4) a",
+        "base_url": "https://ankaraeah.saglik.gov.tr"
+      },
+      "notes": "Yaklaşık maliyet / ihale ön hazırlık ilanları — idarenin fiyat teklifi topladığı aşama, yani ihale açılmadan önceki en erken uyarı. Satırlar teklif metnini .xlsx, teknik şartnameyi .pdf olarak doğrudan bağlıyor. UYARI: sayfada şu an tek bir kayıt var ve tarihi 23.05.2024 — sayfa terk edilmiş olabilir. Aktif bırakıldı çünkü maliyeti bir istek, ve T-15'in sessiz kaynak alarmı zaten 30 gün sonra haber verir. Birinci sütun görevli baş harflerini taşıyor, hiçbir seçici onu seçmiyor. Fixture: ankara-eah-yaklasik-maliyet.html."
+    },
+    {
+      "authority_name": "Ankara Valiliği Yatırım İzleme ve Koordinasyon Başkanlığı",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://www.ankara.gov.tr/yikob/ihale-ilanlari",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": ".announcementdaha .ministry-announcements",
+        "title_selector": "a.announce-text",
+        "link_selector": "a.announce-text",
+        "date_selector": null,
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "base_url": "https://www.ankara.gov.tr"
+      },
+      "notes": "Valiliğin YİKOB ihale ilanları sayfası. Tarih hücresi '12 Ara 2023' biçiminde kısaltılmış ay kullanıyor ve TurkishDateParser kısaltmaları tanımıyor; ayrıca o tarih yayın tarihi, ihale tarihi değil. Bu yüzden date_selector kasten boş. Sayfadaki en yeni kayıt Aralık 2023 — kaynak uzun süredir sessiz olabilir, T-15 alarmı bunu söyleyecek. Fixture: ankara-valiligi-yikob.html."
+    },
+    {
+      "authority_name": "Ankara Bilkent Şehir Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Çankaya",
+      "url": "https://ankarasehir.saglik.gov.tr/TR-408394/ihale-ilanlari.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Aynı hastanenin ihale (doğrudan temin dışı) sayfası. URL ve robots doğrulandı, sayfa açılıyor ama şu an kayıt yok — satır yapısı görülmeden seçici yazılmaz. Doğrudan temin sayfası aktif."
+    },
+    {
+      "authority_name": "Ankara Eğitim ve Araştırma Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Altındağ",
+      "url": "https://ankaraeah.saglik.gov.tr/TR-1128036/dogrudan-temin-teknik-birim-alimlari.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Doğrudan temin — teknik birim alımları. URL doğrulandı, şu an boş. İlan çıktığında aynı kurumun yaklaşık maliyet sayfasındaki telerik tablo yapısı denenebilir."
+    },
+    {
+      "authority_name": "Ankara Eğitim ve Araştırma Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Altındağ",
+      "url": "https://ankaraeah.saglik.gov.tr/TR-1128276/dogrudan-temin-sarf-malzeme-alimlari.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Doğrudan temin — sarf malzeme alımları. URL doğrulandı, şu an boş."
+    },
+    {
+      "authority_name": "Ankara Etlik Zübeyde Hanım Kadın Hastalıkları Eğitim ve Araştırma Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Keçiören",
+      "url": "https://ezheah.saglik.gov.tr/TR-396411/satin-alma-duyurulari.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Satın alma duyuruları sayfası doğrulandı ama şu an kayıt yok."
+    },
+    {
+      "authority_name": "Ankara Ulucanlar Göz Eğitim ve Araştırma Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Altındağ",
+      "url": "https://ulucanlargozeah.saglik.gov.tr/TR-67565/satin-alma.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Satın alma sayfası doğrulandı, şu an kayıt yok."
+    },
+    {
+      "authority_name": "Ankara Etlik Şehir Hastanesi",
+      "authority_type": "hospital",
+      "province": "Ankara",
+      "district": "Keçiören",
+      "url": "https://etliksehir.saglik.gov.tr/TR-870258/dogrudan-temin-ilanlari.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "Adres Bilkent Şehir Hastanesi'nin şablonuyla birebir aynı ve doğru görünüyor ama sunucu tarama sırasında yanıt vermedi (unreachable). Geçici olabilir; tekrar denenmeli. Yanıt verirse Bilkent'in seçicileri büyük ihtimalle olduğu gibi çalışır."
+    },
+    {
+      "authority_name": "Ankara Gençlik ve Spor İl Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ankara.gsb.gov.tr/Sayfalar/2142/313/ihaleler.aspx",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "İhale sayfası bulundu ve robots serbest, ama sayfada şu an ilan yok. İlk turda 'bulunamadı' denmişti, bu tur bulundu."
+    },
+    {
+      "authority_name": "Ankara İl Emniyet Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://www.ankara.pol.tr/duyurular",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "8 kayıt ayrıştı ama sayfa genel duyuru akışı: ilk satır 'Özel Güvenlik Eğitim Kurumları Ders Saati Taban Ücretleri'. İhaleye özel bir sayfa bulunamadı."
+    },
+    {
+      "authority_name": "Başkent Doğalgaz Dağıtım A.Ş.",
+      "authority_type": "soe_subsidiary",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://baskentdogalgaz.com.tr/Ihale-Duyurulari/TR/346/346.aspx",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "notes": "İhale duyuruları sayfası JavaScript ile kuruluyor; statik gövdede satır yok."
     }
   ]
 }

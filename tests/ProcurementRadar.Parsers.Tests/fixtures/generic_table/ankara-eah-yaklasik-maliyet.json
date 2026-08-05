@@ -1,0 +1,20 @@
+{
+  "_comment": "Ankara Eğitim ve Araştırma Hastanesi. https://ankaraeah.saglik.gov.tr/TR-1127915/ihale-on-hazirlik-yaklasik-maliyet-ilanlari.html adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Yaklaşık maliyet / ihale ön hazırlık ilanları — idarenin fiyat teklifi topladığı aşama, yani ihale açılmadan önceki en erken uyarı. Satırlar teklif metnini .xlsx, teknik şartnameyi .pdf olarak doğrudan bağlıyor. UYARI: sayfada şu an tek bir kayıt var ve tarihi 23.05.2024 — sayfa terk edilmiş olabilir. Aktif bırakıldı çünkü maliyeti bir istek, ve T-15'in sessiz kaynak alarmı zaten 30 gün sonra haber verir. Birinci sütun görevli baş harflerini taşıyor, hiçbir seçici onu seçmiyor.",
+  "adapter_config": {
+    "row_selector": ".page-content-body-hc table tr[class*=\"telerik-reTableOddRow\"], .page-content-body-hc table tr[class*=\"telerik-reTableEvenRow\"]",
+    "title_selector": "td:nth-child(2)",
+    "link_selector": null,
+    "date_selector": "td:nth-child(5)",
+    "time_selector": null,
+    "amount_selector": null,
+    "document_selector": "td:nth-child(3) a, td:nth-child(4) a",
+    "base_url": "https://ankaraeah.saglik.gov.tr"
+  },
+  "captured_bytes": 64477,
+  "captured_sha256": "d28925d04d32840ca2b4fbea19d1e0d05c7196a3b7e8007e17c1a8a984ce04ae",
+  "expected_notice_count": 1,
+  "expected_first_title": "16 KALEM YENİDOĞAN YOĞUN BAKIM TIBBİ SARF MALZEME ALIMI",
+  "expected_first_deadline_utc": "2024-05-23T20:59:00Z",
+  "expected_first_document_count": 2
+}

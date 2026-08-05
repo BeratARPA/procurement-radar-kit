@@ -1,0 +1,18 @@
+{
+  "_comment": "Ankara Atatürk Sanatoryum Eğitim ve Araştırma Hastanesi. https://sanatoryumdh.saglik.gov.tr/TR-646042/dogrudan-temin.html adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Doğrudan temin ilanları; basit <li> listesi, her satır bir detay sayfasına gidiyor. Listede tarih sütunu yok ve başlıklarda da tarih geçmiyor, bu yüzden date_selector boş — son teklif tarihi ancak detay sayfasından okunabilir. Keçiören EAH ilanları da bu site üzerinden yayınlanıyor (K Blok), yani iki hastane tek kaynakta.",
+  "adapter_config": {
+    "row_selector": "ul#page_listed > li",
+    "title_selector": "a",
+    "link_selector": "a",
+    "date_selector": null,
+    "time_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://sanatoryumdh.saglik.gov.tr"
+  },
+  "captured_bytes": 102204,
+  "captured_sha256": "e5341786236fb45be99a99ca325e36b31259d7169dc6d75966e8f068a45d1ae8",
+  "expected_notice_count": 15,
+  "expected_first_title": "DÜĞÜMSÜZ (ÇENTİKLİ) POLYGLECAPRONE POLYGLECAPRONE20 26 MM ½ YUVARLAK 15 CM VE 30 CM LOOP ALIMI"
+}

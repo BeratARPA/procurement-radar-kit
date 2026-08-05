@@ -96,6 +96,22 @@ public sealed class TurkishDateParserTests
     }
 
     [Fact]
+    public void A_colon_stuck_to_the_word_saat_does_not_cost_the_time()
+    {
+        // Ankara Atatürk Sanatoryum EAH puts the tender moment inside the title:
+        // "... İhalesi (02.04.2026 saat:10:00)". Stripping the word "saat" alone
+        // leaves ":10:00", the colon is not between two digits so it survives,
+        // and the time pattern stops matching one character short of the hour.
+        var result = Parser.TryParseDetailed(
+            "2026 Yılı 96 Kalem Tıbbi Sarf ve Laboratuvar Malzeme İhalesi (02.04.2026 saat:10:00)");
+
+        Assert.False(result.TimeWasAssumed);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-04-02T07:00:00Z", System.Globalization.CultureInfo.InvariantCulture),
+            result.Value);
+    }
+
+    [Fact]
     public void An_ascii_hyphen_is_still_a_date_separator()
     {
         Assert.Equal(

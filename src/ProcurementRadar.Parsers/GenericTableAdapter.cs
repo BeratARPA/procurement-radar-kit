@@ -153,7 +153,7 @@ public sealed class GenericTableAdapter : ISourceAdapter
         // and the conversion out of Europe/Istanbul has to happen in one place.
         var deadline = config.DateSelector is null
             ? null
-            : _dateParser.TryParse(Text(row, config.DateSelector));
+            : _dateParser.TryParse(DateText(row, config));
 
         var amount = config.AmountSelector is null
             ? null
@@ -168,6 +168,33 @@ public sealed class GenericTableAdapter : ISourceAdapter
             DocumentUrls: DocumentUrls(row, config));
 
         return true;
+    }
+
+    /// <summary>
+    /// The text the date parser is given, which is the date cell plus the time
+    /// cell when the listing keeps them apart.
+    /// </summary>
+    /// <remarks>
+    /// Splitting them across two columns is common in these tables - Ankara
+    /// Bilkent Şehir Hastanesi heads them "SON TEKLİF VERME TARİHİ" and "SON
+    /// TEKLİF VERME SAATİ" - and reading only the first is not a small loss. A
+    /// date with no time falls back to 23:59, so a notice that actually closes
+    /// at 12:00 is recorded as closing eleven hours later, and the notifier
+    /// reports time remaining on something already shut. That is the dangerous
+    /// direction of the two: it does not make you hurry, it makes you relax.
+    /// </remarks>
+    private static string? DateText(IElement row, GenericTableAdapterConfig config)
+    {
+        var date = Text(row, config.DateSelector!);
+
+        if (config.TimeSelector is not { } timeSelector || string.IsNullOrWhiteSpace(date))
+        {
+            return date;
+        }
+
+        var time = Text(row, timeSelector);
+
+        return string.IsNullOrWhiteSpace(time) ? date : $"{date} {time}";
     }
 
     private static IReadOnlyList<string> DocumentUrls(IElement row, GenericTableAdapterConfig config)

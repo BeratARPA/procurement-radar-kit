@@ -1,0 +1,19 @@
+{
+  "_comment": "Ankara Atatürk Sanatoryum Eğitim ve Araştırma Hastanesi. https://sanatoryumdh.saglik.gov.tr/TR-646043/ihale.html adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Aynı hastanenin ihale listesi. Ayrı bir tarih sütunu yok ama ihale anı başlığın içinde parantezle veriliyor: '... İhalesi (02.04.2026 saat:10:00)'. date_selector bu yüzden başlığın kendisini gösteriyor; TurkishDateParser serbest metinden okuyor. 15 satırın 3'ünde tarih var, kalanında başlık tarih taşımıyor ve null dönüyor — bu beklenen davranış, hata değil.",
+  "adapter_config": {
+    "row_selector": "ul#page_listed > li",
+    "title_selector": "a",
+    "link_selector": "a",
+    "date_selector": "a",
+    "time_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://sanatoryumdh.saglik.gov.tr"
+  },
+  "captured_bytes": 103168,
+  "captured_sha256": "95f0cc1904c4217b260cc233c7e61d4ade1b1386fe14c733d1e1c963f2caa6f0",
+  "expected_notice_count": 15,
+  "expected_first_title": "2026 Yılı 96 Kalem Tıbbi Sarf ve Laboratuvar Malzeme İhalesi (02.04.2026 saat:10:00)",
+  "expected_first_deadline_utc": "2026-04-02T07:00:00Z"
+}

@@ -1,0 +1,20 @@
+{
+  "_comment": "Ankara Bilkent Şehir Hastanesi. https://ankarasehir.saglik.gov.tr/TR-408391/dogrudan-temin-ilanlari.html adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Doğrudan temin listesi — projenin asıl hedefi, tek statik tablo, JS gerekmiyor. Tabloda veri satırları <tbody> değil <thead> içinde ve hücreler <td> değil <th>; ilk satır başlık olduğu için seçici ikinciden başlıyor. 27 satırın tamamı 8 hücreli, sayfada hiç colspan/rowspan yok, bu yüzden konum tabanlı seçiciler güvenli. SON TEKLİF VERME TARİHİ (6. sütun) ile SAATİ (7. sütun) ayrı hücrelerde — time_selector bu yüzden var. Saat okunmazsa 12:00'lık son teklif 23:59 olarak yazılır, yani sistem size olduğundan on iki saat fazla süre olduğunu söyler. 5. sütun görevli baş harfleri ve dahili telefon içeriyor; hiçbir seçici onu seçmiyor, veritabanına girmiyor. Sunucu ETag göndermiyor ve Last-Modified'ı her istekte o ana ayarlıyor, If-Modified-Since'i de yok sayıyor — bu kaynakta 304 hiç oluşmayacak, değişim tespiti tamamen content_hash'e dayanıyor. Liste yalnızca ~4 günlük pencere tutuyor, ilanlar hızla düşüyor: kaçırılan tarama kalıcı veri kaybı demek.",
+  "adapter_config": {
+    "row_selector": ".page-content-body-hc table.table-bordered thead tr:nth-child(n+2)",
+    "title_selector": "th:nth-child(3)",
+    "link_selector": null,
+    "date_selector": "th:nth-child(6)",
+    "time_selector": "th:nth-child(7)",
+    "amount_selector": null,
+    "document_selector": "th:nth-child(8) a",
+    "base_url": "https://ankarasehir.saglik.gov.tr"
+  },
+  "captured_bytes": 201866,
+  "captured_sha256": "c4bedb85d45157ba6b92847825f316063b00510a35b11be6cdb19c70e49a2939",
+  "expected_notice_count": 26,
+  "expected_first_title": "2765-Nöroşirurji Ortopedi Ameliyathanesi 3 Kalem Malzeme Alımı",
+  "expected_first_deadline_utc": "2026-08-03T09:00:00Z",
+  "expected_first_document_count": 1
+}

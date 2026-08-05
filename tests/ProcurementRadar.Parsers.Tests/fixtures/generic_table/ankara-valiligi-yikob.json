@@ -1,0 +1,18 @@
+{
+  "_comment": "Ankara Valiliği Yatırım İzleme ve Koordinasyon Başkanlığı. https://www.ankara.gov.tr/yikob/ihale-ilanlari adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Valiliğin YİKOB ihale ilanları sayfası. Tarih hücresi '12 Ara 2023' biçiminde kısaltılmış ay kullanıyor ve TurkishDateParser kısaltmaları tanımıyor; ayrıca o tarih yayın tarihi, ihale tarihi değil. Bu yüzden date_selector kasten boş. Sayfadaki en yeni kayıt Aralık 2023 — kaynak uzun süredir sessiz olabilir, T-15 alarmı bunu söyleyecek.",
+  "adapter_config": {
+    "row_selector": ".announcementdaha .ministry-announcements",
+    "title_selector": "a.announce-text",
+    "link_selector": "a.announce-text",
+    "date_selector": null,
+    "time_selector": null,
+    "amount_selector": null,
+    "document_selector": null,
+    "base_url": "https://www.ankara.gov.tr"
+  },
+  "captured_bytes": 409941,
+  "captured_sha256": "e57a647007c956ebde138aa43d4db5e996680e6f968f9783672b3619d4eb1d78",
+  "expected_notice_count": 10,
+  "expected_first_title": "Yatırım İzleme ve Koordinasyon Başkanlığı Taşınmaz Satışı İlanı"
+}
