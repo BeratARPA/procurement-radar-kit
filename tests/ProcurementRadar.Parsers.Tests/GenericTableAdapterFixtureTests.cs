@@ -92,6 +92,41 @@ public sealed class GenericTableAdapterFixtureTests
         }
     }
 
+    [Fact]
+    public void Every_captured_page_is_still_the_bytes_the_server_sent()
+    {
+        // A fixture is evidence, and evidence that has been edited is no longer
+        // evidence. This is not hypothetical: git's line-ending normalisation was
+        // storing one of these pages as 126 263 bytes where the server had sent
+        // 129 075, and because Windows converted them back on checkout, nothing
+        // looked wrong locally. .gitattributes now marks the fixture directory
+        // -text; this test is what notices if that ever stops being true.
+        foreach (var htmlPath in CapturedPages())
+        {
+            var expectationPath = Path.ChangeExtension(htmlPath, ".json");
+            var expectation = JsonSerializer.Deserialize<Expectation>(File.ReadAllText(expectationPath))!;
+
+            if (expectation.CapturedSha256 is not { Length: > 0 } expectedHash)
+            {
+                continue;
+            }
+
+            var content = File.ReadAllBytes(htmlPath);
+            var name = Path.GetFileName(htmlPath);
+            var actualHash = Convert
+                .ToHexString(System.Security.Cryptography.SHA256.HashData(content))
+                .ToLowerInvariant();
+
+            Assert.True(
+                expectation.CapturedBytes == content.LongLength && expectedHash == actualHash,
+                $"{name} is no longer the page that was captured from the live site. "
+                    + $"Expected {expectation.CapturedBytes} bytes / {expectedHash}, "
+                    + $"found {content.LongLength} bytes / {actualHash}. "
+                    + "If the site changed, add the new page as a second fixture rather than "
+                    + "overwriting this one - the archive still holds pages in the old shape.");
+        }
+    }
+
     private static IEnumerable<string> CapturedPages()
         => Directory.Exists(FixtureDirectory)
             ? Directory.EnumerateFiles(FixtureDirectory, "*.html").Order(StringComparer.Ordinal)
@@ -124,6 +159,13 @@ public sealed class GenericTableAdapterFixtureTests
 
         [JsonPropertyName("expected_first_document_count")]
         public int? ExpectedFirstDocumentCount { get; init; }
+
+        /// <summary>Size of the page as the server sent it. Optional, but paired with the hash.</summary>
+        [JsonPropertyName("captured_bytes")]
+        public long CapturedBytes { get; init; }
+
+        [JsonPropertyName("captured_sha256")]
+        public string? CapturedSha256 { get; init; }
     }
 
     /// <summary>Parse must never reach the network, so this would throw if it did.</summary>

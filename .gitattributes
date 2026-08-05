@@ -1,0 +1,24 @@
+# Source files are normalised to LF in the repository, so a diff reads the same
+# on every machine and nobody sees a whole file rewritten because of a checkout.
+* text=auto
+
+# Fixtures are the exception, and the reason this file exists.
+#
+# A fixture is a copy of the bytes an authority's server actually sent. Turkish
+# public sites are largely IIS and send CRLF, and with normalisation on, git was
+# storing 126 263 bytes for a page the server sent as 129 075 - 2 812 line
+# endings quietly rewritten. On Windows the checkout converted them back, so
+# nothing looked wrong; on the Linux machine this is meant to run on (D-10) the
+# fixture would have differed from the captured page by every line.
+#
+# D-09 says a fixture must be a real captured page, and D-11 says the archive
+# holds bytes rather than decoded text, for the same reason: what gets modified
+# on the way in cannot be recovered by reprocessing later. A fixture git has
+# edited is no longer evidence of what the site returned.
+tests/ProcurementRadar.Parsers.Tests/fixtures/** -text
+
+# Archived bodies, if one ever ends up tracked. Compressed data must not be
+# touched at all.
+*.gz -text
+*.zip -text
+*.pdf -text

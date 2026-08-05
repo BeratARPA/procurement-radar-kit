@@ -10,6 +10,9 @@
     "document_selector": "a",
     "base_url": "https://ankaraism.saglik.gov.tr"
   },
+  "_bytes_note": "Sayfanın sunucudan geldiği hali. Bkz. diğer fixture'ın aynı alanı.",
+  "captured_bytes": 120185,
+  "captured_sha256": "62521f3f68d2d6579dec967e9119b5abb3d523552135f6271822526031dd3c4e",
   "expected_notice_count": 1,
   "expected_first_title": "PROTON TERAPİ HİZMETLERİ ALIMI İÇİN UYGULANACAK PAZAR TESTİ ÖN YETERLİK İLANI",
   "expected_first_deadline_utc": "2026-08-14T14:00:00Z",
