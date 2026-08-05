@@ -8,4 +8,15 @@
     <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Polly" Version="8.7.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The politeness gate's wait calculation is checked directly. -->
+    <InternalsVisibleTo Include="ProcurementRadar.UnitTests" />
+  </ItemGroup>
+
 </Project>
