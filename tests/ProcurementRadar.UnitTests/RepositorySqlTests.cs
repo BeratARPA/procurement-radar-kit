@@ -12,12 +12,17 @@ namespace ProcurementRadar.UnitTests;
 /// </summary>
 public sealed class RepositorySqlTests
 {
-    // Each SQL holder works against exactly one table.
-    private static readonly (Type Holder, string Table)[] SqlHolders =
+    // Which tables each SQL holder is allowed to name. Most work against one;
+    // the notification queries join across four to assemble a message.
+    private static readonly (Type Holder, string[] Tables)[] SqlHolders =
     [
-        (typeof(SourceSql), "source"),
-        (typeof(RawFetchSql), "raw_fetch"),
-        (typeof(NoticeSql), "procurement_notice")
+        (typeof(SourceSql), ["source"]),
+        (typeof(RawFetchSql), ["raw_fetch"]),
+        (typeof(NoticeSql), ["procurement_notice"]),
+        (typeof(NoticeScoreSql), ["notice_score"]),
+        (typeof(NoticeDocumentSql), ["notice_document"]),
+        (typeof(NotificationSql),
+            ["notification", "procurement_notice", "notice_score", "notice_document"])
     ];
 
     // Words that follow FROM/INTO/UPDATE/JOIN without being a table name.
@@ -115,7 +120,7 @@ public sealed class RepositorySqlTests
         var problems = new List<string>();
         var checkedColumns = 0;
 
-        foreach (var (holder, table) in SqlHolders)
+        foreach (var (holder, tables) in SqlHolders)
         {
             foreach (var (name, sql) in StatementsOf(holder))
             {
@@ -124,9 +129,11 @@ public sealed class RepositorySqlTests
                     var column = match.Groups["column"].Value;
                     checkedColumns++;
 
-                    if (!_schema.HasColumn(table, column))
+                    if (!tables.Any(table => _schema.HasColumn(table, column)))
                     {
-                        problems.Add($"{name} selects '{column}', which is not a column of '{table}'");
+                        problems.Add(
+                            $"{name} selects '{column}', which is not a column of "
+                            + string.Join(" or ", tables));
                     }
                 }
             }

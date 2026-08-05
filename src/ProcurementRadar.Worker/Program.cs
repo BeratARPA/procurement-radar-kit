@@ -5,8 +5,10 @@ using ProcurementRadar.Domain.Fetching;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Domain.Parsing;
 using ProcurementRadar.Domain.Repositories;
+using ProcurementRadar.Domain.Notifications;
 using ProcurementRadar.Domain.Scoring;
 using ProcurementRadar.Parsers;
+using ProcurementRadar.Notifier;
 using ProcurementRadar.Persistence;
 using ProcurementRadar.Scoring;
 using ProcurementRadar.Worker;
@@ -35,6 +37,7 @@ var datePatterns = TurkishDatePatterns.Load(ReadConfig("tr-date-patterns.json"))
 var normalization = NormalizationRules.Load(ReadConfig("tr-normalization.json"));
 var personalData = PersonalDataRules.Load(ReadConfig("tr-personal-data.json"));
 var keywords = KeywordRules.Load(ReadConfig("keywords.json"));
+var messages = MessageTemplates.Load(ReadConfig("tr-messages.json"));
 
 PersistenceSetup.RegisterTypeHandlers();
 
@@ -61,6 +64,7 @@ builder.Services.AddSingleton<IRawFetchRepository, RawFetchRepository>();
 builder.Services.AddSingleton<INoticeRepository, NoticeRepository>();
 builder.Services.AddSingleton<INoticeScoreRepository, NoticeScoreRepository>();
 builder.Services.AddSingleton<INoticeDocumentRepository, NoticeDocumentRepository>();
+builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 
 builder.Services.AddSingleton(datePatterns);
 builder.Services.AddSingleton<ITurkishDateParser, TurkishDateParser>();
@@ -79,6 +83,32 @@ builder.Services.AddSingleton<DocumentDownloader>();
 builder.Services.AddHostedService<CollectionWorker>();
 builder.Services.AddHostedService<ParseWorker>();
 builder.Services.AddHostedService<DocumentWorker>();
+
+// Telegram is optional at startup. Without a token the rest of the system still
+// collects, archives, parses and scores; it just stays quiet. Refusing to start
+// would make an unfinished bot setup look like a broken worker.
+var botToken = builder.Configuration["PR_TELEGRAM_BOT_TOKEN"];
+var chatId = builder.Configuration["PR_TELEGRAM_CHAT_ID"];
+
+if (!string.IsNullOrWhiteSpace(botToken) && !string.IsNullOrWhiteSpace(chatId))
+{
+    builder.Services.AddSingleton(new TelegramOptions { BotToken = botToken, ChatId = chatId });
+    builder.Services.AddSingleton(messages);
+    builder.Services.AddSingleton(new NotificationOptions { MinimumScore = keywords.NotifyThreshold });
+    builder.Services.AddSingleton<TelegramClient>();
+    builder.Services.AddSingleton<NoticeMessageFormatter>();
+    builder.Services.AddSingleton<NotificationService>();
+    builder.Services.AddSingleton<CallbackProcessor>();
+
+    builder.Services.AddHostedService<NotificationWorker>();
+    builder.Services.AddHostedService<CallbackWorker>();
+}
+else
+{
+    Log.Warning(
+        "PR_TELEGRAM_BOT_TOKEN or PR_TELEGRAM_CHAT_ID is not set; notifications are off. "
+        + "Notices are still collected, parsed and scored. See START-HERE.md step 3.");
+}
 
 using var host = builder.Build();
 

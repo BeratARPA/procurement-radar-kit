@@ -2,7 +2,7 @@ using System.Net;
 
 namespace ProcurementRadar.UnitTests.Fetching;
 
-internal sealed record RecordedRequest(Uri Uri, DateTimeOffset At, HttpRequestHeaders Headers);
+internal sealed record RecordedRequest(Uri Uri, DateTimeOffset At, HttpRequestHeaders Headers, string? Body);
 
 internal sealed record HttpRequestHeaders(string? IfNoneMatch, string? IfModifiedSince, string? UserAgent);
 
@@ -32,6 +32,9 @@ internal sealed class StubHttpMessageHandler : HttpMessageHandler
     {
         var uri = request.RequestUri!;
 
+        // Buffered content, so reading it here cannot block on anything.
+        var body = request.Content?.ReadAsStringAsync(cancellationToken).GetAwaiter().GetResult();
+
         lock (Requests)
         {
             Requests.Add(new RecordedRequest(
@@ -40,7 +43,8 @@ internal sealed class StubHttpMessageHandler : HttpMessageHandler
                 new HttpRequestHeaders(
                     Header(request, "If-None-Match"),
                     Header(request, "If-Modified-Since"),
-                    request.Headers.UserAgent.ToString() is { Length: > 0 } agent ? agent : null)));
+                    request.Headers.UserAgent.ToString() is { Length: > 0 } agent ? agent : null),
+                body));
         }
 
         var ordinal = Requests.Count;

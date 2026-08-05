@@ -1,0 +1,29 @@
+{
+  "_comment": "Data, not code. Telegram mesaj metinleri — okuyan sizsiniz, o yüzden Türkçe (CLAUDE.md dil kuralı). Yeniden derlemeden değiştirilebilsin diye burada.",
+  "_placeholders": "Süslü parantezli alanlar koddan doldurulur: {score} {title} {authority} {cost} {deadline} {remaining} {count} {rationale}. Bilinmeyen bir alan adı yazarsanız olduğu gibi görünür.",
+  "notice": {
+    "header": "{icon} {score}/100 — {title}",
+    "authority": "🏛 {authority}",
+    "cost": "💰 ~{cost}",
+    "deadline": "⏰ Son teklif: {deadline} ({remaining})",
+    "deadline_unknown": "⚠️ Son teklif tarihi okunamadı — ilanı açıp elle kontrol edin",
+    "documents": "📎 Şartname indirildi ({count} dosya)",
+    "rationale": "🔎 Eşleşen: {rationale}"
+  },
+  "reminder_header": "⏳ HATIRLATMA — son teklife az kaldı",
+  "buttons": {
+    "review": "İncele",
+    "not_relevant": "İlgilenmiyoruz"
+  },
+  "remaining": {
+    "days": "kalan {count} gün",
+    "hours": "kalan {count} saat",
+    "minutes": "kalan {count} dakika",
+    "expired": "süre doldu"
+  },
+  "score_icons": [
+    { "at_least": 60, "icon": "🟢" },
+    { "at_least": 30, "icon": "🟡" },
+    { "at_least": 0, "icon": "🔴" }
+  ]
+}
