@@ -18,7 +18,13 @@ public sealed record RawFetch
 
     public string? LastModified { get; init; }
 
-    /// <summary>sha256 of the body, used for change detection.</summary>
+    /// <summary>
+    /// The Content-Type as the server sent it. Kept because the charset it may
+    /// carry cannot be recovered from the archived bytes (D-11).
+    /// </summary>
+    public string? ContentType { get; init; }
+
+    /// <summary>sha256 of the archived bytes, used for change detection.</summary>
     public required string ContentHash { get; init; }
 
     /// <summary>Path of the gzipped body under PR_DATA_DIR (D-04).</summary>

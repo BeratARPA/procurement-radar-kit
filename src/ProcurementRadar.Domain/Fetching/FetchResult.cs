@@ -20,17 +20,17 @@ public enum FetchOutcome
 public sealed record FetchRequest(string Url, string? ETag = null, string? LastModified = null);
 
 /// <summary>
-/// The outcome of one fetch. Nothing here is parsed: the collector never looks
-/// inside the body.
+/// The outcome of one fetch. Nothing here is interpreted: the collector does not
+/// look inside the body, and does not even decide what encoding it is in.
 /// </summary>
 public sealed record FetchResult(
     FetchOutcome Outcome,
     int HttpStatus,
-    string? Body,
+    byte[]? Body,
     string? ETag,
     string? LastModified,
     string? ContentHash,
-    string? CharSet = null)
+    string? ContentType = null)
 {
     public static FetchResult NotModified(string? etag, string? lastModified)
         => new(FetchOutcome.NotModified, 304, null, etag, lastModified, null);

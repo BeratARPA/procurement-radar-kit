@@ -13,14 +13,25 @@ public sealed class RawFetchRepository : IRawFetchRepository
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<long> InsertAsync(RawFetch rawFetch, CancellationToken cancellationToken)
+    public async Task<long> ReserveIdAsync(CancellationToken cancellationToken)
     {
         await using var connection = await _connectionFactory
             .OpenConnectionAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        return await connection.ExecuteScalarAsync<long>(
+            new CommandDefinition(RawFetchSql.ReserveId, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
+    public async Task InsertAsync(RawFetch rawFetch, CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(rawFetch.Id);
+        ArgumentException.ThrowIfNullOrWhiteSpace(rawFetch.BodyPath);
+
         var parameters = new
         {
+            rawFetch.Id,
             rawFetch.SourceId,
             // Normalized rather than trusted: PostgreSQL rejects a timestamptz
             // parameter that does not carry a zero offset, and a caller handing
@@ -29,14 +40,33 @@ public sealed class RawFetchRepository : IRawFetchRepository
             rawFetch.HttpStatus,
             rawFetch.ETag,
             rawFetch.LastModified,
+            rawFetch.ContentType,
             rawFetch.ContentHash,
             rawFetch.BodyPath,
             rawFetch.ParserVersion,
             rawFetch.IsProcessed
         };
 
-        return await connection.ExecuteScalarAsync<long>(
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        await connection.ExecuteAsync(
             new CommandDefinition(RawFetchSql.Insert, parameters, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
+    public async Task<string?> GetLatestContentHashAsync(long sourceId, CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return await connection.ExecuteScalarAsync<string?>(
+            new CommandDefinition(
+                RawFetchSql.GetLatestContentHash,
+                new { SourceId = sourceId },
+                cancellationToken: cancellationToken))
             .ConfigureAwait(false);
     }
 

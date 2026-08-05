@@ -193,7 +193,7 @@ public sealed class HttpFetcherBehaviourTests
     }
 
     [Fact]
-    public async Task A_fetched_body_is_hashed_over_the_bytes_that_arrived()
+    public async Task A_fetched_body_is_handed_on_as_the_bytes_that_arrived()
     {
         const string Body = "<html><body>Yazılım Bakım Hizmeti Alımı</body></html>";
 
@@ -210,12 +210,45 @@ public sealed class HttpFetcherBehaviourTests
             new FetchRequest("https://example.gov.tr/ihaleler"),
             CancellationToken.None);
 
+        var bytes = Encoding.UTF8.GetBytes(Body);
         var expected = Convert.ToHexString(
-            System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(Body))).ToLowerInvariant();
+            System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant();
 
         Assert.Equal(FetchOutcome.Fetched, result.Outcome);
-        Assert.Equal(Body, result.Body);
+        // D-11: bytes, not text. The collector does not decide the encoding.
+        Assert.Equal(bytes, result.Body);
         Assert.Equal(expected, result.ContentHash);
+    }
+
+    [Fact]
+    public async Task The_content_type_travels_with_the_body()
+    {
+        var handler = new StubHttpMessageHandler(
+            TimeProvider.System,
+            (uri, _) =>
+            {
+                if (uri.AbsolutePath == "/robots.txt")
+                {
+                    return StubHttpMessageHandler.NotFound();
+                }
+
+                var response = StubHttpMessageHandler.Text(HttpStatusCode.OK, "<html/>", contentType: null);
+                response.Content.Headers.ContentType =
+                    new System.Net.Http.Headers.MediaTypeHeaderValue("text/html") { CharSet = "windows-1254" };
+
+                return response;
+            });
+
+        using var httpClient = new HttpClient(handler);
+        using var fetcher = new HttpFetcher(httpClient, Immediate, TimeProvider.System, NullLogger<HttpFetcher>.Instance);
+
+        var result = await fetcher.FetchAsync(
+            new FetchRequest("https://example.gov.tr/ihaleler"),
+            CancellationToken.None);
+
+        // The charset in the HTTP header cannot be recovered from the body, so
+        // it has to be carried and stored alongside it.
+        Assert.Equal("text/html; charset=windows-1254", result.ContentType);
     }
 
     [Fact]

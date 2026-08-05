@@ -110,18 +110,23 @@ public sealed class HttpFetcher : IHttpFetcher, IDisposable
                 return FetchResult.Failed(status);
             }
 
+            // The bytes are handed on exactly as they arrived (D-11). Deciding
+            // the character encoding here would bake that decision into the
+            // archive, and a wrong guess could then never be repaired by
+            // reprocessing. The Content-Type travels with them because the
+            // charset it may carry is not recoverable from the body itself.
             var bytes = await response.Content.ReadAsByteArrayAsync(linked.Token).ConfigureAwait(false);
-            var (text, charSet) = BodyDecoder.Decode(bytes, response.Content.Headers.ContentType?.CharSet);
+            var contentType = response.Content.Headers.ContentType?.ToString();
             var contentHash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 
             _logger.LogInformation(
-                "Fetched {Url}: {StatusCode}, {ByteCount} bytes, {CharSet}",
+                "Fetched {Url}: {StatusCode}, {ByteCount} bytes, {ContentType}",
                 uri,
                 status,
                 bytes.Length,
-                charSet);
+                contentType);
 
-            return new FetchResult(FetchOutcome.Fetched, status, text, etag, lastModified, contentHash, charSet);
+            return new FetchResult(FetchOutcome.Fetched, status, bytes, etag, lastModified, contentHash, contentType);
         }
         catch (HttpRequestException exception)
         {

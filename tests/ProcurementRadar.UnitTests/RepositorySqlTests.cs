@@ -51,20 +51,32 @@ public sealed class RepositorySqlTests
     }
 
     [Fact]
-    public void Every_statement_is_non_empty_and_parameterised()
+    public void Every_statement_is_a_compile_time_constant()
     {
         var problems = new List<string>();
 
-        foreach (var (name, sql) in AllStatements())
+        foreach (var (holder, _) in SqlHolders)
         {
-            if (string.IsNullOrWhiteSpace(sql))
+            foreach (var field in holder.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                problems.Add($"{name} is empty");
+                if (field is not { IsLiteral: true, IsInitOnly: false } || field.FieldType != typeof(string))
+                {
+                    problems.Add($"{holder.Name}.{field.Name} is not a const string");
+                }
+                else if (string.IsNullOrWhiteSpace((string)field.GetRawConstantValue()!))
+                {
+                    problems.Add($"{holder.Name}.{field.Name} is empty");
+                }
             }
 
-            if (sql.Contains('\'', StringComparison.Ordinal) && !sql.Contains("'new'", StringComparison.Ordinal))
+            // Nothing here may assemble SQL at run time. Every statement being a
+            // constant is what makes it impossible for a value read from a page
+            // to end up as SQL, and it is a stronger guarantee than reviewing
+            // each query for concatenation.
+            foreach (var method in holder.GetMethods(
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
             {
-                problems.Add($"{name} contains a literal string; use a parameter");
+                problems.Add($"{holder.Name}.{method.Name} builds SQL at run time");
             }
         }
 

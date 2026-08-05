@@ -3,10 +3,10 @@ using System.Text.RegularExpressions;
 namespace ProcurementRadar.UnitTests;
 
 /// <summary>
-/// Reads the tables and columns out of 001_initial.sql. The migration script is
-/// the schema's only source of truth (D-02), so tests check the repository SQL
-/// against it rather than against a running database (D-09 rules out integration
-/// tests).
+/// Replays every migration script to work out the tables and columns the
+/// database ends up with. The scripts are the schema's only source of truth
+/// (D-02), so tests check the repository SQL against them rather than against a
+/// running database (D-09 rules out integration tests).
 /// </summary>
 internal sealed class MigrationSchema
 {
@@ -14,12 +14,16 @@ internal sealed class MigrationSchema
         @"CREATE\s+TABLE\s+(?<table>[a-z_][a-z0-9_]*)\s*\((?<body>.*?)\r?\n\);",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
+    private static readonly Regex AddColumnPattern = new(
+        @"ALTER\s+TABLE\s+(?<table>[a-z_][a-z0-9_]*)\s+ADD\s+COLUMN\s+(?<column>[a-z_][a-z0-9_]*)",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
     private static readonly string[] ConstraintKeywords =
         ["unique", "primary", "foreign", "constraint", "check", "exclude"];
 
-    private readonly IReadOnlyDictionary<string, IReadOnlySet<string>> _columnsByTable;
+    private readonly IReadOnlyDictionary<string, HashSet<string>> _columnsByTable;
 
-    private MigrationSchema(IReadOnlyDictionary<string, IReadOnlySet<string>> columnsByTable)
+    private MigrationSchema(IReadOnlyDictionary<string, HashSet<string>> columnsByTable)
     {
         _columnsByTable = columnsByTable;
     }
@@ -28,20 +32,39 @@ internal sealed class MigrationSchema
 
     public static MigrationSchema Load()
     {
-        var path = Path.Combine(
+        var scriptDirectory = Path.Combine(
             RepositoryRoot.Find().FullName,
-            "src", "ProcurementRadar.Migrator", "Scripts", "001_initial.sql");
+            "src", "ProcurementRadar.Migrator", "Scripts");
 
-        var tables = new Dictionary<string, IReadOnlySet<string>>(StringComparer.Ordinal);
+        var tables = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
 
-        foreach (Match match in CreateTablePattern.Matches(File.ReadAllText(path)))
+        // Name order is apply order, which is what DbUp uses too.
+        foreach (var script in Directory.GetFiles(scriptDirectory, "*.sql").Order(StringComparer.Ordinal))
         {
-            tables[match.Groups["table"].Value] = ParseColumns(match.Groups["body"].Value);
+            var sql = File.ReadAllText(script);
+
+            foreach (Match match in CreateTablePattern.Matches(sql))
+            {
+                tables[match.Groups["table"].Value] = ParseColumns(match.Groups["body"].Value);
+            }
+
+            foreach (Match match in AddColumnPattern.Matches(sql))
+            {
+                var table = match.Groups["table"].Value;
+
+                if (!tables.TryGetValue(table, out var columns))
+                {
+                    throw new InvalidOperationException(
+                        $"{Path.GetFileName(script)} adds a column to '{table}', which no earlier script creates.");
+                }
+
+                columns.Add(match.Groups["column"].Value);
+            }
         }
 
         if (tables.Count == 0)
         {
-            throw new InvalidOperationException($"No CREATE TABLE statement was found in '{path}'.");
+            throw new InvalidOperationException($"No CREATE TABLE statement was found under '{scriptDirectory}'.");
         }
 
         return new MigrationSchema(tables);
@@ -52,7 +75,7 @@ internal sealed class MigrationSchema
     public bool HasColumn(string table, string column)
         => _columnsByTable.TryGetValue(table, out var columns) && columns.Contains(column);
 
-    private static IReadOnlySet<string> ParseColumns(string body)
+    private static HashSet<string> ParseColumns(string body)
     {
         var columns = new HashSet<string>(StringComparer.Ordinal);
 

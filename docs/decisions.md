@@ -173,3 +173,34 @@ otomatik başlar. Kapanma/açılma sonrası ilk tarama hemen tetiklenir, bir
 sonraki periyot beklenmez.
 
 ---
+
+## D-11 — Arşiv ham bayt tutar, çözülmüş metin değil
+
+**Karar:** `raw_fetch` arşivi sunucudan gelen baytları olduğu gibi gzip'leyip
+saklar. Karakter kodlaması çözümü ayrıştırma anında yapılır, indirme anında
+değil. `spec.md` Bölüm 6'daki `FetchResult.Body` alanı bu yüzden `string`
+değil `byte[]`.
+
+**Gerekçe:** Mimari kural 2 "parser kırılınca düzeltip arşivi yeniden işleriz"
+diyor. Kodlama çözümü indirme anında kalıcılaşırsa bu kural o alan için
+geçersiz olur: yanlış çözülmüş bir sayfa, arşiv yeniden işlenerek kurtarılamaz,
+çünkü kaybolan bilgi arşivin içinde değildir.
+
+Bu teorik bir risk değil. Türk kamu kurumlarının sayfaları hâlâ yaygın olarak
+`windows-1254` ve `iso-8859-9` ile sunuluyor, önemli bir kısmı kodlamayı
+yalnızca `<meta>` etiketinde bildiriyor. Yanlış tahmin, ilan başlığındaki her
+`ş`, `ğ`, `İ` karakterini bozar — ve başlık, T-11'in anahtar kelime filtresinin
+okuduğu tek alandır.
+
+İkinci gerekçe tutarlılık: `content_hash` zaten baytlar üzerinden
+hesaplanıyor. Arşiv metin tutsaydı hash ile arşiv farklı şeyleri tarif ederdi.
+
+**Sonuç:** `raw_fetch.content_type` kolonu eklendi (`003`). HTTP başlığındaki
+`charset` bilgisi baytların içinden geri kazanılamaz — `<meta>` etiketi
+gövdededir ama HTTP başlığı değildir — bu yüzden ayrıca saklanır.
+
+**Kural:** `Parse(string body, Source source)` imzası değişmedi. Çözümleme
+parse hattında, `BodyDecoder` ile, `Parse` çağrılmadan hemen önce yapılır.
+Parser'lar hâlâ string üzerinde çalışan saf fonksiyonlar.
+
+---
