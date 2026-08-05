@@ -3,6 +3,10 @@
 # here. Never committed. Backup is manual: weekly tar czf to a second disk.
 data/
 
+# --- Per-machine compose overrides -------------------------------------------
+# Local-only tweaks such as the Windows named-volume workaround. Never shared.
+docker-compose.override.yml
+
 # --- Serilog output (D-07) ---------------------------------------------------
 # Daily rolling files, 30 days retained. Written next to the working directory.
 logs/
