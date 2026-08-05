@@ -70,6 +70,18 @@ public sealed class GenericTableAdapterFixtureTests
                 Assert.Equal(firstTitle, notices[0].Title);
             }
 
+            if (expectation.ExpectedFirstDeadline is { Length: > 0 } firstDeadline)
+            {
+                Assert.Equal(
+                    DateTimeOffset.Parse(firstDeadline, System.Globalization.CultureInfo.InvariantCulture),
+                    notices[0].BidDeadlineAt);
+            }
+
+            if (expectation.ExpectedFirstDocumentCount is { } documentCount)
+            {
+                Assert.Equal(documentCount, notices[0].DocumentUrls.Count);
+            }
+
             foreach (var notice in notices)
             {
                 Assert.False(string.IsNullOrWhiteSpace(notice.Title));
@@ -106,6 +118,12 @@ public sealed class GenericTableAdapterFixtureTests
 
         [JsonPropertyName("expected_first_title")]
         public string? ExpectedFirstTitle { get; init; }
+
+        [JsonPropertyName("expected_first_deadline_utc")]
+        public string? ExpectedFirstDeadline { get; init; }
+
+        [JsonPropertyName("expected_first_document_count")]
+        public int? ExpectedFirstDocumentCount { get; init; }
     }
 
     /// <summary>Parse must never reach the network, so this would throw if it did.</summary>

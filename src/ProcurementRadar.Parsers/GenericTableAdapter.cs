@@ -134,10 +134,19 @@ public sealed class GenericTableAdapter : ISourceAdapter
             return false;
         }
 
-        var href = row.QuerySelector(config.LinkSelector)?.GetAttribute("href");
-        if (!TryResolve(config.BaseUrl, href, out var sourceUrl))
+        // A listing without detail pages is common enough to be normal, not an
+        // error. The notice is then recorded against the listing itself, which
+        // is where a person would go to read it anyway.
+        var sourceUrl = source.Url;
+
+        if (config.LinkSelector is { } linkSelector)
         {
-            return false;
+            var href = row.QuerySelector(linkSelector)?.GetAttribute("href");
+
+            if (!TryResolve(config.BaseUrl, href, out sourceUrl))
+            {
+                return false;
+            }
         }
 
         // Never DateTime.Parse: the formats are data (config/tr-date-patterns.json)
@@ -155,9 +164,30 @@ public sealed class GenericTableAdapter : ISourceAdapter
             SourceUrl: sourceUrl,
             AuthorityName: source.AuthorityName,
             BidDeadlineAt: deadline,
-            EstimatedCost: amount);
+            EstimatedCost: amount,
+            DocumentUrls: DocumentUrls(row, config));
 
         return true;
+    }
+
+    private static IReadOnlyList<string> DocumentUrls(IElement row, GenericTableAdapterConfig config)
+    {
+        if (config.DocumentSelector is not { } selector)
+        {
+            return [];
+        }
+
+        var urls = new List<string>();
+
+        foreach (var element in row.QuerySelectorAll(selector))
+        {
+            if (TryResolve(config.BaseUrl, element.GetAttribute("href"), out var url))
+            {
+                urls.Add(url);
+            }
+        }
+
+        return urls;
     }
 
     private static string? Text(IElement row, string selector)

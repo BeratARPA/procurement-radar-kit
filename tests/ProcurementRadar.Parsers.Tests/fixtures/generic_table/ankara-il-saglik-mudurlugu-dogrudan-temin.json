@@ -1,0 +1,17 @@
+{
+  "_comment": "Ankara İl Sağlık Müdürlüğü, Doğrudan Temin listesi. https://ankaraism.saglik.gov.tr/TR-185202/dogrudan-temin.html adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "Tabloda ilk satır boş, ikinci satır başlık. Satırlarda detay sayfası linki yok — hücrelerdeki linkler doğrudan teklif cetveli ve teknik şartname dosyaları. Birinci kolon 'İLGİLİ KİŞİ' (baş harfler) kişisel veri olduğu için hiçbir selector'la seçilmiyor.",
+  "adapter_config": {
+    "row_selector": "table tbody tr:nth-child(n+3)",
+    "title_selector": "td:nth-child(2)",
+    "link_selector": null,
+    "date_selector": "td:nth-child(3)",
+    "amount_selector": null,
+    "document_selector": "a",
+    "base_url": "https://ankaraism.saglik.gov.tr"
+  },
+  "expected_notice_count": 13,
+  "expected_first_title": "Aile Sağlığı Merkezlerinde Tespit Edilen İhtiyaçların Giderilmesi İşi (2 Kısım)",
+  "expected_first_deadline_utc": "2026-07-31T20:59:00Z",
+  "expected_first_document_count": 2
+}

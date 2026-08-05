@@ -43,7 +43,6 @@ public sealed class GenericTableAdapterConfigTests
     [Theory]
     [InlineData("row_selector")]
     [InlineData("title_selector")]
-    [InlineData("link_selector")]
     [InlineData("base_url")]
     public void A_missing_required_selector_is_named(string field)
     {
@@ -51,6 +50,30 @@ public sealed class GenericTableAdapterConfigTests
 
         Assert.False(GenericTableAdapterConfig.TryRead(json, out _, out var problem));
         Assert.Contains(field, problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_listing_with_no_detail_pages_is_a_valid_config()
+    {
+        // Ankara İl Sağlık Müdürlüğü publishes its Doğrudan Temin table with no
+        // detail page at all: the links in a row are the specification files.
+        // Requiring link_selector would have made that source unusable.
+        var json = Complete
+            .Replace("\"link_selector\": \"a\",", "\"link_selector\": null,", StringComparison.Ordinal);
+
+        Assert.True(GenericTableAdapterConfig.TryRead(json, out var config, out var problem), problem);
+        Assert.Null(config.LinkSelector);
+    }
+
+    [Fact]
+    public void A_document_selector_is_read_when_present()
+    {
+        var json = Complete
+            .Replace("\"amount_selector\": null", "\"amount_selector\": null, \"document_selector\": \"a\"",
+                StringComparison.Ordinal);
+
+        Assert.True(GenericTableAdapterConfig.TryRead(json, out var config, out _));
+        Assert.Equal("a", config.DocumentSelector);
     }
 
     [Fact]
@@ -86,11 +109,13 @@ public sealed class GenericTableAdapterConfigTests
     }
 
     [Fact]
-    public void The_shape_in_the_seed_file_that_ships_with_the_repository_is_understood()
+    public void Every_config_in_the_seed_file_is_either_usable_or_openly_unfilled()
     {
-        // Not that it is usable - every entry is still a placeholder - but that
-        // the field names in config/sources.seed.json and the ones read here have
-        // not drifted apart.
+        // Guards the seam between the file the team edits by hand and the code
+        // that reads it. A config may be complete, or it may still hold
+        // placeholders - but it must never be rejected for a reason that means
+        // the two have drifted apart, because that would look like an empty
+        // source rather than a mistake.
         var path = Path.Combine(RepositoryRoot.Find().FullName, "config", "sources.seed.json");
         var seeded = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
 
@@ -103,11 +128,19 @@ public sealed class GenericTableAdapterConfigTests
 
         Assert.NotEmpty(configs);
 
+        var usable = 0;
+
         foreach (var config in configs)
         {
-            Assert.False(GenericTableAdapterConfig.TryRead(config, out _, out var problem));
-            // Rejected for being unfilled, not for being unrecognised.
+            if (GenericTableAdapterConfig.TryRead(config, out _, out var problem))
+            {
+                usable++;
+                continue;
+            }
+
             Assert.Contains("TODO", problem, StringComparison.Ordinal);
         }
+
+        Assert.True(usable > 0, "No source in the seed file is ready to poll.");
     }
 }

@@ -19,8 +19,26 @@ public sealed record GenericTableAdapterConfig
     /// <summary>The title inside a row.</summary>
     public required string TitleSelector { get; init; }
 
-    /// <summary>The link to the detail page inside a row.</summary>
-    public required string LinkSelector { get; init; }
+    /// <summary>
+    /// The link to the detail page inside a row, where there is one.
+    /// </summary>
+    /// <remarks>
+    /// Optional, because plenty of listings have no detail page at all: the
+    /// Doğrudan Temin table at Ankara İl Sağlık Müdürlüğü, for one, links
+    /// straight to the specification files. When it is absent the notice is
+    /// recorded against the listing page itself, which is still where a person
+    /// would go to read it.
+    /// </remarks>
+    public string? LinkSelector { get; init; }
+
+    /// <summary>
+    /// Links in a row that point at specification files rather than at a page.
+    /// </summary>
+    /// <remarks>
+    /// Where a listing publishes the documents directly, this is what fills
+    /// notice_document and gives the downloader in T-12 something to work with.
+    /// </remarks>
+    public string? DocumentSelector { get; init; }
 
     /// <summary>Where relative links are resolved against.</summary>
     public required string BaseUrl { get; init; }
@@ -65,7 +83,6 @@ public sealed record GenericTableAdapterConfig
                  {
                      ("row_selector", shape.RowSelector),
                      ("title_selector", shape.TitleSelector),
-                     ("link_selector", shape.LinkSelector),
                      ("base_url", shape.BaseUrl)
                  })
         {
@@ -94,10 +111,11 @@ public sealed record GenericTableAdapterConfig
         {
             RowSelector = shape.RowSelector!.Trim(),
             TitleSelector = shape.TitleSelector!.Trim(),
-            LinkSelector = shape.LinkSelector!.Trim(),
             BaseUrl = shape.BaseUrl.Trim(),
+            LinkSelector = Optional(shape.LinkSelector),
             DateSelector = Optional(shape.DateSelector),
-            AmountSelector = Optional(shape.AmountSelector)
+            AmountSelector = Optional(shape.AmountSelector),
+            DocumentSelector = Optional(shape.DocumentSelector)
         };
 
         problem = string.Empty;
@@ -126,6 +144,9 @@ public sealed record GenericTableAdapterConfig
 
         [JsonPropertyName("amount_selector")]
         public string? AmountSelector { get; init; }
+
+        [JsonPropertyName("document_selector")]
+        public string? DocumentSelector { get; init; }
 
         [JsonPropertyName("base_url")]
         public string? BaseUrl { get; init; }

@@ -1,7 +1,78 @@
 {
-  "_comment": "Doldurulacak. url alanı TODO olan kayıtlar seed sırasında atlanır. Gerçek sayfayı ziyaret etmeden URL yazmayın.",
+  "_comment": "Kaynak kayıt defteri. url alanı TODO olan kayıtlar seed sırasında atlanır. Gerçek sayfayı ziyaret etmeden URL yazmayın.",
   "_how_to_fill": "docs/source-collection.md dosyasına bakın.",
+  "_status": "5 Ağustos 2026: iki kaynak doğrulandı ve aktif. Her biri için robots.txt kontrol edildi, sayfa indirilip yapısı incelendi, selector'lar oradan çıkarıldı ve HTML fixture olarak tests/ProcurementRadar.Parsers.Tests/fixtures/generic_table/ altına kaydedildi. Aktif olmayan kayıtların sebebi tek tek notes alanında yazılı.",
   "sources": [
+    {
+      "authority_name": "Ankara İl Sağlık Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ankaraism.saglik.gov.tr/TR-185202/dogrudan-temin.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "table tbody tr:nth-child(n+3)",
+        "title_selector": "td:nth-child(2)",
+        "link_selector": null,
+        "date_selector": "td:nth-child(3)",
+        "amount_selector": null,
+        "document_selector": "a",
+        "base_url": "https://ankaraism.saglik.gov.tr"
+      },
+      "notes": "Doğrudan temin listesi — projenin asıl hedefi. robots.txt yok (RFC 9309: serbest), 5 Ağustos 2026'da kontrol edildi. Tabloda ilk satır boş, ikinci satır başlık; row_selector üçüncü satırdan başlıyor. Detay sayfası yok, satırdaki linkler doğrudan teklif cetveli ve teknik şartname. Birinci kolon 'İLGİLİ KİŞİ' baş harf taşıyor ve kişisel veri olduğu için hiçbir selector'la seçilmiyor. Fixture: ankara-il-saglik-mudurlugu-dogrudan-temin.html, 13 ilan."
+    },
+    {
+      "authority_name": "Ankara İl Sağlık Müdürlüğü",
+      "authority_type": "provincial_directorate",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ankaraism.saglik.gov.tr/TR-388198/guncel-ihaleler.html",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "adapter_config": {
+        "row_selector": "table tbody tr:nth-child(n+2)",
+        "title_selector": "td:nth-child(2)",
+        "link_selector": null,
+        "date_selector": "td:nth-child(3)",
+        "amount_selector": null,
+        "document_selector": "a",
+        "base_url": "https://ankaraism.saglik.gov.tr"
+      },
+      "notes": "Aynı kurumun büyük ihale listesi. Tarih hücresi serbest metin ('Son Başvuru Tarihi ve Saati: 14/08/2026 Saat 17:00') ve TurkishDateParser bunu doğru okuyor. Fixture: ankara-il-saglik-mudurlugu-guncel-ihaleler.html, 1 ilan."
+    },
+    {
+      "authority_name": "Çankaya Belediyesi",
+      "authority_type": "municipality",
+      "province": "Ankara",
+      "district": "Çankaya",
+      "url": "https://www.cankaya.bel.tr/ihaleler",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": false,
+      "adapter_config": {
+        "row_selector": "TODO",
+        "title_selector": "TODO",
+        "link_selector": "TODO",
+        "date_selector": "TODO",
+        "amount_selector": null,
+        "base_url": "https://www.cankaya.bel.tr"
+      },
+      "notes": "URL doğrulandı, robots.txt serbest (5 Ağustos 2026). Ama sayfa o gün 'İhale bulunamadı' diyordu — ilan olmadan satır yapısı görülemez, o yüzden selector'lar TODO ve kaynak pasif. Sayfada ilan çıktığında yapıya bakıp doldurun; adapter_config TODO kaldığı sürece parser sıfır ilan döndürmek yerine gerekçeyi loglar."
+    },
+    {
+      "authority_name": "EKAP - İhale Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap/search",
+      "adapter_key": "ekap_tender",
+      "poll_interval_minutes": 60,
+      "is_active": false,
+      "notes": "URL doğrulandı, robots.txt serbest (5 Ağustos 2026). ekap.kik.gov.tr buraya yönlendiriyor. Sayfa tamamen JavaScript ile kuruluyor: ilk yanıtın gövdesi boş, yalnızca JS paketleri iniyor. GenericTableAdapter statik HTML okur, dolayısıyla bu kaynağı okuyamaz — T-16 gerekiyor ve spec'in 'en kırılgan bileşen' demesinin sebebi tam olarak bu. Arama yapılmadan JSON isteği de tetiklenmiyor, yani API'yi görmek için formun doldurulması gerekiyor."
+    },
     {
       "authority_name": "EKAP - Doğrudan Temin Arama",
       "authority_type": "ekap",
@@ -11,18 +82,18 @@
       "adapter_key": "ekap_direct_procurement",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "T-16 tamamlanana kadar pasif. İhale İşlemleri menüsü altındaki arama sayfası."
+      "notes": "Doğrudan Temin aramasının ayrı bir adresi olup olmadığı doğrulanamadı — EKAP arayüzü JS ile kurulduğu için menü statik HTML'de görünmüyor. T-16'da arayüz üzerinden bulunacak. URL uydurulmadı."
     },
     {
-      "authority_name": "EKAP - İhale Arama",
-      "authority_type": "ekap",
+      "authority_name": "Ankara Büyükşehir Belediyesi",
+      "authority_type": "municipality",
       "province": "Ankara",
       "district": null,
       "url": "TODO",
-      "adapter_key": "ekap_tender",
-      "poll_interval_minutes": 60,
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "Pazar istihbaratı için. Bildirim üretmez, sadece arşiv."
+      "notes": "www.ankara.bel.tr otomatik isteklere HTTP 403 döndürüyor (5 Ağustos 2026). Sayfa görülemediği için URL de selector de yazılmadı. Denemeden önce robots.txt'i ve site kullanım şartlarını tekrar kontrol edin: 403 bir bot korumasıdır, aşmaya çalışmak nezaket kuralının da spec Bölüm 12'nin de dışına çıkar."
     },
     {
       "authority_name": "Ankara Üniversitesi",
@@ -33,34 +104,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "adapter_config": {
-        "row_selector": "TODO",
-        "title_selector": "TODO",
-        "link_selector": "TODO",
-        "date_selector": "TODO",
-        "amount_selector": null,
-        "base_url": "TODO"
-      },
-      "notes": "İdari ve Mali İşler Daire Başkanlığı ilan sayfası"
-    },
-    {
-      "authority_name": "Çankaya Belediyesi",
-      "authority_type": "municipality",
-      "province": "Ankara",
-      "district": "Çankaya",
-      "url": "TODO",
-      "adapter_key": "generic_table",
-      "poll_interval_minutes": 15,
-      "is_active": false,
-      "adapter_config": {
-        "row_selector": "TODO",
-        "title_selector": "TODO",
-        "link_selector": "TODO",
-        "date_selector": "TODO",
-        "amount_selector": null,
-        "base_url": "TODO"
-      },
-      "notes": ""
+      "notes": "robots.txt serbest (5 Ağustos 2026). Ana sayfada ihale/duyuru bağlantısı statik HTML'de bulunamadı; ilan sayfası büyük ihtimalle İdari ve Mali İşler Daire Başkanlığı alt sitesinde. Elle bakılması gerekiyor."
     }
   ]
 }

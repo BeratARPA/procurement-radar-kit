@@ -1,0 +1,17 @@
+{
+  "_comment": "Ankara İl Sağlık Müdürlüğü, Güncel İhaleler listesi. https://ankaraism.saglik.gov.tr/TR-388198/guncel-ihaleler.html adresinden 5 Ağustos 2026'da indirildi.",
+  "_shape": "İlk satır başlık. Detay sayfası yok, satırdaki linkler doğrudan ilan ve şartname dosyaları — biri .rar, T-12'nin arşiv çıkarıcısını da besliyor. Tarih hücresi serbest metin: 'Ön Yeterlilik Değerlendirilmesi Son Başvuru Tarihi ve Saati: 14/08/2026 Saat 17:00'. Bu fixture'ın asıl değeri, TurkishDateParser'ın gürültü temizliğinin gerçek bir cümlede çalıştığını göstermesi.",
+  "adapter_config": {
+    "row_selector": "table tbody tr:nth-child(n+2)",
+    "title_selector": "td:nth-child(2)",
+    "link_selector": null,
+    "date_selector": "td:nth-child(3)",
+    "amount_selector": null,
+    "document_selector": "a",
+    "base_url": "https://ankaraism.saglik.gov.tr"
+  },
+  "expected_notice_count": 1,
+  "expected_first_title": "PROTON TERAPİ HİZMETLERİ ALIMI İÇİN UYGULANACAK PAZAR TESTİ ÖN YETERLİK İLANI",
+  "expected_first_deadline_utc": "2026-08-14T14:00:00Z",
+  "expected_first_document_count": 3
+}

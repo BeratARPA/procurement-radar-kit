@@ -149,10 +149,12 @@ public sealed class SourceSeedReaderTests
 
         var plan = SourceSeedReader.Read(File.ReadAllText(path));
 
-        // Every entry is still a placeholder today. What matters here is that the
-        // file parses and that the unknown top-level keys in it are ignored, so
-        // this test keeps working once the team starts filling urls in.
+        // Not a count: the file grows as sources are collected. What matters is
+        // that nothing in it is malformed, that the unknown top-level keys are
+        // ignored, and that at least one source is actually ready to be polled -
+        // an all-placeholder file would leave the system running and silent.
         Assert.Empty(plan.Rejections);
-        Assert.Equal(4, plan.SkippedPlaceholders + plan.Sources.Count);
+        Assert.NotEmpty(plan.Sources);
+        Assert.Contains(plan.Sources, source => source.IsActive);
     }
 }
