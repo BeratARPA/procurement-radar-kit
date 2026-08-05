@@ -6,4 +6,15 @@
     <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.79" />
+    <PackageReference Include="Npgsql" Version="8.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The SQL lives in internal const strings. The unit tests read them back to
+         check every parameter and column against 001_initial.sql. -->
+    <InternalsVisibleTo Include="ProcurementRadar.UnitTests" />
+  </ItemGroup>
+
 </Project>
