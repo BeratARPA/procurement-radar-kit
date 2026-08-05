@@ -14,7 +14,7 @@ internal sealed class FakeRawFetchRepository : IRawFetchRepository
 
     public List<RawFetch> Rows { get; } = [];
 
-    public List<(long RawFetchId, string ParserVersion)> Processed { get; } = [];
+    public List<(long RawFetchId, string ParserVersion, int NoticeCount)> Processed { get; } = [];
 
     public Task<long> ReserveIdAsync(CancellationToken cancellationToken)
         => Task.FromResult(Interlocked.Increment(ref _nextId));
@@ -43,9 +43,13 @@ internal sealed class FakeRawFetchRepository : IRawFetchRepository
             .Take(limit)
             .ToList());
 
-    public Task MarkProcessedAsync(long rawFetchId, string parserVersion, CancellationToken cancellationToken)
+    public Task MarkProcessedAsync(
+        long rawFetchId,
+        string parserVersion,
+        int noticeCount,
+        CancellationToken cancellationToken)
     {
-        Processed.Add((rawFetchId, parserVersion));
+        Processed.Add((rawFetchId, parserVersion, noticeCount));
         return Task.CompletedTask;
     }
 }
@@ -98,8 +102,13 @@ internal sealed class FakeSourceRepository : ISourceRepository
     public Task RecordRobotsCheckAsync(long sourceId, CancellationToken cancellationToken)
         => Task.CompletedTask;
 
+    public List<long> Deactivated { get; } = [];
+
     public Task DeactivateAsync(long sourceId, CancellationToken cancellationToken)
-        => Task.CompletedTask;
+    {
+        Deactivated.Add(sourceId);
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>

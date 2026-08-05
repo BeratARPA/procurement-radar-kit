@@ -94,9 +94,11 @@ public sealed class RawFetchRepository : IRawFetchRepository
     public async Task MarkProcessedAsync(
         long rawFetchId,
         string parserVersion,
+        int noticeCount,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parserVersion);
+        ArgumentOutOfRangeException.ThrowIfNegative(noticeCount);
 
         await using var connection = await _connectionFactory
             .OpenConnectionAsync(cancellationToken)
@@ -105,7 +107,7 @@ public sealed class RawFetchRepository : IRawFetchRepository
         await connection.ExecuteAsync(
             new CommandDefinition(
                 RawFetchSql.MarkProcessed,
-                new { RawFetchId = rawFetchId, ParserVersion = parserVersion },
+                new { RawFetchId = rawFetchId, ParserVersion = parserVersion, NoticeCount = noticeCount },
                 cancellationToken: cancellationToken))
             .ConfigureAwait(false);
     }

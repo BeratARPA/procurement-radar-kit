@@ -22,7 +22,9 @@ public sealed class RepositorySqlTests
         (typeof(NoticeScoreSql), ["notice_score"]),
         (typeof(NoticeDocumentSql), ["notice_document"]),
         (typeof(NotificationSql),
-            ["notification", "procurement_notice", "notice_score", "notice_document"])
+            ["notification", "procurement_notice", "notice_score", "notice_document"]),
+        (typeof(HealthSql),
+            ["health_alert", "source", "raw_fetch", "procurement_notice", "notification"])
     ];
 
     // Words that follow FROM/INTO/UPDATE/JOIN without being a table name.
@@ -33,8 +35,11 @@ public sealed class RepositorySqlTests
         @"\b(?:FROM|INTO|UPDATE|JOIN)\s+(?<table>[a-z_][a-z0-9_]*)",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
+    // The word boundary keeps the pattern from starting mid-identifier, and the
+    // lookbehind keeps a PostgreSQL cast out of it: count(*)::int AS "EmptyParses"
+    // otherwise reports "int" as a column that does not exist.
     private static readonly Regex AliasedColumnPattern = new(
-        @"(?<column>[a-z_][a-z0-9_]*)\s+AS\s+""(?<property>[A-Za-z][A-Za-z0-9]*)""",
+        @"\b(?<!:)(?<column>[a-z_][a-z0-9_]*)\s+AS\s+""(?<property>[A-Za-z][A-Za-z0-9]*)""",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private static readonly Regex InsertColumnListPattern = new(
@@ -49,7 +54,7 @@ public sealed class RepositorySqlTests
         Assert.Equal(
             new[]
             {
-                "award", "notice_document", "notice_score", "notification",
+                "award", "health_alert", "notice_document", "notice_score", "notification",
                 "procurement_notice", "raw_fetch", "source"
             },
             _schema.TableNames.Order(StringComparer.Ordinal));

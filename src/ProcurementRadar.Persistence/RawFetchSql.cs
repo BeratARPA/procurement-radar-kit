@@ -12,6 +12,7 @@ internal static class RawFetchSql
                     last_modified  AS "LastModified",
                     content_type   AS "ContentType",
                     content_hash   AS "ContentHash",
+                    notice_count   AS "NoticeCount",
                     body_path      AS "BodyPath",
                     parser_version AS "ParserVersion",
                     is_processed   AS "IsProcessed"
@@ -56,7 +57,8 @@ internal static class RawFetchSql
     internal const string MarkProcessed = """
         UPDATE raw_fetch
         SET is_processed   = true,
-            parser_version = @ParserVersion
+            parser_version = @ParserVersion,
+            notice_count   = @NoticeCount
         WHERE id = @RawFetchId
         """;
 }

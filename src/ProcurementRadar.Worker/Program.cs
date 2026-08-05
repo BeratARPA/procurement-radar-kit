@@ -5,6 +5,7 @@ using ProcurementRadar.Domain.Fetching;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Domain.Parsing;
 using ProcurementRadar.Domain.Repositories;
+using ProcurementRadar.Domain.Health;
 using ProcurementRadar.Domain.Notifications;
 using ProcurementRadar.Domain.Scoring;
 using ProcurementRadar.Parsers;
@@ -65,6 +66,7 @@ builder.Services.AddSingleton<INoticeRepository, NoticeRepository>();
 builder.Services.AddSingleton<INoticeScoreRepository, NoticeScoreRepository>();
 builder.Services.AddSingleton<INoticeDocumentRepository, NoticeDocumentRepository>();
 builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
+builder.Services.AddSingleton<IHealthRepository, HealthRepository>();
 
 builder.Services.AddSingleton(datePatterns);
 builder.Services.AddSingleton<ITurkishDateParser, TurkishDateParser>();
@@ -90,10 +92,17 @@ builder.Services.AddHostedService<DocumentWorker>();
 var botToken = builder.Configuration["PR_TELEGRAM_BOT_TOKEN"];
 var chatId = builder.Configuration["PR_TELEGRAM_CHAT_ID"];
 
+// Health monitoring runs either way, so a half-finished bot setup does not
+// also mean nobody is watching the sources.
+builder.Services.AddSingleton(messages);
+builder.Services.AddSingleton(new HealthOptions());
+builder.Services.AddSingleton<HealthMonitor>();
+builder.Services.AddHostedService<HealthWorker>();
+
 if (!string.IsNullOrWhiteSpace(botToken) && !string.IsNullOrWhiteSpace(chatId))
 {
     builder.Services.AddSingleton(new TelegramOptions { BotToken = botToken, ChatId = chatId });
-    builder.Services.AddSingleton(messages);
+    builder.Services.AddSingleton<IAlertChannel, TelegramAlertChannel>();
     builder.Services.AddSingleton(new NotificationOptions { MinimumScore = keywords.NotifyThreshold });
     builder.Services.AddSingleton<TelegramClient>();
     builder.Services.AddSingleton<NoticeMessageFormatter>();
@@ -105,9 +114,12 @@ if (!string.IsNullOrWhiteSpace(botToken) && !string.IsNullOrWhiteSpace(chatId))
 }
 else
 {
+    builder.Services.AddSingleton<IAlertChannel, LoggingAlertChannel>();
+
     Log.Warning(
         "PR_TELEGRAM_BOT_TOKEN or PR_TELEGRAM_CHAT_ID is not set; notifications are off. "
-        + "Notices are still collected, parsed and scored. See START-HERE.md step 3.");
+        + "Notices are still collected, parsed and scored, and health alarms go to the log. "
+        + "See START-HERE.md step 3.");
 }
 
 using var host = builder.Build();

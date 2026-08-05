@@ -16,8 +16,12 @@ public sealed class MessageTemplates
         string reminderHeader,
         ButtonLabels buttons,
         RemainingLabels remaining,
-        IReadOnlyList<ScoreIcon> scoreIcons)
+        IReadOnlyList<ScoreIcon> scoreIcons,
+        AlertTemplates alerts,
+        WeeklySummaryTemplates weeklySummary)
     {
+        Alerts = alerts;
+        WeeklySummary = weeklySummary;
         Notice = notice;
         ReminderHeader = reminderHeader;
         Buttons = buttons;
@@ -35,6 +39,10 @@ public sealed class MessageTemplates
 
     /// <summary>Highest threshold first, so the first match is the right one.</summary>
     public IReadOnlyList<ScoreIcon> ScoreIcons { get; }
+
+    public AlertTemplates Alerts { get; }
+
+    public WeeklySummaryTemplates WeeklySummary { get; }
 
     public string IconFor(int score)
         => ScoreIcons.FirstOrDefault(icon => score >= icon.AtLeast)?.Icon ?? string.Empty;
@@ -54,7 +62,9 @@ public sealed class MessageTemplates
             shape.ReminderHeader,
             shape.Buttons,
             shape.Remaining,
-            shape.ScoreIcons.OrderByDescending(icon => icon.AtLeast).ToArray());
+            shape.ScoreIcons.OrderByDescending(icon => icon.AtLeast).ToArray(),
+            shape.Alerts,
+            shape.WeeklySummary);
     }
 
     public sealed record NoticeTemplates
@@ -105,6 +115,33 @@ public sealed class MessageTemplates
         public string Expired { get; init; } = string.Empty;
     }
 
+    public sealed record AlertTemplates
+    {
+        [JsonPropertyName("fetch_failures")]
+        public string FetchFailures { get; init; } = string.Empty;
+
+        [JsonPropertyName("source_deactivated")]
+        public string SourceDeactivated { get; init; } = string.Empty;
+
+        [JsonPropertyName("parser_broken")]
+        public string ParserBroken { get; init; } = string.Empty;
+
+        [JsonPropertyName("silent_source")]
+        public string SilentSource { get; init; } = string.Empty;
+
+        [JsonPropertyName("nothing_collected")]
+        public string NothingCollected { get; init; } = string.Empty;
+    }
+
+    public sealed record WeeklySummaryTemplates
+    {
+        [JsonPropertyName("header")]
+        public string Header { get; init; } = string.Empty;
+
+        [JsonPropertyName("lines")]
+        public IReadOnlyList<string> Lines { get; init; } = [];
+    }
+
     public sealed record ScoreIcon
     {
         [JsonPropertyName("at_least")]
@@ -130,5 +167,11 @@ public sealed class MessageTemplates
 
         [JsonPropertyName("score_icons")]
         public IReadOnlyList<ScoreIcon> ScoreIcons { get; init; } = [];
+
+        [JsonPropertyName("alerts")]
+        public AlertTemplates Alerts { get; init; } = new();
+
+        [JsonPropertyName("weekly_summary")]
+        public WeeklySummaryTemplates WeeklySummary { get; init; } = new();
     }
 }

@@ -179,7 +179,7 @@ public sealed class ParsePipeline
         }
 
         await _rawFetches
-            .MarkProcessedAsync(rawFetch.Id, $"{adapter.Key}@{ParserVersion}", cancellationToken)
+            .MarkProcessedAsync(rawFetch.Id, $"{adapter.Key}@{ParserVersion}", notices.Count, cancellationToken)
             .ConfigureAwait(false);
 
         if (created > 0)

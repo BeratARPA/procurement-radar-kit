@@ -21,6 +21,25 @@
     "minutes": "kalan {count} dakika",
     "expired": "süre doldu"
   },
+  "alerts": {
+    "fetch_failures": "🔴 {authority} — art arda {count} tarama hatası. Sayfa taşınmış olabilir.",
+    "source_deactivated": "⛔ {authority} — {count} hatadan sonra pasife alındı. Elle bakılması gerekiyor.",
+    "parser_broken": "🟠 PARSER BOZUK OLABİLİR — {authority}. Sayfa değişmiş ama ayrıştırıcı hiçbir ilan çıkaramadı ({count} kez). Selector'ları kontrol edin.",
+    "silent_source": "🔇 {authority} — {days} gündür yeni ilan yok. Daha önce ilan veriyordu.",
+    "nothing_collected": "🚨 KRİTİK — son {hours} saatte sistem genelinde tek bir yeni ilan yok. Hafta içi bu normal değil."
+  },
+  "weekly_summary": {
+    "header": "📊 Haftalık özet",
+    "lines": [
+      "Aktif kaynak: {active_sources}",
+      "Taranan kaynak: {sources_polled}",
+      "Yeni ilan: {notices_seen}",
+      "Gönderilen bildirim: {notices_notified}",
+      "Teklif verilen: {bids_submitted}",
+      "İlgilenmedik: {not_relevant}",
+      "Sorunlu kaynak: {sources_in_trouble}"
+    ]
+  },
   "score_icons": [
     { "at_least": 60, "icon": "🟢" },
     { "at_least": 30, "icon": "🟡" },

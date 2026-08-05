@@ -41,8 +41,18 @@ public interface IRawFetchRepository
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Marks a row as parsed and records which parser version did it, so a later
-    /// reprocess can tell old output from new.
+    /// Marks a row as parsed, recording which parser version did it and how many
+    /// notices came out.
     /// </summary>
-    Task MarkProcessedAsync(long rawFetchId, string parserVersion, CancellationToken cancellationToken);
+    /// <remarks>
+    /// The count is what the parser-broken alarm reads. An archive row exists
+    /// only when the page changed, so a changed page that yielded nothing is
+    /// exactly the condition in spec Bölüm 11 - and there is no other way to see
+    /// it after the fact.
+    /// </remarks>
+    Task MarkProcessedAsync(
+        long rawFetchId,
+        string parserVersion,
+        int noticeCount,
+        CancellationToken cancellationToken);
 }

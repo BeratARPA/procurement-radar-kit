@@ -25,7 +25,11 @@ public sealed class RepositoryGuardTests
         var repository = new RawFetchRepository(new UnusableConnectionFactory());
 
         await Assert.ThrowsAsync<ArgumentException>(
-            () => repository.MarkProcessedAsync(rawFetchId: 1, parserVersion: "  ", CancellationToken.None));
+            () => repository.MarkProcessedAsync(
+                rawFetchId: 1,
+                parserVersion: "  ",
+                noticeCount: 0,
+                CancellationToken.None));
     }
 
     [Fact]

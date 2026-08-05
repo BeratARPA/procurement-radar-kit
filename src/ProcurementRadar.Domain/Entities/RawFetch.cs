@@ -33,4 +33,7 @@ public sealed record RawFetch
     public string? ParserVersion { get; init; }
 
     public bool IsProcessed { get; init; }
+
+    /// <summary>How many notices the parse produced. Null until it has run.</summary>
+    public int? NoticeCount { get; init; }
 }
