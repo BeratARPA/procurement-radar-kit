@@ -28,6 +28,37 @@ public sealed class DocumentTextExtractorTests
     }
 
     [Fact]
+    public void Cells_come_out_of_a_spreadsheet()
+    {
+        var result = Extractor.Extract(
+            SampleFiles.Xlsx(
+                ["Sıra No", "Malın / Hizmetin Adı", "Miktar", "Birim"],
+                ["1", "Personel Takip Yazılımı Bakım ve Destek Hizmeti", "12", "Ay"]),
+            "teklif-cetveli.xlsx");
+
+        Assert.Equal("xlsx", result.Kind);
+        Assert.Contains("Bakım ve Destek Hizmeti", result.Text!, StringComparison.Ordinal);
+        Assert.Contains("Malın / Hizmetin Adı", result.Text!, StringComparison.Ordinal);
+        Assert.Empty(result.Problems);
+    }
+
+    [Fact]
+    public void A_spreadsheet_is_not_read_as_a_plain_archive()
+    {
+        // The regression this guards is silent, which is why it is worth its own
+        // test. An .xlsx is a zip, so it opens perfectly well as one - and every
+        // entry inside is xml the extractor has no reader for, so the result is
+        // an empty string and no complaint. Forty per cent of the documents the
+        // first two live sources link to are spreadsheets.
+        var result = Extractor.Extract(
+            SampleFiles.Xlsx(["Web Sitesi Yenileme İşi"]),
+            "cetvel.xlsx");
+
+        Assert.NotEqual("zip", result.Kind);
+        Assert.Contains("Web Sitesi Yenileme İşi", result.Text!, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Text_comes_out_of_the_files_inside_a_zip()
     {
         var zip = SampleFiles.Zip(
@@ -68,6 +99,24 @@ public sealed class DocumentTextExtractorTests
         var result = Extractor.Extract(content, fileName);
 
         Assert.Null(result.Text);
+
+        // And the other half of the test's own name: it costs a warning. The
+        // unknown extension used to cost nothing at all.
+        Assert.NotEmpty(result.Problems);
+    }
+
+    [Fact]
+    public void A_file_that_yields_no_text_at_all_says_so()
+    {
+        // An archive of images opens cleanly, contains nothing readable, and
+        // would otherwise be stored as a document with an empty text column -
+        // indistinguishable from one the extractor never looked at.
+        var result = Extractor.Extract(
+            SampleFiles.Zip(("plan.png", [0x89, 0x50, 0x4E, 0x47])),
+            "ekler.zip");
+
+        Assert.Null(result.Text);
+        Assert.Contains("nothing could be read", string.Join(" ", result.Problems), StringComparison.Ordinal);
     }
 
     [Fact]

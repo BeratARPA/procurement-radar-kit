@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Spreadsheet = DocumentFormat.OpenXml.Spreadsheet;
 
 namespace ProcurementRadar.UnitTests.Documents;
 
@@ -72,6 +74,55 @@ internal static class SampleFiles
         {
             var body = new Body(new Paragraph(new Run(new Text(text))));
             document.AddMainDocumentPart().Document = new Document(body);
+        }
+
+        return stream.ToArray();
+    }
+
+    /// <summary>
+    /// A workbook whose cells hold the given rows, written the way Excel writes
+    /// them: the strings live in the shared string table and each cell carries an
+    /// index into it. A reader that skips that indirection gets numbers back.
+    /// </summary>
+    public static byte[] Xlsx(params string[][] rows)
+    {
+        using var stream = new MemoryStream();
+
+        using (var document = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
+        {
+            var workbook = document.AddWorkbookPart();
+            workbook.Workbook = new Spreadsheet.Workbook();
+
+            var strings = rows.SelectMany(row => row).Distinct(StringComparer.Ordinal).ToList();
+
+            workbook.AddNewPart<SharedStringTablePart>().SharedStringTable =
+                new Spreadsheet.SharedStringTable(
+                    strings.Select(value =>
+                        new Spreadsheet.SharedStringItem(new Spreadsheet.Text(value))));
+
+            var sheetData = new Spreadsheet.SheetData();
+
+            foreach (var row in rows)
+            {
+                sheetData.Append(new Spreadsheet.Row(row.Select(value => new Spreadsheet.Cell
+                {
+                    DataType = Spreadsheet.CellValues.SharedString,
+                    CellValue = new Spreadsheet.CellValue(
+                        strings.IndexOf(value).ToString(CultureInfo.InvariantCulture))
+                })));
+            }
+
+            var worksheet = workbook.AddNewPart<WorksheetPart>();
+            worksheet.Worksheet = new Spreadsheet.Worksheet(sheetData);
+
+            workbook.Workbook
+                .AppendChild(new Spreadsheet.Sheets())
+                .AppendChild(new Spreadsheet.Sheet
+                {
+                    Id = workbook.GetIdOfPart(worksheet),
+                    SheetId = 1,
+                    Name = "Teklif Cetveli"
+                });
         }
 
         return stream.ToArray();
