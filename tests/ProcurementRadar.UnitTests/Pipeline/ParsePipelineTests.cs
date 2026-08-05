@@ -8,6 +8,7 @@ using ProcurementRadar.Domain.Fetching;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.UnitTests.Archive;
 using ProcurementRadar.UnitTests.Normalization;
+using ProcurementRadar.Scoring;
 
 namespace ProcurementRadar.UnitTests.Pipeline;
 
@@ -29,6 +30,13 @@ public sealed class ParsePipelineTests : IDisposable
     private readonly StoragePathBuilder _paths;
     private readonly FileSystemRawArchive _archive;
     private readonly StubAdapter _adapter = new();
+    private readonly FakeNoticeScoreRepository _scores = new();
+
+    // The real scorer, reading the same keywords.json the worker does.
+    private static readonly RuleScorer Scorer = new(
+        KeywordRules.Load(File.ReadAllText(Path.Combine(
+            RepositoryRoot.Find().FullName, "config", "keywords.json"))),
+        new NoticeNormalizer(NoticeNormalizerTests.Rules));
 
     private static readonly PersonalDataMasker Masker = new(PersonalDataRules.Load(
         File.ReadAllText(Path.Combine(
@@ -155,6 +163,8 @@ public sealed class ParsePipelineTests : IDisposable
             new SourceAdapterRegistry([]),
             new ExternalKeyBuilder(new NoticeNormalizer(NoticeNormalizerTests.Rules)),
             Masker,
+            Scorer,
+            _scores,
             NullLogger<ParsePipeline>.Instance);
 
         var summary = await pipeline.RunAsync(null, 10, CancellationToken.None);
@@ -199,6 +209,8 @@ public sealed class ParsePipelineTests : IDisposable
         new SourceAdapterRegistry([_adapter]),
         new ExternalKeyBuilder(new NoticeNormalizer(NoticeNormalizerTests.Rules)),
         Masker,
+        Scorer,
+        _scores,
         NullLogger<ParsePipeline>.Instance);
 
     private async Task ArchiveAsync(byte[] body, long sourceId = 12, string? contentType = "text/html")

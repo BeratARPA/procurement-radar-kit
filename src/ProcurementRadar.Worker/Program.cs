@@ -5,8 +5,10 @@ using ProcurementRadar.Domain.Fetching;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Domain.Parsing;
 using ProcurementRadar.Domain.Repositories;
+using ProcurementRadar.Domain.Scoring;
 using ProcurementRadar.Parsers;
 using ProcurementRadar.Persistence;
+using ProcurementRadar.Scoring;
 using ProcurementRadar.Worker;
 using Serilog;
 
@@ -32,6 +34,7 @@ var dataDirectory = builder.Configuration["PR_DATA_DIR"] ?? StoragePathBuilder.D
 var datePatterns = TurkishDatePatterns.Load(ReadConfig("tr-date-patterns.json"));
 var normalization = NormalizationRules.Load(ReadConfig("tr-normalization.json"));
 var personalData = PersonalDataRules.Load(ReadConfig("tr-personal-data.json"));
+var keywords = KeywordRules.Load(ReadConfig("keywords.json"));
 
 PersistenceSetup.RegisterTypeHandlers();
 
@@ -56,12 +59,15 @@ builder.Services.AddSingleton<IDbConnectionFactory>(_ => new NpgsqlConnectionFac
 builder.Services.AddSingleton<ISourceRepository, SourceRepository>();
 builder.Services.AddSingleton<IRawFetchRepository, RawFetchRepository>();
 builder.Services.AddSingleton<INoticeRepository, NoticeRepository>();
+builder.Services.AddSingleton<INoticeScoreRepository, NoticeScoreRepository>();
 
 builder.Services.AddSingleton(datePatterns);
 builder.Services.AddSingleton<ITurkishDateParser, TurkishDateParser>();
 builder.Services.AddSingleton(new NoticeNormalizer(normalization));
 builder.Services.AddSingleton<ExternalKeyBuilder>();
 builder.Services.AddSingleton(new PersonalDataMasker(personalData));
+builder.Services.AddSingleton(keywords);
+builder.Services.AddSingleton<INoticeScorer, RuleScorer>();
 
 builder.Services.AddSingleton<ISourceAdapter, GenericTableAdapter>();
 builder.Services.AddSingleton<ISourceAdapterRegistry, SourceAdapterRegistry>();

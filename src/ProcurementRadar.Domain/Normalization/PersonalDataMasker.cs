@@ -27,6 +27,16 @@ public sealed class PersonalDataMasker
         @"\b[\w.+-]+@[\w-]+\.[\w.-]+\b",
         RegexOptions.CultureInvariant);
 
+    // Named by code point rather than written out. These are a casing rule, not
+    // vocabulary, so they belong in code - but U+0130 and U+0131 are almost
+    // impossible to tell from I and i in a monospaced font, and the whole
+    // codebase otherwise keeps Turkish text in config/.
+    private const char DotlessSmallI = (char)0x0131;
+    private const char DottedCapitalI = (char)0x0130;
+
+    private static readonly string AnyIShapedLetter =
+        string.Concat("[iI", DotlessSmallI, DottedCapitalI, "]");
+
     private readonly PersonalDataRules _rules;
     private readonly Regex _labelPattern;
 
@@ -67,7 +77,9 @@ public sealed class PersonalDataMasker
         var escaped = Regex.Escape(label);
 
         return string.Concat(escaped.Select(character =>
-            character is 'i' or 'ı' or 'İ' or 'I' ? "[iıİI]" : character.ToString()));
+            character is 'i' or 'I' or DotlessSmallI or DottedCapitalI
+                ? AnyIShapedLetter
+                : character.ToString()));
     }
 
     public string? MaskText(string? text)

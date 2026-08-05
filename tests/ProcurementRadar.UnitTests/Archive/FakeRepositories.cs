@@ -154,6 +154,19 @@ internal sealed class FakeNoticeRepository : INoticeRepository
     }
 }
 
+internal sealed class FakeNoticeScoreRepository : INoticeScoreRepository
+{
+    public List<NoticeScore> Scores { get; } = [];
+
+    public Task UpsertAsync(NoticeScore score, CancellationToken cancellationToken)
+    {
+        Scores.RemoveAll(existing => existing.NoticeId == score.NoticeId);
+        Scores.Add(score);
+
+        return Task.CompletedTask;
+    }
+}
+
 internal static class TestSources
 {
     public static Source Municipality(long id = 12, string? adapterConfig = null) => new()

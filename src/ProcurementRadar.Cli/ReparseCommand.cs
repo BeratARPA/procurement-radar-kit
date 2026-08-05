@@ -4,6 +4,7 @@ using ProcurementRadar.Domain.Adapters;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Parsers;
 using ProcurementRadar.Persistence;
+using ProcurementRadar.Scoring;
 using Serilog;
 using Serilog.Extensions.Logging;
 
@@ -74,6 +75,8 @@ internal static class ReparseCommand
             Environment.GetEnvironmentVariable(StoragePathBuilder.DataDirectoryVariable)
             ?? StoragePathBuilder.DefaultDataDirectory);
 
+        var normalizer = new NoticeNormalizer(config.Normalization);
+
         var pipeline = new ParsePipeline(
             new FileSystemRawArchive(paths, loggerFactory.CreateLogger<FileSystemRawArchive>()),
             new RawFetchRepository(connectionFactory),
@@ -88,8 +91,10 @@ internal static class ReparseCommand
                         loggerFactory.CreateLogger<TurkishDateParser>()),
                     loggerFactory.CreateLogger<GenericTableAdapter>())
             ]),
-            new ExternalKeyBuilder(new NoticeNormalizer(config.Normalization)),
+            new ExternalKeyBuilder(normalizer),
             new PersonalDataMasker(config.PersonalData),
+            new RuleScorer(config.Keywords, normalizer),
+            new NoticeScoreRepository(connectionFactory, TimeProvider.System),
             loggerFactory.CreateLogger<ParsePipeline>());
 
         var summary = await pipeline.RunAsync(sourceId, batchSize, cancellationToken).ConfigureAwait(false);

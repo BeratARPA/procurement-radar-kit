@@ -4,6 +4,7 @@ using ProcurementRadar.Domain.Adapters;
 using ProcurementRadar.Domain.Entities;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Domain.Repositories;
+using ProcurementRadar.Domain.Scoring;
 
 namespace ProcurementRadar.Collector;
 
@@ -38,6 +39,8 @@ public sealed class ParsePipeline
     private readonly ISourceAdapterRegistry _adapters;
     private readonly ExternalKeyBuilder _keyBuilder;
     private readonly PersonalDataMasker _masker;
+    private readonly INoticeScorer _scorer;
+    private readonly INoticeScoreRepository _scores;
     private readonly ILogger<ParsePipeline> _logger;
 
     public ParsePipeline(
@@ -48,6 +51,8 @@ public sealed class ParsePipeline
         ISourceAdapterRegistry adapters,
         ExternalKeyBuilder keyBuilder,
         PersonalDataMasker masker,
+        INoticeScorer scorer,
+        INoticeScoreRepository scores,
         ILogger<ParsePipeline> logger)
     {
         _archive = archive;
@@ -57,6 +62,8 @@ public sealed class ParsePipeline
         _adapters = adapters;
         _keyBuilder = keyBuilder;
         _masker = masker;
+        _scorer = scorer;
+        _scores = scores;
         _logger = logger;
     }
 
@@ -207,8 +214,7 @@ public sealed class ParsePipeline
                 masked.SourceUrl);
         }
 
-        var result = await _notices.UpsertAsync(
-            new ProcurementNotice
+        var notice = new ProcurementNotice
             {
                 SourceId = source.Id,
                 RawFetchId = rawFetch.Id,
@@ -220,19 +226,37 @@ public sealed class ParsePipeline
                 EstimatedCost = masked.EstimatedCost,
                 BidDeadlineAt = masked.BidDeadlineAt,
                 SourceUrl = masked.SourceUrl
+            };
+
+        var result = await _notices.UpsertAsync(notice, cancellationToken).ConfigureAwait(false);
+
+        if (!result.WasInserted)
+        {
+            // Only last_seen_at moved. The wording has not changed, so neither
+            // would the score.
+            return false;
+        }
+
+        var score = _scorer.Score(notice);
+
+        await _scores.UpsertAsync(
+            new NoticeScore
+            {
+                NoticeId = result.NoticeId,
+                RuleScore = score.Value,
+                Rationale = score.Rationale,
+                Model = score.Model
             },
             cancellationToken).ConfigureAwait(false);
 
-        if (result.WasInserted)
-        {
-            _logger.LogInformation(
-                "New notice {NoticeId}: {Title} ({Authority})",
-                result.NoticeId,
-                masked.Title,
-                masked.AuthorityName ?? source.AuthorityName);
-        }
+        _logger.LogInformation(
+            "New notice {NoticeId} scored {Score}: {Title} ({Authority})",
+            result.NoticeId,
+            score.Value,
+            masked.Title,
+            masked.AuthorityName ?? source.AuthorityName);
 
-        return result.WasInserted;
+        return true;
     }
 
     /// <summary>

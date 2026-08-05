@@ -1,5 +1,6 @@
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Parsers;
+using ProcurementRadar.Scoring;
 
 namespace ProcurementRadar.Cli;
 
@@ -10,7 +11,8 @@ namespace ProcurementRadar.Cli;
 internal sealed record ConfigFiles(
     TurkishDatePatterns DatePatterns,
     NormalizationRules Normalization,
-    PersonalDataRules PersonalData)
+    PersonalDataRules PersonalData,
+    KeywordRules Keywords)
 {
     public const string DefaultDirectory = "config";
 
@@ -18,7 +20,8 @@ internal sealed record ConfigFiles(
         => new(
             TurkishDatePatterns.Load(Read(directory, "tr-date-patterns.json")),
             NormalizationRules.Load(Read(directory, "tr-normalization.json")),
-            PersonalDataRules.Load(Read(directory, "tr-personal-data.json")));
+            PersonalDataRules.Load(Read(directory, "tr-personal-data.json")),
+            KeywordRules.Load(Read(directory, "keywords.json")));
 
     private static string Read(string directory, string fileName)
     {
