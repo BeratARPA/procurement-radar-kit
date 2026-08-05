@@ -1,0 +1,35 @@
+{
+  "_comment": "Data, not code. Feeds the normalizer behind external_key (spec Bölüm 8). Türkçe, çünkü kaynak metin Türkçe.",
+  "ascii_folding": {
+    "ç": "c",
+    "ğ": "g",
+    "ı": "i",
+    "ö": "o",
+    "ş": "s",
+    "ü": "u",
+    "â": "a",
+    "î": "i",
+    "û": "u"
+  },
+  "_folding_note": "Küçük harfe çevirme Türkçe kurallarıyla yapılır, sonra bu tablo uygulanır. 'İ' önce 'i' olur, 'I' önce 'ı' olur ve buradan 'i'ye iner — böylece aynı ilanın iki farklı yazımı aynı anahtarı üretir.",
+  "suffixes_to_strip": [
+    "hizmet alımı işi",
+    "hizmeti alımı işi",
+    "mal alımı işi",
+    "hizmet alımı",
+    "hizmeti alımı",
+    "mal alımı",
+    "yapım işi",
+    "satın alınması",
+    "satın alınması işi",
+    "yaptırılması",
+    "hizmeti",
+    "hizmet",
+    "alımı",
+    "alım",
+    "temini",
+    "işi",
+    "işleri"
+  ],
+  "_suffix_note": "Başlığın SONUNDAN atılır, tekrar tekrar: 'Yazılım Bakım ve Destek Hizmeti Alımı' önce 'alımı'yı, sonra 'hizmeti'yi kaybeder. Uzun olanlar önce denenir. Başlığın tamamı ek çıkarsa atma geri alınır — aksi halde farklı ilanlar boş başlıkta çakışır."
+}

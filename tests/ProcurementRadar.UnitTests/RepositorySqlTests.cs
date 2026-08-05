@@ -163,13 +163,23 @@ public sealed class RepositorySqlTests
     }
 
     [Fact]
-    public void The_upsert_never_overwrites_first_seen_at()
+    public void The_upsert_touches_only_last_seen_at_when_a_notice_is_already_known()
     {
         var conflictClause = NoticeSql.Upsert[NoticeSql.Upsert.IndexOf(
             "ON CONFLICT", StringComparison.Ordinal)..];
 
+        // first_seen_at is the product's whole competitive edge: how many hours
+        // before everyone else we saw this. Recomputing it once destroys it for
+        // that notice permanently.
         Assert.DoesNotContain("first_seen_at", conflictClause, StringComparison.Ordinal);
-        Assert.Contains("last_seen_at = EXCLUDED.last_seen_at", conflictClause, StringComparison.Ordinal);
+
+        // Spec Bölüm 8: on a collision the first record is kept and only
+        // last_seen_at moves. Exactly one assignment, not "at least one".
+        var assignments = Regex.Matches(conflictClause, @"(?<column>[a-z_]+)\s*=\s*EXCLUDED\.")
+            .Select(match => match.Groups["column"].Value)
+            .ToArray();
+
+        Assert.Equal(["last_seen_at"], assignments);
     }
 
     private static IEnumerable<(string Name, string Sql)> AllStatements()
