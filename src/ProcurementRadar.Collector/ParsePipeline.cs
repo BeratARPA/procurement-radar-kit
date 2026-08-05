@@ -39,6 +39,7 @@ public sealed class ParsePipeline
     private readonly ISourceAdapterRegistry _adapters;
     private readonly ExternalKeyBuilder _keyBuilder;
     private readonly PersonalDataMasker _masker;
+    private readonly INoticeDocumentRepository _documents;
     private readonly INoticeScorer _scorer;
     private readonly INoticeScoreRepository _scores;
     private readonly ILogger<ParsePipeline> _logger;
@@ -51,6 +52,7 @@ public sealed class ParsePipeline
         ISourceAdapterRegistry adapters,
         ExternalKeyBuilder keyBuilder,
         PersonalDataMasker masker,
+        INoticeDocumentRepository documents,
         INoticeScorer scorer,
         INoticeScoreRepository scores,
         ILogger<ParsePipeline> logger)
@@ -62,6 +64,7 @@ public sealed class ParsePipeline
         _adapters = adapters;
         _keyBuilder = keyBuilder;
         _masker = masker;
+        _documents = documents;
         _scorer = scorer;
         _scores = scores;
         _logger = logger;
@@ -235,6 +238,16 @@ public sealed class ParsePipeline
             // Only last_seen_at moved. The wording has not changed, so neither
             // would the score.
             return false;
+        }
+
+        // Only the url is recorded here. Fetching it is the downloader's job:
+        // this pipeline has to stay runnable against the archive with the
+        // network unplugged.
+        foreach (var documentUrl in masked.DocumentUrls)
+        {
+            await _documents
+                .RecordUrlAsync(result.NoticeId, documentUrl, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         var score = _scorer.Score(notice);

@@ -60,6 +60,7 @@ builder.Services.AddSingleton<ISourceRepository, SourceRepository>();
 builder.Services.AddSingleton<IRawFetchRepository, RawFetchRepository>();
 builder.Services.AddSingleton<INoticeRepository, NoticeRepository>();
 builder.Services.AddSingleton<INoticeScoreRepository, NoticeScoreRepository>();
+builder.Services.AddSingleton<INoticeDocumentRepository, NoticeDocumentRepository>();
 
 builder.Services.AddSingleton(datePatterns);
 builder.Services.AddSingleton<ITurkishDateParser, TurkishDateParser>();
@@ -72,9 +73,12 @@ builder.Services.AddSingleton<INoticeScorer, RuleScorer>();
 builder.Services.AddSingleton<ISourceAdapter, GenericTableAdapter>();
 builder.Services.AddSingleton<ISourceAdapterRegistry, SourceAdapterRegistry>();
 builder.Services.AddSingleton<ParsePipeline>();
+builder.Services.AddSingleton<DocumentTextExtractor>();
+builder.Services.AddSingleton<DocumentDownloader>();
 
 builder.Services.AddHostedService<CollectionWorker>();
 builder.Services.AddHostedService<ParseWorker>();
+builder.Services.AddHostedService<DocumentWorker>();
 
 using var host = builder.Build();
 

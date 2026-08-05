@@ -31,6 +31,7 @@ public sealed class ParsePipelineTests : IDisposable
     private readonly FileSystemRawArchive _archive;
     private readonly StubAdapter _adapter = new();
     private readonly FakeNoticeScoreRepository _scores = new();
+    private readonly FakeNoticeDocumentRepository _documents = new();
 
     // The real scorer, reading the same keywords.json the worker does.
     private static readonly RuleScorer Scorer = new(
@@ -163,6 +164,7 @@ public sealed class ParsePipelineTests : IDisposable
             new SourceAdapterRegistry([]),
             new ExternalKeyBuilder(new NoticeNormalizer(NoticeNormalizerTests.Rules)),
             Masker,
+            _documents,
             Scorer,
             _scores,
             NullLogger<ParsePipeline>.Instance);
@@ -209,6 +211,7 @@ public sealed class ParsePipelineTests : IDisposable
         new SourceAdapterRegistry([_adapter]),
         new ExternalKeyBuilder(new NoticeNormalizer(NoticeNormalizerTests.Rules)),
         Masker,
+        _documents,
         Scorer,
         _scores,
         NullLogger<ParsePipeline>.Instance);

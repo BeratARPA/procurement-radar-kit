@@ -167,6 +167,61 @@ internal sealed class FakeNoticeScoreRepository : INoticeScoreRepository
     }
 }
 
+internal sealed class FakeNoticeDocumentRepository : INoticeDocumentRepository
+{
+    private long _nextId;
+
+    public List<NoticeDocument> Documents { get; } = [];
+
+    public Task RecordUrlAsync(long noticeId, string url, CancellationToken cancellationToken)
+    {
+        // Mirrors UNIQUE (notice_id, url): a repeat is ignored, not duplicated.
+        if (!Documents.Any(d => d.NoticeId == noticeId && d.Url == url))
+        {
+            Documents.Add(new NoticeDocument
+            {
+                Id = Interlocked.Increment(ref _nextId),
+                NoticeId = noticeId,
+                Url = url
+            });
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<NoticeDocument>> ListPendingAsync(
+        int maximumAttempts,
+        int limit,
+        CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyList<NoticeDocument>>(Documents
+            .Where(d => d.DownloadedAt is null && d.FailedAttempts < maximumAttempts)
+            .OrderBy(d => d.Id)
+            .Take(limit)
+            .ToList());
+
+    public Task MarkDownloadedAsync(NoticeDocument document, CancellationToken cancellationToken)
+    {
+        var index = Documents.FindIndex(d => d.Id == document.Id);
+        if (index >= 0)
+        {
+            Documents[index] = document;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task RecordFailureAsync(long documentId, CancellationToken cancellationToken)
+    {
+        var index = Documents.FindIndex(d => d.Id == documentId);
+        if (index >= 0)
+        {
+            Documents[index] = Documents[index] with { FailedAttempts = Documents[index].FailedAttempts + 1 };
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
 internal static class TestSources
 {
     public static Source Municipality(long id = 12, string? adapterConfig = null) => new()

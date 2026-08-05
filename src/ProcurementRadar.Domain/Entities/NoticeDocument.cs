@@ -21,4 +21,10 @@ public sealed record NoticeDocument
 
     /// <summary>Text pulled out of the pdf, docx or archive contents (T-12).</summary>
     public string? ExtractedText { get; init; }
+
+    /// <summary>
+    /// How many times fetching this has failed. The downloader gives up after a
+    /// few, so a url that will never resolve stops costing requests.
+    /// </summary>
+    public int FailedAttempts { get; init; }
 }
