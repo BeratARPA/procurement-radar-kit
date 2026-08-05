@@ -13,6 +13,13 @@
     <!-- Real HTML captured from live pages, one folder per adapter_key.
          Copied next to the test assembly so parser tests can read it. -->
     <None Include="fixtures\**\*" CopyToOutputDirectory="PreserveNewest" />
+
+    <!-- The date patterns are data (config/tr-date-patterns.json). Fixtures run
+         against the real parser, so the same file the worker loads is copied
+         here rather than a second copy being kept in sync by hand. -->
+    <None Include="..\..\config\tr-date-patterns.json"
+          Link="config\tr-date-patterns.json"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

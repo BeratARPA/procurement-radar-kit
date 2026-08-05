@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using ProcurementRadar.Domain.Entities;
 using ProcurementRadar.Domain.Enums;
 using ProcurementRadar.Domain.Fetching;
-using ProcurementRadar.Domain.Parsing;
 using ProcurementRadar.Parsers;
 
 namespace ProcurementRadar.Parsers.Tests;
@@ -39,6 +38,11 @@ public sealed class GenericTableAdapterFixtureTests
     private static readonly string FixtureDirectory =
         Path.Combine(AppContext.BaseDirectory, "fixtures", GenericTableAdapter.AdapterKey);
 
+    // The real parser, loaded from the same config file the worker uses. A
+    // fixture that cannot have its dates read should say so here.
+    private static readonly TurkishDatePatterns DatePatterns = TurkishDatePatterns.Load(
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "config", "tr-date-patterns.json")));
+
     [Fact]
     public void Every_captured_page_parses_to_the_number_of_notices_it_should()
     {
@@ -54,7 +58,7 @@ public sealed class GenericTableAdapterFixtureTests
             var source = SourceFor(expectation);
             var adapter = new GenericTableAdapter(
                 new UnusableFetcher(),
-                new NullDateParser(),
+                new TurkishDateParser(DatePatterns, NullLogger<TurkishDateParser>.Instance),
                 NullLogger<GenericTableAdapter>.Instance);
 
             var notices = adapter.Parse(File.ReadAllText(htmlPath), source);
@@ -109,11 +113,5 @@ public sealed class GenericTableAdapterFixtureTests
     {
         public Task<FetchResult> FetchAsync(FetchRequest request, CancellationToken cancellationToken)
             => throw new InvalidOperationException("Parse must not fetch anything.");
-    }
-
-    /// <summary>Stands in until T-08 lands the real one.</summary>
-    private sealed class NullDateParser : ITurkishDateParser
-    {
-        public DateTimeOffset? TryParse(string? text) => null;
     }
 }
