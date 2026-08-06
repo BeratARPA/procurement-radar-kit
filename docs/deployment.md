@@ -1,10 +1,9 @@
 # Kurulum
 
-D-10: kendi makineniz, tercihen sürekli açık kalabilecek eski bir laptop.
-VPS yok, bulut yok, aylık gider yok — elektrik dışında.
-
-Bu doküman Ubuntu Server varsayıyor. Windows'ta geliştirip Linux'ta çalıştırmak
-sorun değil; kod tarafında platforma bağlı hiçbir şey yok.
+D-10 "eski bir laptop + Ubuntu + systemd" diyordu. Gerçekte elimizde tek makine
+var: geliştirmenin yapıldığı Windows 11 makinesi, PostgreSQL zaten Docker
+Desktop üzerinde çalışıyor. Karar buna göre güncellendi — aşağıdaki **Windows**
+bölümü geçerli olan; Linux bölümü ileride ayrı bir makine çıkarsa diye duruyor.
 
 ---
 
@@ -12,12 +11,67 @@ sorun değil; kod tarafında platforma bağlı hiçbir şey yok.
 
 Sistem çalışmadığı sürece hiçbir şey yakalamıyor. Ve yakalanmayan ilan geri
 gelmiyor: bazı kaynaklar listelerinde yalnızca birkaç günlük pencere tutuyor
-(örneğin Ankara Bilkent Şehir Hastanesi ~4 gün), yani kapalı geçen bir gün
-kalıcı veri kaybı demek.
-
-`first_seen_at` — projenin bütün değeri — ancak makine açıkken birikir.
+(Ankara Bilkent Şehir Hastanesi ~4 gün), yani kapalı geçen bir gün kalıcı veri
+kaybı demek. `first_seen_at` — projenin bütün değeri — ancak makine açıkken
+birikir.
 
 ---
+
+## Windows (bu makine)
+
+### Neden servis değil, zamanlanmış görev
+
+Windows'ta Docker motoru Docker Desktop'ın içinde yaşıyor ve Docker Desktop bir
+kullanıcı oturumu istiyor: açılışta değil, siz giriş yapınca başlıyor. Windows
+Service oturum açılmadan başlar, veritabanını bulamaz ve boş odaya konuşur.
+Bu makineyi gerçekten ayağa kaldıran şey sizin giriş yapmanız, o yüzden worker
+da oraya bağlanıyor.
+
+Worker'ın veritabanı hazır olmadan başlaması sorun değil — `CollectionWorker`
+her turu try/catch içinde çalıştırıyor, bir sonraki turda yeniden dener — ama
+görev yine de iki dakika gecikmeli başlıyor ki ilk dakikasını hata basarak
+geçirmesin. `docker-compose.yml` içindeki `restart: unless-stopped` de
+PostgreSQL'i Docker Desktop ile birlikte geri getiriyor.
+
+### Kurulum
+
+Depo kökünde, PowerShell:
+
+```
+.\deploy\install-windows.ps1
+```
+
+Yaptıkları: worker'ı `publish/` altına yayınlar, `config/` klasörünü yanına
+kopyalar, EKAP için Chromium'u bir kez indirir (~150 MB), görevi oturum
+açılışına kaydeder ve çalışmasını engelleyecek şeyleri raporlar.
+
+Kaldırmak için: `.\deploy\install-windows.ps1 -Uninstall`
+
+### Uyku — en kolay unutulan şey
+
+Uyuyan laptop hiçbir şey toplamaz. Kurulum betiği bunu kontrol edip söylüyor;
+kapatmak için:
+
+```
+powercfg /change standby-timeout-ac 0
+powercfg /change hibernate-timeout-ac 0
+```
+
+Kapağı kapatmak da uyutur — Denetim Masası → Güç Seçenekleri → "Kapağı
+kapattığımda" → "Hiçbir şey yapma".
+
+### Elle başlatma ve izleme
+
+```
+Start-ScheduledTask -TaskName ProcurementRadar
+Get-Content publish\logs\procurement-radar-*.log -Tail 20 -Wait
+```
+
+Loglar JSON (D-07).
+
+---
+
+## Linux (ileride ayrı bir makine olursa)
 
 ## 1. Bağımlılıklar
 

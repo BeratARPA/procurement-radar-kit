@@ -172,6 +172,22 @@ makine işinizi görür. Mükemmel uptime v2 konusu.
 otomatik başlar. Kapanma/açılma sonrası ilk tarama hemen tetiklenir, bir
 sonraki periyot beklenmez.
 
+**Güncelleme — 6 Ağustos 2026:** ~~Ubuntu Server + systemd~~ Ekipte ikinci bir
+makine yok; sistem geliştirmenin yapıldığı Windows 11 makinesinde çalışacak,
+PostgreSQL zaten orada Docker Desktop üzerinde. Kararın özü değişmedi (kendi
+makinemiz, VPS yok, aylık gider yok), yalnızca işletim sistemi değişti.
+
+Windows'ta servis değil **oturum açılışına bağlı zamanlanmış görev**
+kullanılıyor. Sebebi teknik: Docker motoru Docker Desktop'ın içinde ve Docker
+Desktop bir kullanıcı oturumu istiyor — açılışta değil, giriş yapınca başlıyor.
+Windows Service oturumdan önce başlar, veritabanını bulamaz ve boşa döner. Bu
+makineyi gerçekten ayağa kaldıran şey kullanıcının giriş yapması.
+
+Bunun dürüst maliyeti: makine kapalıyken veya **uykudayken** hiçbir şey
+toplanmıyor, ve laptop varsayılan olarak uyur. Kurulum betiği güç ayarlarını
+kontrol edip uyarıyor ama değiştirmiyor — makinenin sahibi o kararı kendi verir.
+Kurulum: `deploy/install-windows.ps1`, ayrıntılar `docs/deployment.md`.
+
 ---
 
 ## D-11 — Arşiv ham bayt tutar, çözülmüş metin değil
