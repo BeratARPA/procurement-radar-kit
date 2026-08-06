@@ -124,6 +124,7 @@
     "include_score": 90
   },
   "_okas_note": "DOLDURULACAK. okas_codes dolu gelen bir ilanda kelime eşleşmesi yerine bu listeler kullanılır — kod, başlığın nasıl yazıldığından bağımsızdır ve çok daha güvenilirdir (spec Bölüm 9). Kodun başlangıcı eşleşir, yani '72' tüm 72xxxxx kodlarını kapsar. Liste boşken davranış değişmez: kelime eşleşmesine düşülür. EKAP adapter'ı (T-16) okas_codes doldurmaya başlayınca burayı doldurun; kod listesi uydurulmaz.",
+  "_thresholds_note": "Üç eşikten yalnızca notify_threshold canlı. rule_score_threshold okunuyor ama hiçbir yerde kullanılmıyor, llm_score_threshold ise koda hiç girmiyor; ikisi de T-13'ün (LLM katmanı) kalıntısı ve D-03 gereği o katman v1'de yok. Buradaki değerleri değiştirmek HİÇBİR ŞEYİ değiştirmez — T-13 açılana kadar öyle kalacaklar. Ayarlamak istediğiniz sayı notify_threshold.",
   "rule_score_threshold": 30,
   "llm_score_threshold": 60,
   "notify_threshold": 30
