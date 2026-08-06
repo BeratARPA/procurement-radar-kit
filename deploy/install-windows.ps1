@@ -66,11 +66,26 @@ if ($Rebuild -or -not (Test-Path $worker)) {
 }
 
 # --- the browser EKAP needs ---------------------------------------------------
+# A scheduled task cannot carry environment variables of its own, so the path
+# goes in .env, which the worker reads at startup. Installing the browser
+# somewhere the running worker does not look is worse than not installing it:
+# thirty-one sources keep working and only EKAP fails, which reads as EKAP being
+# down. It cost ten failures and an auto-disabled source to learn that once.
 $browsers = Join-Path $repo '.playwright'
+$env:PLAYWRIGHT_BROWSERS_PATH = $browsers
+
 if (-not (Test-Path $browsers)) {
-    Write-Host 'Installing Chromium for the EKAP sources (about 150 MB, once)...'
-    $env:PLAYWRIGHT_BROWSERS_PATH = $browsers
+    Write-Host 'EKAP icin Chromium indiriliyor (~150 MB, bir kez)...'
     & (Join-Path $publish 'playwright.ps1') install chromium
+}
+
+$envPath = Join-Path $repo '.env'
+if (Test-Path $envPath) {
+    $lines = @(Get-Content $envPath)
+    if (-not ($lines -match '^PLAYWRIGHT_BROWSERS_PATH=')) {
+        Add-Content $envPath "PLAYWRIGHT_BROWSERS_PATH=$browsers"
+        Write-Host '.env icine PLAYWRIGHT_BROWSERS_PATH eklendi.'
+    }
 }
 
 # --- the task -----------------------------------------------------------------

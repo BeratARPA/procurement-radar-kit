@@ -70,15 +70,27 @@ internal static class TelegramCheckCommand
         // No chat id yet, so find it the only way Telegram allows: look at what
         // the bot has been sent. A bot cannot discover a chat it was never
         // spoken to.
-        var updates = await CallAsync(http, token, "getUpdates", cancellationToken).ConfigureAwait(false);
+        // allowed_updates has to name my_chat_member explicitly: Telegram leaves it
+        // out by default, and it is the one update that arrives merely from adding
+        // the bot to a group. Without it the only way to be seen is to send the bot
+        // a message it is allowed to read - and in a group, with privacy mode on as
+        // it is by default, that means one starting with a slash. Asking for it
+        // turns "add the bot" into enough.
+        var updates = await CallAsync(
+                http,
+                token,
+                "getUpdates?allowed_updates=%5B%22message%22,%22channel_post%22,%22my_chat_member%22%5D",
+                cancellationToken)
+            .ConfigureAwait(false);
         var chats = Chats(updates);
 
         if (chats.Count == 0)
         {
             Log.Warning(
-                "No chats yet. Add the bot to your group, send any message there, then run this "
-                + "again. A bot only sees chats that have spoken to it - Telegram gives it no way "
-                + "to look itself up.");
+                "No chats yet. Add the bot to the group, then send /start there - with a slash. "
+                + "Telegram switches a bot's privacy mode on by default, so an ordinary message "
+                + "in a group never reaches it; a command does. This does not affect the buttons "
+                + "on a notification, which always come through.");
 
             return 2;
         }
@@ -86,6 +98,23 @@ internal static class TelegramCheckCommand
         foreach (var (id, title) in chats)
         {
             Log.Information("Found chat {ChatId} ({Title})", id, title);
+        }
+
+        // Promoting a bot to administrator turns a basic group into a supergroup,
+        // and a supergroup has a different id. Both then show up here under the
+        // same name, and the old one silently goes nowhere. The -100 prefix marks
+        // the live one.
+        var supergroups = chats
+            .Where(chat => chat.Id.StartsWith("-100", StringComparison.Ordinal))
+            .ToArray();
+
+        if (supergroups.Length == 1 && chats.Count > 1)
+        {
+            Log.Warning(
+                "More than one id for what looks like the same group. Use {ChatId}: making a bot "
+                + "an administrator converts a group to a supergroup and changes its id. The "
+                + "older id still resolves but nothing arrives.",
+                supergroups[0].Id);
         }
 
         Log.Information(
