@@ -71,7 +71,7 @@ public sealed class CallbackProcessor
         {
             try
             {
-                await _commands.RespondAsync(command.Name, cancellationToken).ConfigureAwait(false);
+                await _commands.RespondAsync(command.Name, command.Argument, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {

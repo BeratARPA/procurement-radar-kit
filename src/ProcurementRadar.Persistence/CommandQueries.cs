@@ -74,6 +74,124 @@ public sealed class CommandQueries : ICommandQueries
             .ConfigureAwait(false);
     }
 
+    // ILIKE rather than a text search index: a few hundred rows today and a few
+    // thousand a year, where a sequential scan costs nothing and an index would
+    // want a Turkish configuration PostgreS"""L does not ship.
+    private const string Search = """
+        SELECT n.id AS "NoticeId", n.title AS "Title",
+               coalesce(s.rule_score, 0) AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
+        FROM procurement_notice n
+        LEFT JOIN notice_score s ON s.notice_id = n.id
+        WHERE n.title ILIKE @Pattern OR n.authority_name ILIKE @Pattern
+        ORDER BY n.first_seen_at DESC
+        LIMIT @Limit
+        """;
+
+    private const string Detail = """
+        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
+               n.ikn AS "Ikn", coalesce(s.rule_score, 0) AS "Score", s.rationale AS "Rationale",
+               n.bid_deadline_at AS "BidDeadlineAt",
+               (SELECT d.extracted_text FROM notice_document d
+                 WHERE d.notice_id = n.id AND d.extracted_text IS NOT NULL
+                 ORDER BY length(d.extracted_text) DESC LIMIT 1) AS "AnnouncementText"
+        FROM procurement_notice n
+        LEFT JOIN notice_score s ON s.notice_id = n.id
+        WHERE n.ikn = @Ikn
+        LIMIT 1
+        """;
+
+    // Failing, or quiet long enough to be suspicious after having produced
+    // something before. A source that never produced anything is a different
+    // problem and carries its reason in its own notes.
+    private const string TroubledSources = """
+        SELECT authority_name AS "AuthorityName", consecutive_failures AS "ConsecutiveFailures",
+               last_success_at AS "LastSuccessAt", last_new_notice_at AS "LastNewNoticeAt"
+        FROM source
+        WHERE is_active
+          AND (consecutive_failures > 0
+               OR (last_new_notice_at IS NOT NULL
+                   AND last_new_notice_at < now() - make_interval(days => @SilentDays)))
+        ORDER BY consecutive_failures DESC, last_new_notice_at ASC NULLS FIRST
+        LIMIT 15
+        """;
+
+    private const string ScoreReport = """
+        SELECT n.status AS "Status", count(*)::int AS "Count",
+               round(avg(s.rule_score)::numeric, 1)::float8 AS "AverageScore",
+               max(s.rule_score) AS "MaximumScore"
+        FROM procurement_notice n
+        JOIN notice_score s ON s.notice_id = n.id
+        GROUP BY n.status
+        ORDER BY count(*) DESC
+        """;
+
+    private const string ClosingSoon = """
+        SELECT n.id AS "NoticeId", n.title AS "Title", s.rule_score AS "Score",
+               n.bid_deadline_at AS "BidDeadlineAt"
+        FROM procurement_notice n
+        JOIN notice_score s ON s.notice_id = n.id
+        WHERE n.status = 'new'
+          AND n.bid_deadline_at BETWEEN now() AND now() + make_interval(hours => @WithinHours)
+        ORDER BY n.bid_deadline_at ASC
+        LIMIT @Limit
+        """;
+
+    public async Task<IReadOnlyList<CommandNotice>> SearchAsync(
+        string term,
+        int limit,
+        CancellationToken cancellationToken)
+        => await QueryAsync(Search, new { Pattern = $"%{term}%", Limit = limit }, cancellationToken)
+            .ConfigureAwait(false);
+
+    public async Task<NoticeDetail?> GetDetailAsync(string ikn, CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return await connection.QuerySingleOrDefaultAsync<NoticeDetail>(
+            new CommandDefinition(Detail, new { Ikn = ikn }, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<SourceHealth>> ListTroubledSourcesAsync(
+        int silentDays,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var rows = await connection.QueryAsync<SourceHealth>(
+            new CommandDefinition(
+                TroubledSources,
+                new { SilentDays = silentDays },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<ScoreByStatus>> GetScoreReportAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var rows = await connection.QueryAsync<ScoreByStatus>(
+            new CommandDefinition(ScoreReport, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<CommandNotice>> ListClosingSoonAsync(
+        int withinHours,
+        int limit,
+        CancellationToken cancellationToken)
+        => await QueryAsync(ClosingSoon, new { WithinHours = withinHours, Limit = limit }, cancellationToken)
+            .ConfigureAwait(false);
+
     private async Task<IReadOnlyList<CommandNotice>> QueryAsync(
         string sql,
         object parameters,

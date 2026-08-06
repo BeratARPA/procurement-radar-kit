@@ -59,4 +59,76 @@ public interface ICommandQueries
         CancellationToken cancellationToken);
 
     Task<SystemStatus> GetStatusAsync(CancellationToken cancellationToken);
+
+    /// <summary>Anything in the archive whose title or authority carries the term.</summary>
+    /// <remarks>
+    /// The archive is what this project is actually accumulating (spec Bolum 16),
+    /// and until now the only way to ask it a question was psql.
+    /// </remarks>
+    Task<IReadOnlyList<CommandNotice>> SearchAsync(string term, int limit, CancellationToken cancellationToken);
+
+    /// <summary>One notice in full, announcement text included.</summary>
+    Task<NoticeDetail?> GetDetailAsync(string ikn, CancellationToken cancellationToken);
+
+    /// <summary>Sources that are failing or have gone quiet.</summary>
+    Task<IReadOnlyList<SourceHealth>> ListTroubledSourcesAsync(int silentDays, CancellationToken cancellationToken);
+
+    /// <summary>What the team's own verdicts scored - the calibration data.</summary>
+    Task<IReadOnlyList<ScoreByStatus>> GetScoreReportAsync(CancellationToken cancellationToken);
+
+    /// <summary>Still new, closing within the window.</summary>
+    Task<IReadOnlyList<CommandNotice>> ListClosingSoonAsync(
+        int withinHours,
+        int limit,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>One notice with everything worth reading on a phone.</summary>
+public sealed record NoticeDetail
+{
+    public long NoticeId { get; init; }
+
+    public string Title { get; init; } = string.Empty;
+
+    public string AuthorityName { get; init; } = string.Empty;
+
+    public string? Ikn { get; init; }
+
+    public int Score { get; init; }
+
+    public string? Rationale { get; init; }
+
+    public DateTimeOffset? BidDeadlineAt { get; init; }
+
+    public string? AnnouncementText { get; init; }
+}
+
+public sealed record SourceHealth
+{
+    public string AuthorityName { get; init; } = string.Empty;
+
+    public int ConsecutiveFailures { get; init; }
+
+    public DateTimeOffset? LastSuccessAt { get; init; }
+
+    public DateTimeOffset? LastNewNoticeAt { get; init; }
+}
+
+/// <summary>
+/// How the team's verdicts line up with the score.
+/// </summary>
+/// <remarks>
+/// The threshold is a guess until this says otherwise. spec Bolum 10 keeps the
+/// button presses for exactly this: if what was dismissed and what was pursued
+/// score the same, the filter is not discriminating and the number needs moving.
+/// </remarks>
+public sealed record ScoreByStatus
+{
+    public string Status { get; init; } = string.Empty;
+
+    public int Count { get; init; }
+
+    public double AverageScore { get; init; }
+
+    public int MaximumScore { get; init; }
 }

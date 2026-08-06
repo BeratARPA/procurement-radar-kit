@@ -117,6 +117,30 @@ public sealed class MessageTemplates
         [JsonPropertyName("nothing_today")] public string NothingToday { get; init; } = string.Empty;
         [JsonPropertyName("status")] public string Status { get; init; } = string.Empty;
         [JsonPropertyName("help")] public string Help { get; init; } = string.Empty;
+        [JsonPropertyName("search_command")] public string SearchCommand { get; init; } = string.Empty;
+        [JsonPropertyName("detail_command")] public string DetailCommand { get; init; } = string.Empty;
+        [JsonPropertyName("sources_command")] public string SourcesCommand { get; init; } = string.Empty;
+        [JsonPropertyName("report_command")] public string ReportCommand { get; init; } = string.Empty;
+        [JsonPropertyName("closing_command")] public string ClosingCommand { get; init; } = string.Empty;
+        [JsonPropertyName("keywords_command")] public string KeywordsCommand { get; init; } = string.Empty;
+        [JsonPropertyName("search_usage")] public string SearchUsage { get; init; } = string.Empty;
+        [JsonPropertyName("search_header")] public string SearchHeader { get; init; } = string.Empty;
+        [JsonPropertyName("search_empty")] public string SearchEmpty { get; init; } = string.Empty;
+        [JsonPropertyName("detail_usage")] public string DetailUsage { get; init; } = string.Empty;
+        [JsonPropertyName("detail_missing")] public string DetailMissing { get; init; } = string.Empty;
+        [JsonPropertyName("detail_no_text")] public string DetailNoText { get; init; } = string.Empty;
+        [JsonPropertyName("detail")] public string Detail { get; init; } = string.Empty;
+        [JsonPropertyName("sources_header")] public string SourcesHeader { get; init; } = string.Empty;
+        [JsonPropertyName("sources_line")] public string SourcesLine { get; init; } = string.Empty;
+        [JsonPropertyName("sources_healthy")] public string SourcesHealthy { get; init; } = string.Empty;
+        [JsonPropertyName("report_header")] public string ReportHeader { get; init; } = string.Empty;
+        [JsonPropertyName("report_line")] public string ReportLine { get; init; } = string.Empty;
+        [JsonPropertyName("report_note")] public string ReportNote { get; init; } = string.Empty;
+        [JsonPropertyName("report_empty")] public string ReportEmpty { get; init; } = string.Empty;
+        [JsonPropertyName("closing_header")] public string ClosingHeader { get; init; } = string.Empty;
+        [JsonPropertyName("closing_empty")] public string ClosingEmpty { get; init; } = string.Empty;
+        [JsonPropertyName("keywords_header")] public string KeywordsHeader { get; init; } = string.Empty;
+        [JsonPropertyName("keywords_excluded")] public string KeywordsExcluded { get; init; } = string.Empty;
     }
 
     public sealed record ButtonLabels

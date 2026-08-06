@@ -24,6 +24,7 @@ public sealed class CommandResponder
     private readonly ICommandQueries _queries;
     private readonly MessageTemplates _messages;
     private readonly NotificationOptions _options;
+    private readonly Scoring.KeywordRules _keywords;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<CommandResponder> _logger;
 
@@ -32,6 +33,7 @@ public sealed class CommandResponder
         ICommandQueries queries,
         MessageTemplates messages,
         NotificationOptions options,
+        Scoring.KeywordRules keywords,
         TimeProvider timeProvider,
         ILogger<CommandResponder> logger)
     {
@@ -39,11 +41,12 @@ public sealed class CommandResponder
         _queries = queries;
         _messages = messages;
         _options = options;
+        _keywords = keywords;
         _timeProvider = timeProvider;
         _logger = logger;
     }
 
-    public async Task RespondAsync(string command, CancellationToken cancellationToken)
+    public async Task RespondAsync(string command, string argument, CancellationToken cancellationToken)
     {
         var templates = _messages.Commands;
 
@@ -54,6 +57,12 @@ public sealed class CommandResponder
             _ when Matches(command, templates.OpenCommand) => await OpenAsync(cancellationToken).ConfigureAwait(false),
             _ when Matches(command, templates.TodayCommand) => await TodayAsync(cancellationToken).ConfigureAwait(false),
             _ when Matches(command, templates.StatusCommand) => await StatusAsync(cancellationToken).ConfigureAwait(false),
+            _ when Matches(command, templates.ClosingCommand) => await ClosingAsync(cancellationToken).ConfigureAwait(false),
+            _ when Matches(command, templates.SearchCommand) => await SearchAsync(argument, cancellationToken).ConfigureAwait(false),
+            _ when Matches(command, templates.DetailCommand) => await DetailAsync(argument, cancellationToken).ConfigureAwait(false),
+            _ when Matches(command, templates.SourcesCommand) => await SourcesAsync(cancellationToken).ConfigureAwait(false),
+            _ when Matches(command, templates.ReportCommand) => await ReportAsync(cancellationToken).ConfigureAwait(false),
+            _ when Matches(command, templates.KeywordsCommand) => Keywords(),
             _ when Matches(command, templates.HelpCommand) => templates.Help,
             _ => null
         };
@@ -128,6 +137,129 @@ public sealed class CommandResponder
                     : "-",
                 StringComparison.Ordinal)
             .Replace("{title}", Shorten(notice.Title), StringComparison.Ordinal);
+
+    private async Task<string> ClosingAsync(CancellationToken cancellationToken)
+    {
+        var notices = await _queries.ListClosingSoonAsync(48, 10, cancellationToken).ConfigureAwait(false);
+
+        return notices.Count == 0
+            ? _messages.Commands.ClosingEmpty
+            : _messages.Commands.ClosingHeader + "\n\n" + string.Join("\n", notices.Select(Line));
+    }
+
+    private async Task<string> SearchAsync(string term, CancellationToken cancellationToken)
+    {
+        if (term.Length < 3)
+        {
+            // Two letters match half the archive and answer nothing.
+            return _messages.Commands.SearchUsage;
+        }
+
+        var notices = await _queries.SearchAsync(term, 10, cancellationToken).ConfigureAwait(false);
+
+        return notices.Count == 0
+            ? _messages.Commands.SearchEmpty.Replace("{term}", term, StringComparison.Ordinal)
+            : _messages.Commands.SearchHeader.Replace("{term}", term, StringComparison.Ordinal)
+              + "\n\n" + string.Join("\n", notices.Select(Line));
+    }
+
+    private async Task<string> DetailAsync(string ikn, CancellationToken cancellationToken)
+    {
+        if (ikn.Length < 5)
+        {
+            return _messages.Commands.DetailUsage;
+        }
+
+        var detail = await _queries.GetDetailAsync(ikn, cancellationToken).ConfigureAwait(false);
+
+        if (detail is null)
+        {
+            return _messages.Commands.DetailMissing.Replace("{ikn}", ikn, StringComparison.Ordinal);
+        }
+
+        // Telegram refuses anything over 4096 characters, and an announcement runs
+        // to seven thousand. Cut with room left for everything above it.
+        var text = detail.AnnouncementText is { Length: > 0 } announcement
+            ? (announcement.Length > 3200 ? announcement[..3200] + "…" : announcement)
+            : _messages.Commands.DetailNoText;
+
+        return _messages.Commands.Detail
+            .Replace("{icon}", _messages.IconFor(detail.Score), StringComparison.Ordinal)
+            .Replace("{score}", detail.Score.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
+            .Replace("{title}", detail.Title, StringComparison.Ordinal)
+            .Replace("{authority}", detail.AuthorityName, StringComparison.Ordinal)
+            .Replace("{ikn}", detail.Ikn ?? "-", StringComparison.Ordinal)
+            .Replace("{deadline}", Moment(detail.BidDeadlineAt), StringComparison.Ordinal)
+            .Replace("{rationale}", detail.Rationale ?? "-", StringComparison.Ordinal)
+            .Replace("{text}", text, StringComparison.Ordinal);
+    }
+
+    private async Task<string> SourcesAsync(CancellationToken cancellationToken)
+    {
+        var sources = await _queries.ListTroubledSourcesAsync(30, cancellationToken).ConfigureAwait(false);
+
+        if (sources.Count == 0)
+        {
+            return _messages.Commands.SourcesHealthy;
+        }
+
+        var lines = sources.Select(source => _messages.Commands.SourcesLine
+            .Replace("{name}", source.AuthorityName, StringComparison.Ordinal)
+            .Replace(
+                "{failures}",
+                source.ConsecutiveFailures.ToString(CultureInfo.InvariantCulture),
+                StringComparison.Ordinal)
+            .Replace("{lastNotice}", Moment(source.LastNewNoticeAt), StringComparison.Ordinal));
+
+        return _messages.Commands.SourcesHeader + "\n\n" + string.Join("\n", lines);
+    }
+
+    private async Task<string> ReportAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _queries.GetScoreReportAsync(cancellationToken).ConfigureAwait(false);
+
+        if (rows.Count == 0)
+        {
+            return _messages.Commands.ReportEmpty;
+        }
+
+        var lines = rows.Select(row => _messages.Commands.ReportLine
+            .Replace("{status}", row.Status, StringComparison.Ordinal)
+            .Replace("{count}", row.Count.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
+            .Replace(
+                "{average}",
+                row.AverageScore.ToString("0.#", CultureInfo.InvariantCulture),
+                StringComparison.Ordinal)
+            .Replace("{max}", row.MaximumScore.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal));
+
+        return _messages.Commands.ReportHeader + "\n\n" + string.Join("\n", lines)
+            + "\n" + _messages.Commands.ReportNote;
+    }
+
+    /// <summary>
+    /// The filter as it currently stands. Read only: a group has no way to tell
+    /// who is typing, and one mistyped term can silence the whole thing.
+    /// </summary>
+    private string Keywords()
+    {
+        var header = _messages.Commands.KeywordsHeader.Replace(
+            "{threshold}",
+            _options.MinimumScore.ToString(CultureInfo.InvariantCulture),
+            StringComparison.Ordinal);
+
+        var include = _keywords.Include
+            .OrderByDescending(term => term.Weight)
+            .Select(term => $"• {term.Term} ({term.Weight})");
+
+        return header + "\n" + string.Join("\n", include)
+            + "\n" + _messages.Commands.KeywordsExcluded + "\n"
+            + string.Join(", ", _keywords.Exclude);
+    }
+
+    private static string Moment(DateTimeOffset? at)
+        => at is { } value
+            ? value.ToOffset(TimeSpan.FromHours(3)).ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)
+            : "-";
 
     private static string Shorten(string title)
         => title.Length <= 70 ? title : title[..70].TrimEnd() + "…";

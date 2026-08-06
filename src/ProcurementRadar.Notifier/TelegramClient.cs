@@ -19,8 +19,8 @@ public sealed record TelegramButton(string Label, string CallbackData);
 
 public sealed record TelegramCallback(string Id, string Data, long UpdateId, long MessageId);
 
-/// <summary>A slash command somebody typed in the group.</summary>
-public sealed record TelegramCommand(string Name, long UpdateId);
+/// <summary>A slash command somebody typed, and whatever followed it.</summary>
+public sealed record TelegramCommand(string Name, string Argument, long UpdateId);
 
 /// <summary>Everything one poll returned. One poller, because the offset is shared.</summary>
 public sealed record TelegramUpdates(
@@ -142,8 +142,14 @@ public sealed class TelegramClient
                 // here takes.
                 if (update.Message?.Text is { Length: > 1 } text && text[0] == '/')
                 {
-                    var name = text.Split(' ', '@')[0];
-                    commands.Add(new TelegramCommand(name, update.UpdateId));
+                    // Telegram appends @thebot in groups. Everything after the
+                    // first space is the argument, kept whole - a search term can
+                    // have spaces in it and splitting further would lose them.
+                    var space = text.IndexOf(' ', StringComparison.Ordinal);
+                    var name = (space < 0 ? text : text[..space]).Split('@')[0];
+                    var argument = space < 0 ? string.Empty : text[(space + 1)..].Trim();
+
+                    commands.Add(new TelegramCommand(name, argument, update.UpdateId));
                 }
             }
 

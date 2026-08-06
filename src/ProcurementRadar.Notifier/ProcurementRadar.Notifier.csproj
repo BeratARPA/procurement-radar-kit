@@ -4,6 +4,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
+    <!-- For KeywordRules alone: /kelimeler shows the filter as it stands, and
+         the filter is what the team tunes. No cycle - both sides see Domain. -->
+    <ProjectReference Include="..\ProcurementRadar.Scoring\ProcurementRadar.Scoring.csproj" />
   </ItemGroup>
 
   <ItemGroup>
