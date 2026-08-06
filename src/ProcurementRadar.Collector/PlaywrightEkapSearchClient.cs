@@ -25,6 +25,10 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
     /// <summary>The single visible search box. Verified to be unambiguous.</summary>
     private const string SearchInputSelector = "input[placeholder='Ara']:visible";
 
+    private const string SearchUrl = "https://ekapv2.kik.gov.tr/ekap/search";
+
+    private const string EkapHost = "ekapv2.kik.gov.tr";
+
     private readonly HostPolitenessGate _gate;
     private readonly HttpFetcherOptions _options;
     private readonly EkapBrowserOptions _browserOptions;
@@ -210,6 +214,121 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
         }
     }
 
+    /// <summary>Where the announcement itself comes back.</summary>
+    private const string AnnouncementApiFragment = "/b_ihalearama/api/Ilan/GetList";
+
+    /// <summary>
+    /// The button on a result card that asks for the announcement. The site's own
+    /// label, so it is data and lives in config/ekap-ui.json.
+    /// </summary>
+    private string AnnouncementButtonName => _browserOptions.AnnouncementButtonName;
+
+    public async Task<FetchResult> FetchAnnouncementAsync(string ikn, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(ikn))
+        {
+            return FetchResult.Failed(0);
+        }
+
+        return await _gate
+            .RunAsync(EkapHost, token => RunAnnouncementAsync(ikn, token), cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private async Task<FetchResult> RunAnnouncementAsync(string ikn, CancellationToken cancellationToken)
+    {
+        IBrowserContext? context = null;
+
+        try
+        {
+            var browser = await BrowserAsync(cancellationToken).ConfigureAwait(false);
+
+            context = await browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                UserAgent = _options.UserAgent,
+                Locale = "tr-TR",
+                TimezoneId = "Europe/Istanbul"
+            }).ConfigureAwait(false);
+
+            var page = await context.NewPageAsync().ConfigureAwait(false);
+
+            await page.GotoAsync(SearchUrl, new PageGotoOptions
+            {
+                WaitUntil = WaitUntilState.DOMContentLoaded,
+                Timeout = (float)_browserOptions.PageTimeout.TotalMilliseconds
+            }).ConfigureAwait(false);
+
+            var input = page.Locator(SearchInputSelector).First;
+
+            await input.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible,
+                Timeout = (float)_browserOptions.PageTimeout.TotalMilliseconds
+            }).ConfigureAwait(false);
+
+            // Searching by the registration number, so exactly one card comes
+            // back and there is no question which announcement belongs to which
+            // notice.
+            await input.FillAsync(ikn).ConfigureAwait(false);
+            await input.PressAsync("Enter").ConfigureAwait(false);
+
+            // The result cards are dx-button custom elements that the page's own
+            // javascript cannot see; the accessibility tree is the only handle,
+            // which is what this locator uses.
+            var button = page
+                .GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = AnnouncementButtonName })
+                .First;
+
+            await button.WaitForAsync(new LocatorWaitForOptions
+            {
+                Timeout = (float)_browserOptions.ResultTimeout.TotalMilliseconds
+            }).ConfigureAwait(false);
+
+            var waiting = page.WaitForResponseAsync(
+                response => response.Url.Contains(AnnouncementApiFragment, StringComparison.Ordinal)
+                    && response.Status == 200,
+                new PageWaitForResponseOptions
+                {
+                    Timeout = (float)_browserOptions.ResultTimeout.TotalMilliseconds
+                });
+
+            await button.ClickAsync().ConfigureAwait(false);
+
+            var result = await waiting.ConfigureAwait(false);
+            var body = await result.BodyAsync().ConfigureAwait(false);
+
+            _logger.LogInformation(
+                "EKAP returned the announcement for {Ikn}: {ByteCount} bytes",
+                ikn,
+                body.Length);
+
+            return new FetchResult(
+                FetchOutcome.Fetched,
+                result.Status,
+                body,
+                ETag: null,
+                LastModified: null,
+                ContentHash: Convert.ToHexString(SHA256.HashData(body)).ToLowerInvariant(),
+                ContentType: "application/json; charset=utf-8");
+        }
+        catch (Exception exception) when (exception is TimeoutException or PlaywrightException)
+        {
+            _logger.LogWarning(
+                exception,
+                "Could not reach the announcement for {Ikn}; the notice keeps whatever it had",
+                ikn);
+
+            return FetchResult.Failed(0);
+        }
+        finally
+        {
+            if (context is not null)
+            {
+                await context.CloseAsync().ConfigureAwait(false);
+            }
+        }
+    }
+
     /// <summary>
     /// One browser for the life of the worker, started on first use.
     /// </summary>
@@ -268,6 +387,9 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
 public sealed record EkapBrowserOptions
 {
     public bool Headless { get; init; } = true;
+
+    /// <summary>Read from config/ekap-ui.json; never a literal in code.</summary>
+    public required string AnnouncementButtonName { get; init; }
 
     /// <summary>How long the application may take to boot before giving up.</summary>
     public TimeSpan PageTimeout { get; init; } = TimeSpan.FromSeconds(60);

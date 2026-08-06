@@ -100,7 +100,10 @@ builder.Services.AddSingleton<ISourceAdapter, GenericTableAdapter>();
 // five seconds apart, plus jitter - which is what keeps a browser from being an
 // exception to the politeness rules rather than a participant in them.
 builder.Services.AddSingleton<HostPolitenessGate>();
-builder.Services.AddSingleton(new EkapBrowserOptions());
+builder.Services.AddSingleton(new EkapBrowserOptions
+{
+    AnnouncementButtonName = EkapUi.AnnouncementButtonName(configDirectory)
+});
 builder.Services.AddSingleton<PlaywrightEkapSearchClient>();
 builder.Services.AddSingleton<IEkapSearchClient>(services =>
     services.GetRequiredService<PlaywrightEkapSearchClient>());

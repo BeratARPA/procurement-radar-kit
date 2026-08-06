@@ -1,0 +1,6 @@
+{
+  "_comment": "EKAP arayüzünün metinleri. Kod değil veri (CLAUDE.md kural 5): sitenin kendi etiketleri, site değiştirdiğinde burası değişir, kod değil.",
+  "search_input_selector": "input[placeholder='Ara']:visible",
+  "announcement_button_name": "İlan Gör",
+  "document_button_name": "Dokümanı Gör"
+}

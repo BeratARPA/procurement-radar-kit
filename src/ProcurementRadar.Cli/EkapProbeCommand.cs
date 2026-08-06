@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using ProcurementRadar.Collector;
 using Serilog;
 
 namespace ProcurementRadar.Cli;
@@ -22,8 +23,11 @@ internal static class EkapProbeCommand
     public static async Task<int> RunAsync(string[] args, CancellationToken cancellationToken)
     {
         var url = ReadOption(args, "--url") ?? "https://ekapv2.kik.gov.tr/ekap/search";
-        var searchText = ReadOption(args, "--search") ?? "yazılım";
-        var buttonName = ReadOption(args, "--button") ?? "İlan Gör";
+        var searchText = ReadOption(args, "--search") ?? "test";
+
+        // The site's own label, so it is data (CLAUDE.md rule 5) and lives in
+        // config/ekap-ui.json beside the selector it goes with.
+        var buttonName = ReadOption(args, "--button") ?? EkapUi.AnnouncementButtonName(null);
 
         using var playwright = await Playwright.CreateAsync().ConfigureAwait(false);
 

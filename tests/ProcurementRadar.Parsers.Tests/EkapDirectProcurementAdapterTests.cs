@@ -101,5 +101,8 @@ public sealed class EkapDirectProcurementAdapterTests
     {
         public Task<FetchResult> SearchAsync(EkapSearchRequest request, CancellationToken cancellationToken)
             => throw new InvalidOperationException("Parse must not search.");
+
+        public Task<FetchResult> FetchAnnouncementAsync(string ikn, CancellationToken cancellationToken)
+            => throw new InvalidOperationException("Parse must not fetch an announcement.");
     }
 }
