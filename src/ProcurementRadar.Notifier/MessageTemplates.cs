@@ -43,6 +43,8 @@ public sealed class MessageTemplates
 
     public AlertTemplates Alerts { get; }
 
+    public CommandTemplates Commands { get; init; } = new();
+
     public WeeklySummaryTemplates WeeklySummary { get; }
 
     public string IconFor(int score)
@@ -65,7 +67,10 @@ public sealed class MessageTemplates
             shape.Remaining,
             shape.ScoreIcons.OrderByDescending(icon => icon.AtLeast).ToArray(),
             shape.Alerts,
-            shape.WeeklySummary);
+            shape.WeeklySummary)
+        {
+            Commands = shape.Commands
+        };
     }
 
     public sealed record NoticeTemplates
@@ -96,6 +101,22 @@ public sealed class MessageTemplates
 
         [JsonPropertyName("rationale")]
         public string Rationale { get; init; } = string.Empty;
+    }
+
+    /// <summary>The slash commands and their replies, names included.</summary>
+    public sealed record CommandTemplates
+    {
+        [JsonPropertyName("open_command")] public string OpenCommand { get; init; } = string.Empty;
+        [JsonPropertyName("today_command")] public string TodayCommand { get; init; } = string.Empty;
+        [JsonPropertyName("status_command")] public string StatusCommand { get; init; } = string.Empty;
+        [JsonPropertyName("help_command")] public string HelpCommand { get; init; } = string.Empty;
+        [JsonPropertyName("line")] public string Line { get; init; } = string.Empty;
+        [JsonPropertyName("open_header")] public string OpenHeader { get; init; } = string.Empty;
+        [JsonPropertyName("nothing_open")] public string NothingOpen { get; init; } = string.Empty;
+        [JsonPropertyName("today_header")] public string TodayHeader { get; init; } = string.Empty;
+        [JsonPropertyName("nothing_today")] public string NothingToday { get; init; } = string.Empty;
+        [JsonPropertyName("status")] public string Status { get; init; } = string.Empty;
+        [JsonPropertyName("help")] public string Help { get; init; } = string.Empty;
     }
 
     public sealed record ButtonLabels
@@ -179,6 +200,9 @@ public sealed class MessageTemplates
 
         [JsonPropertyName("reminder_header")]
         public string ReminderHeader { get; init; } = string.Empty;
+
+        [JsonPropertyName("commands")]
+        public CommandTemplates Commands { get; init; } = new();
 
         [JsonPropertyName("buttons")]
         public ButtonLabels Buttons { get; init; } = new();

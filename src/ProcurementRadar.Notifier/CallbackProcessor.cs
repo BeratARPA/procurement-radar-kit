@@ -45,14 +45,17 @@ public sealed class CallbackProcessor
     private readonly TelegramClient _telegram;
     private readonly INoticeRepository _notices;
     private readonly MessageTemplates _messages;
+    private readonly CommandResponder _commands;
     private readonly ILogger<CallbackProcessor> _logger;
 
     public CallbackProcessor(
         TelegramClient telegram,
         INoticeRepository notices,
         MessageTemplates messages,
+        CommandResponder commands,
         ILogger<CallbackProcessor> logger)
     {
+        _commands = commands;
         _telegram = telegram;
         _notices = notices;
         _messages = messages;
@@ -61,10 +64,15 @@ public sealed class CallbackProcessor
 
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
-        var callbacks = await _telegram.GetCallbacksAsync(cancellationToken).ConfigureAwait(false);
+        var updates = await _telegram.GetUpdatesAsync(cancellationToken).ConfigureAwait(false);
         var applied = 0;
 
-        foreach (var callback in callbacks)
+        foreach (var command in updates.Commands)
+        {
+            await _commands.RespondAsync(command.Name, cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (var callback in updates.Callbacks)
         {
             if (!CallbackData.TryParse(callback.Data, out var status, out var noticeId))
             {

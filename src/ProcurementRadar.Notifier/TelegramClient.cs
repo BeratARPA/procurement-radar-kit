@@ -19,6 +19,14 @@ public sealed record TelegramButton(string Label, string CallbackData);
 
 public sealed record TelegramCallback(string Id, string Data, long UpdateId, long MessageId);
 
+/// <summary>A slash command somebody typed in the group.</summary>
+public sealed record TelegramCommand(string Name, long UpdateId);
+
+/// <summary>Everything one poll returned. One poller, because the offset is shared.</summary>
+public sealed record TelegramUpdates(
+    IReadOnlyList<TelegramCallback> Callbacks,
+    IReadOnlyList<TelegramCommand> Commands);
+
 /// <summary>
 /// The Bot API, spoken directly.
 /// </summary>
@@ -81,13 +89,15 @@ public sealed class TelegramClient
         return await PostAsync("sendMessage", payload, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyList<TelegramCallback>> GetCallbacksAsync(CancellationToken cancellationToken)
+    public async Task<TelegramUpdates> GetUpdatesAsync(CancellationToken cancellationToken)
     {
         var payload = new
         {
             offset = _offset,
             timeout = _options.LongPollSeconds,
-            allowed_updates = new[] { "callback_query" }
+            // Both kinds on one poll: two pollers would fight over the offset and
+            // Telegram answers the second with a 409.
+            allowed_updates = new[] { "callback_query", "message" }
         };
 
         try
@@ -99,7 +109,7 @@ public sealed class TelegramClient
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Telegram getUpdates answered {StatusCode}", (int)response.StatusCode);
-                return [];
+                return Empty;
             }
 
             var body = await response.Content
@@ -108,10 +118,11 @@ public sealed class TelegramClient
 
             if (body is not { Ok: true })
             {
-                return [];
+                return Empty;
             }
 
             var callbacks = new List<TelegramCallback>();
+            var commands = new List<TelegramCommand>();
 
             foreach (var update in body.Result)
             {
@@ -125,14 +136,23 @@ public sealed class TelegramClient
                         update.UpdateId,
                         query.Message?.MessageId ?? 0));
                 }
+
+                // A command, and only the name of it. Telegram appends @thebot in
+                // groups, and anything after a space is an argument no command
+                // here takes.
+                if (update.Message?.Text is { Length: > 1 } text && text[0] == '/')
+                {
+                    var name = text.Split(' ', '@')[0];
+                    commands.Add(new TelegramCommand(name, update.UpdateId));
+                }
             }
 
-            return callbacks;
+            return new TelegramUpdates(callbacks, commands);
         }
         catch (Exception exception) when (exception is HttpRequestException or JsonException)
         {
             _logger.LogWarning(exception, "Telegram getUpdates failed");
-            return [];
+            return Empty;
         }
     }
 
@@ -178,6 +198,8 @@ public sealed class TelegramClient
 
         return await PostAsync("editMessageReplyMarkup", payload, cancellationToken).ConfigureAwait(false);
     }
+
+    private static readonly TelegramUpdates Empty = new([], []);
 
     public Task AnswerCallbackAsync(string callbackQueryId, string? text, CancellationToken cancellationToken)
         => PostAsync("answerCallbackQuery", new { callback_query_id = callbackQueryId, text }, cancellationToken);
@@ -234,6 +256,15 @@ public sealed class TelegramClient
 
         [JsonPropertyName("callback_query")]
         public CallbackQuery? CallbackQuery { get; init; }
+
+        [JsonPropertyName("message")]
+        public IncomingMessage? Message { get; init; }
+    }
+
+    private sealed record IncomingMessage
+    {
+        [JsonPropertyName("text")]
+        public string? Text { get; init; }
     }
 
     private sealed record CallbackQuery

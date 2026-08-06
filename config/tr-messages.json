@@ -58,5 +58,19 @@
       "at_least": 0,
       "icon": "🔴"
     }
-  ]
+  ],
+  "commands": {
+    "_comment": "Telegram komutları ve cevapları. Komut adları da burada: kod içinde Türkçe tanımlayıcı olmasın diye.",
+    "open_command": "/liste",
+    "today_command": "/bugun",
+    "status_command": "/durum",
+    "help_command": "/yardim",
+    "line": "{icon} {score} · {deadline} · {title}",
+    "open_header": "📋 Açık ilanlar (son teklif tarihine göre)",
+    "nothing_open": "📋 Şu an eşiği geçen açık ilan yok.",
+    "today_header": "🆕 Son 24 saatte görülenler",
+    "nothing_today": "🆕 Son 24 saatte yeni ilan görülmedi.",
+    "status": "📡 {active} aktif kaynak, {failing} tanesi hatalı\n📊 {notices} ilan ({today} son 24 saatte)\n📨 {announced} bildirim gönderildi\n🕘 Son tarama: {lastFetch}",
+    "help": "/liste — açık ilanlar\n/bugun — son 24 saat\n/durum — sistem durumu"
+  }
 }
