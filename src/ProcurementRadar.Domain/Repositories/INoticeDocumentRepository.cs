@@ -28,4 +28,22 @@ public interface INoticeDocumentRepository
     /// failure this is not retried: the row is never listed as pending again.
     /// </summary>
     Task MarkUnavailableAsync(long documentId, string reason, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Notices worth fetching an announcement for: scored high enough to be
+    /// announced, carrying a tender registration number, and with no text yet.
+    /// </summary>
+    Task<IReadOnlyList<(long NoticeId, string Ikn)>> ListMissingAnnouncementsAsync(
+        int minimumScore,
+        int limit,
+        CancellationToken cancellationToken);
+
+    /// <summary>Stores an announcement's text against a notice.</summary>
+    Task StoreAnnouncementAsync(
+        long noticeId,
+        string url,
+        string fileName,
+        string text,
+        DateTimeOffset fetchedAt,
+        CancellationToken cancellationToken);
 }

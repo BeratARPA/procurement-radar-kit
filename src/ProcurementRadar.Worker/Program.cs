@@ -141,6 +141,7 @@ if (!string.IsNullOrWhiteSpace(botToken) && !string.IsNullOrWhiteSpace(chatId))
     builder.Services.AddSingleton<NoticeMessageFormatter>();
     builder.Services.AddSingleton<NotificationService>();
     builder.Services.AddSingleton<CallbackProcessor>();
+    builder.Services.AddSingleton<EkapAnnouncementEnricher>();
 
     builder.Services.AddHostedService<NotificationWorker>();
     builder.Services.AddHostedService<CallbackWorker>();

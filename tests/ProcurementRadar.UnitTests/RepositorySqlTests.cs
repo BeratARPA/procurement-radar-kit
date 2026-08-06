@@ -20,7 +20,10 @@ public sealed class RepositorySqlTests
         (typeof(RawFetchSql), ["raw_fetch"]),
         (typeof(NoticeSql), ["procurement_notice"]),
         (typeof(NoticeScoreSql), ["notice_score"]),
-        (typeof(NoticeDocumentSql), ["notice_document"]),
+        // Three tables since T-16: choosing which notices deserve an announcement
+        // means asking what scored and what already has text.
+        (typeof(NoticeDocumentSql),
+            ["notice_document", "procurement_notice", "notice_score"]),
         (typeof(NotificationSql),
             ["notification", "procurement_notice", "notice_score", "notice_document"]),
         (typeof(HealthSql),

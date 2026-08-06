@@ -232,6 +232,33 @@ internal sealed class FakeNoticeDocumentRepository : INoticeDocumentRepository
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<(long NoticeId, string Ikn)>> ListMissingAnnouncementsAsync(
+        int minimumScore,
+        int limit,
+        CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyList<(long, string)>>([]);
+
+    public Task StoreAnnouncementAsync(
+        long noticeId,
+        string url,
+        string fileName,
+        string text,
+        DateTimeOffset fetchedAt,
+        CancellationToken cancellationToken)
+    {
+        Documents.Add(new NoticeDocument
+        {
+            Id = Interlocked.Increment(ref _nextId),
+            NoticeId = noticeId,
+            Url = url,
+            FileName = fileName,
+            ExtractedText = text,
+            DownloadedAt = fetchedAt
+        });
+
+        return Task.CompletedTask;
+    }
+
     public Task MarkUnavailableAsync(long documentId, string reason, CancellationToken cancellationToken)
     {
         var index = Documents.FindIndex(d => d.Id == documentId);

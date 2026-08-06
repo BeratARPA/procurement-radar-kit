@@ -89,6 +89,52 @@ public sealed class NoticeDocumentRepository : INoticeDocumentRepository
             .ConfigureAwait(false);
     }
 
+    public async Task<IReadOnlyList<(long NoticeId, string Ikn)>> ListMissingAnnouncementsAsync(
+        int minimumScore,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var rows = await connection.QueryAsync<(long NoticeId, string Ikn)>(
+            new CommandDefinition(
+                NoticeDocumentSql.ListMissingAnnouncements,
+                new { MinimumScore = minimumScore, Limit = limit },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return rows.AsList();
+    }
+
+    public async Task StoreAnnouncementAsync(
+        long noticeId,
+        string url,
+        string fileName,
+        string text,
+        DateTimeOffset fetchedAt,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        await connection.ExecuteAsync(
+            new CommandDefinition(
+                NoticeDocumentSql.StoreAnnouncement,
+                new
+                {
+                    NoticeId = noticeId,
+                    Url = url,
+                    FileName = fileName,
+                    Text = text,
+                    FetchedAt = fetchedAt.ToUniversalTime()
+                },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
     public async Task MarkUnavailableAsync(long documentId, string reason, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(reason);
