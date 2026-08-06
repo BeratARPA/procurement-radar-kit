@@ -1,16 +1,39 @@
 namespace ProcurementRadar.Domain.Notifications;
 
 /// <summary>One notice as a command reply shows it.</summary>
-public sealed record CommandNotice(long NoticeId, string Title, int Score, DateTimeOffset? BidDeadlineAt);
+/// <remarks>
+/// Init properties, not a positional record, and the project has paid for this
+/// lesson once already. Dapper matches a constructor by exact parameter type: a
+/// timestamptz arrives as DateTime, so a constructor taking DateTimeOffset? is
+/// not considered, and the whole read throws at run time with nothing failing at
+/// compile time. Properties are set one at a time and convert cleanly.
+/// </remarks>
+public sealed record CommandNotice
+{
+    public long NoticeId { get; init; }
+
+    public string Title { get; init; } = string.Empty;
+
+    public int Score { get; init; }
+
+    public DateTimeOffset? BidDeadlineAt { get; init; }
+}
 
 /// <summary>What /durum answers with.</summary>
-public sealed record SystemStatus(
-    int ActiveSources,
-    int FailingSources,
-    int Notices,
-    int NoticesToday,
-    int Announced,
-    DateTimeOffset? LastFetchAt);
+public sealed record SystemStatus
+{
+    public int ActiveSources { get; init; }
+
+    public int FailingSources { get; init; }
+
+    public int Notices { get; init; }
+
+    public int NoticesToday { get; init; }
+
+    public int Announced { get; init; }
+
+    public DateTimeOffset? LastFetchAt { get; init; }
+}
 
 /// <summary>
 /// The reads behind the Telegram commands.

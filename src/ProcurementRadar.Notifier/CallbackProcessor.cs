@@ -69,7 +69,18 @@ public sealed class CallbackProcessor
 
         foreach (var command in updates.Commands)
         {
-            await _commands.RespondAsync(command.Name, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await _commands.RespondAsync(command.Name, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // Answering a command is the least important thing this loop
+                // does. A failure here must not take the button presses with it -
+                // those change what the team has decided, and losing them loses
+                // the data the filter is calibrated from.
+                _logger.LogError(exception, "Could not answer {Command}", command.Name);
+            }
         }
 
         foreach (var callback in updates.Callbacks)

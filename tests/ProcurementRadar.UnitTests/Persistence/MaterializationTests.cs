@@ -24,6 +24,48 @@ public sealed class MaterializationTests
     static MaterializationTests() => PersistenceSetup.RegisterTypeHandlers();
 
     [Fact]
+    public async Task A_command_notice_materialises()
+    {
+        // /liste reads this. It was written as a positional record and threw the
+        // first time somebody typed the command - and because command handling
+        // runs in the same loop as the buttons, it took those down with it. The
+        // exact failure this class was created for, a second time.
+        var table = Table(
+            ("NoticeId", typeof(long)),
+            ("Title", typeof(string)),
+            ("Score", typeof(int)),
+            ("BidDeadlineAt", typeof(DateTime)));
+
+        table.Rows.Add(1L, "Yazılım Bakım Hizmeti", 70, DateTime.UtcNow);
+
+        var notice = Assert.Single(await ReadAsync<CommandNotice>(table));
+
+        Assert.Equal("Yazılım Bakım Hizmeti", notice.Title);
+        Assert.Equal(70, notice.Score);
+        Assert.NotNull(notice.BidDeadlineAt);
+    }
+
+    [Fact]
+    public async Task The_system_status_materialises()
+    {
+        var table = Table(
+            ("ActiveSources", typeof(int)),
+            ("FailingSources", typeof(int)),
+            ("Notices", typeof(int)),
+            ("NoticesToday", typeof(int)),
+            ("Announced", typeof(int)),
+            ("LastFetchAt", typeof(DateTime)));
+
+        table.Rows.Add(41, 1, 583, 12, 13, DateTime.UtcNow);
+
+        var status = Assert.Single(await ReadAsync<SystemStatus>(table));
+
+        Assert.Equal(41, status.ActiveSources);
+        Assert.Equal(583, status.Notices);
+        Assert.NotNull(status.LastFetchAt);
+    }
+
+    [Fact]
     public async Task A_source_materialises()
     {
         var table = Table(
