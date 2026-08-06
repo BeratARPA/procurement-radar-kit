@@ -54,6 +54,12 @@ if ($Status) {
 $worker = Join-Path $publish 'ProcurementRadar.Worker.exe'
 
 if ($Rebuild -or -not (Test-Path $worker)) {
+    # A running worker holds its own exe open, so publishing over it fails. Stop
+    # it first; the task is registered again below either way.
+    Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    Get-Process ProcurementRadar.Worker -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Seconds 2
+
     Write-Host 'Yayinlaniyor...'
     & dotnet publish (Join-Path $repo 'src\ProcurementRadar.Worker') -c Release -o $publish --nologo -v q
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }

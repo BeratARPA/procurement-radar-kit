@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ProcurementRadar.Domain.Enums;
 using System.Text.Json.Serialization;
 
 namespace ProcurementRadar.Notifier;
@@ -98,6 +99,20 @@ public sealed class MessageTemplates
 
         [JsonPropertyName("not_relevant")]
         public string NotRelevant { get; init; } = string.Empty;
+
+        /// <summary>
+        /// Shown as a toast after the press. Without one Telegram simply stops
+        /// the spinner and leaves the message exactly as it was, so a button
+        /// that worked perfectly looks like a button that did nothing.
+        /// </summary>
+        [JsonPropertyName("review_confirmation")]
+        public string ReviewConfirmation { get; init; } = string.Empty;
+
+        [JsonPropertyName("not_relevant_confirmation")]
+        public string NotRelevantConfirmation { get; init; } = string.Empty;
+
+        public string ConfirmationFor(NoticeStatus status)
+            => status == NoticeStatus.NotRelevant ? NotRelevantConfirmation : ReviewConfirmation;
     }
 
     public sealed record RemainingLabels

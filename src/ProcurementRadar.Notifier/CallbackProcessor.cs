@@ -44,15 +44,18 @@ public sealed class CallbackProcessor
 {
     private readonly TelegramClient _telegram;
     private readonly INoticeRepository _notices;
+    private readonly MessageTemplates _messages;
     private readonly ILogger<CallbackProcessor> _logger;
 
     public CallbackProcessor(
         TelegramClient telegram,
         INoticeRepository notices,
+        MessageTemplates messages,
         ILogger<CallbackProcessor> logger)
     {
         _telegram = telegram;
         _notices = notices;
+        _messages = messages;
         _logger = logger;
     }
 
@@ -72,7 +75,13 @@ public sealed class CallbackProcessor
             }
 
             await _notices.UpdateStatusAsync(noticeId, status, cancellationToken).ConfigureAwait(false);
-            await _telegram.AnswerCallbackAsync(callback.Id, null, cancellationToken).ConfigureAwait(false);
+
+            // Answered with text, not silence. The press was already recorded
+            // either way, but a button that changes nothing on screen is a button
+            // people press twice and then stop trusting.
+            await _telegram
+                .AnswerCallbackAsync(callback.Id, _messages.Buttons.ConfirmationFor(status), cancellationToken)
+                .ConfigureAwait(false);
 
             _logger.LogInformation("Notice {NoticeId} moved to {Status} from Telegram", noticeId, status);
             applied++;

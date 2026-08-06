@@ -14,7 +14,9 @@
   "reminder_header": "⏳ HATIRLATMA — son teklife az kaldı",
   "buttons": {
     "review": "İncele",
-    "not_relevant": "İlgilenmiyoruz"
+    "not_relevant": "İlgilenmiyoruz",
+    "review_confirmation": "İncelendi olarak işaretlendi",
+    "not_relevant_confirmation": "İlgilenmiyoruz olarak işaretlendi"
   },
   "remaining": {
     "days": "kalan {count} gün",
