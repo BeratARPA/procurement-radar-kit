@@ -17,7 +17,7 @@ public sealed record TelegramOptions
 
 public sealed record TelegramButton(string Label, string CallbackData);
 
-public sealed record TelegramCallback(string Id, string Data, long UpdateId);
+public sealed record TelegramCallback(string Id, string Data, long UpdateId, long MessageId);
 
 /// <summary>
 /// The Bot API, spoken directly.
@@ -119,7 +119,11 @@ public sealed class TelegramClient
 
                 if (update.CallbackQuery is { Id.Length: > 0, Data.Length: > 0 } query)
                 {
-                    callbacks.Add(new TelegramCallback(query.Id, query.Data, update.UpdateId));
+                    callbacks.Add(new TelegramCallback(
+                        query.Id,
+                        query.Data,
+                        update.UpdateId,
+                        query.Message?.MessageId ?? 0));
                 }
             }
 
@@ -130,6 +134,49 @@ public sealed class TelegramClient
             _logger.LogWarning(exception, "Telegram getUpdates failed");
             return [];
         }
+    }
+
+    /// <summary>
+    /// Replaces the buttons under a message that has already been sent.
+    /// </summary>
+    /// <remarks>
+    /// This is the only place the team can see what it decided. There is no web
+    /// interface and there is not going to be one in v1 (spec Bölüm 2), so the
+    /// message has to carry its own state: press a button and the chosen option
+    /// comes back ticked. A toast says it happened; this says what it is.
+    ///
+    /// Both buttons stay live afterwards, because deciding again is normal - a
+    /// notice dismissed on the title often looks different once the şartname has
+    /// been read.
+    /// </remarks>
+    public async Task<bool> EditButtonsAsync(
+        long messageId,
+        IReadOnlyList<TelegramButton> buttons,
+        CancellationToken cancellationToken)
+    {
+        if (messageId == 0)
+        {
+            return false;
+        }
+
+        var payload = new
+        {
+            chat_id = _options.ChatId,
+            message_id = messageId,
+            reply_markup = new
+            {
+                inline_keyboard = new[]
+                {
+                    buttons.Select(button => new
+                    {
+                        text = button.Label,
+                        callback_data = button.CallbackData
+                    }).ToArray()
+                }
+            }
+        };
+
+        return await PostAsync("editMessageReplyMarkup", payload, cancellationToken).ConfigureAwait(false);
     }
 
     public Task AnswerCallbackAsync(string callbackQueryId, string? text, CancellationToken cancellationToken)
@@ -196,5 +243,15 @@ public sealed class TelegramClient
 
         [JsonPropertyName("data")]
         public string Data { get; init; } = string.Empty;
+
+        /// <summary>The message the button belongs to, so it can be marked.</summary>
+        [JsonPropertyName("message")]
+        public CallbackMessage? Message { get; init; }
+    }
+
+    private sealed record CallbackMessage
+    {
+        [JsonPropertyName("message_id")]
+        public long MessageId { get; init; }
     }
 }

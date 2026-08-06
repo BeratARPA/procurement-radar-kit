@@ -83,10 +83,33 @@ public sealed class CallbackProcessor
                 .AnswerCallbackAsync(callback.Id, _messages.Buttons.ConfirmationFor(status), cancellationToken)
                 .ConfigureAwait(false);
 
+            // And the message keeps the answer. The toast is gone in three
+            // seconds; this is where the decision lives, because Telegram is the
+            // only interface this team has.
+            await _telegram
+                .EditButtonsAsync(callback.MessageId, Buttons(status, noticeId), cancellationToken)
+                .ConfigureAwait(false);
+
             _logger.LogInformation("Notice {NoticeId} moved to {Status} from Telegram", noticeId, status);
             applied++;
         }
 
         return applied;
     }
+
+    /// <summary>
+    /// The keyboard with the chosen option ticked. Both stay pressable: a notice
+    /// dismissed on its title often reads differently once the şartname is open.
+    /// </summary>
+    private IReadOnlyList<TelegramButton> Buttons(NoticeStatus chosen, long noticeId) =>
+    [
+        new TelegramButton(
+            Mark(_messages.Buttons.Review, chosen == NoticeStatus.Reviewed),
+            CallbackData.For(NoticeStatus.Reviewed, noticeId)),
+        new TelegramButton(
+            Mark(_messages.Buttons.NotRelevant, chosen == NoticeStatus.NotRelevant),
+            CallbackData.For(NoticeStatus.NotRelevant, noticeId))
+    ];
+
+    private static string Mark(string label, bool chosen) => chosen ? "✅ " + label : label;
 }
