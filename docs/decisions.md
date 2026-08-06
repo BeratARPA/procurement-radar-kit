@@ -204,3 +204,64 @@ parse hattında, `BodyDecoder` ile, `Parse` çağrılmadan hemen önce yapılır
 Parser'lar hâlâ string üzerinde çalışan saf fonksiyonlar.
 
 ---
+
+## D-12 — EKAP: Playwright, imza taklidi yok
+
+**Karar:** EKAP'a yalnızca gerçek bir tarayıcı üzerinden erişilir. Uygulamanın
+API imzası yeniden üretilmez. Doğrudan Temin araması kapsam dışıdır.
+
+**Bulgu.** `ekapv2.kik.gov.tr` bir Angular uygulaması ve arama sonuçları
+`POST /b_ihalearama/api/Ihale/GetListByParameters` adresinden JSON olarak
+geliyor. Yanıt tam ihtiyacımız olan şey: `ihaleAdi`, `ikn`, `idareAdi`,
+`ihaleIlAdi`, `ihaleTarihSaat`, `dokumanListe`.
+
+Ama bu uç nokta imzasız isteği kabul etmiyor. Uygulama her çağrıya dört başlık
+ekliyor — `X-Custom-Request-Ts`, `-Siv`, `-R8id`, `-Guid` — ve bunlar istemci
+tarafında şifrelenmiş zaman damgası, IV ve istek kimliği. Bunlarsız sunucu
+`401 İstek doğrulanamadı. HataKodu: 1200` dönüyor. Çerez, `Origin` ve `Referer`
+eklemek yetmiyor; deneyerek doğrulandı.
+
+**Gerekçe.** Bu başlıkları C#'ta yeniden üretmek, gömülü anahtarı çıkarıp
+imzalama şemasını taklit etmek demek. 401 bir hata değil, sitenin "bu API'yi
+yalnızca benim istemcim çağırsın" demesi. Aşmak bir erişim korumasını devre dışı
+bırakmaktır ve bu depoda aynı karar iki kez daha verildi: Ankara Büyükşehir'in
+otomatik isteklere döndüğü 403 aşılmadı, `dosyaism.saglik.gov.tr`'nin
+`Disallow: /` kuralına uyuldu. Üçüncüsünde farklı davranmanın gerekçesi yok.
+
+Playwright'ta böyle bir sorun yok: uygulamanın kendi JavaScript'i çalışır,
+istekleri kendisi imzalar, biz yalnızca sonucu okuruz. Sitenin robots.txt'si de
+taramaya izin veriyor (`ekap.kik.gov.tr/ekap/robots.txt` → `Disallow:` boş).
+Zaten `spec.md` Bölüm 13 Playwright'ı "yalnızca gerektiğinde, kaynakların ~%10'u"
+diye stack'e koymuştu; burası tam olarak o durum.
+
+**Mimari.** Tarayıcı `Collector` katmanında kalır. `Parsers` içindeki
+`EkapAdapter` yalnızca `IEkapSearchClient` portunu tanır; `Parse` ise arşivlenen
+JSON üzerinde saf bir fonksiyondur. Sonuç: parser fixture ile, tarayıcısız test
+edilir ve kırılganlık `FetchAsync`'te toplanır. Arşiv HTML değil JSON tutar —
+D-11 ile tutarlı, çünkü saklanan yine sunucudan gelen ham gövdedir.
+
+**Doğrudan Temin de var, kapsamı sınırlı.** Bu bölümün ilk hali "halka açık
+doğrudan temin araması yok" diyordu — yanlıştı ve düzeltildi. Üst menü ilk
+yüklemede render olmuyor; arama yapıldıktan sonra beliriyor ve içinde
+"Doğrudan Teminler" var. Adres `https://ekapv2.kik.gov.tr/ekap-dt/search`,
+sonuçlar `POST /b_dogrudantemin/api/DogrudanTemin/GetListByParametersElastic`
+adresinden geliyor ve aynı imza zorunluluğu burada da işliyor: sayfanın kendi
+içinden imzasız `fetch` denendi, `406` döndü. Yani karar aynı — tarayıcı.
+
+Filtreleri projenin istediği her şeyi taşıyor: son teklif verme tarihi, idarenin
+ili, OKAS kodu, doğrudan temin maddesi. Yanıt da ihale aramasından daha zengin:
+`alimAdi`, `dogrudanTeminNumarasi`, `idareAdi`, `il.adi`, `maddeDayanagiAdi`
+(`22/d*` gibi) ve en önemlisi `fiyatTeklifiSonTarihSaati` — ISO 8601, offset'li,
+yani `TurkishDateParser`'a hiç uğramadan okunuyor.
+
+**Ama:** sayfa "17.07.2026 tarihi itibarıyla Yeni Doğrudan Temin uygulaması
+pilot olarak kullanıma açılmıştır" diyor. Şu an yalnızca pilot idarelerin ve o
+tarihten sonraki duyuruları görünüyor. Yani EKAP doğrudan temin kaynağı bugün
+kapsamın küçük bir bölümünü veriyor ve zamanla büyüyecek. Kurumların kendi
+sayfaları bu yüzden emekliye ayrılmıyor; ikisi birlikte çalışır ve `ikn` /
+doğrudan temin numarası üzerinden tekilleştirme çakışmayı zaten halleder.
+
+**Sonuç:** T-16 iki adapter demek — `ekap_tender` ve `ekap_direct_procurement` —
+ve ikisi de aynı tarayıcı istemcisini kullanır, çünkü etkileşim ikisinde de aynı:
+sayfayı aç, tek görünür `input[placeholder='Ara']` alanını doldur, Enter'a bas,
+uygulamanın kendi imzaladığı isteğin yanıtını oku.
