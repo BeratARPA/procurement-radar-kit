@@ -40,3 +40,11 @@ coverage/
 # --- OS noise ----------------------------------------------------------------
 Thumbs.db
 .DS_Store
+
+# Playwright's browser (T-16). ~300 MB of Chromium that the installer downloads
+# on each machine. It is a dependency, not source; committing it would put a
+# browser in every clone and in every diff.
+.playwright/
+
+# Output of deploy/install-windows.ps1. Built from the source beside it.
+publish/

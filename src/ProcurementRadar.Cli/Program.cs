@@ -25,6 +25,10 @@ Log.Logger = new LoggerConfiguration()
         retainedFileCountLimit: 30)
     .CreateLogger();
 
+// D-06: the same .env the worker reads, so the cli behaves identically whether
+// it is run from a shell that exported the variables or from one that did not.
+ProcurementRadar.Collector.DotEnv.Load();
+
 using var shutdown = new CancellationTokenSource();
 Console.CancelKeyPress += (_, eventArgs) =>
 {

@@ -7,10 +7,19 @@
 # database, and retry into an empty room. Logging in is what actually brings this
 # machine up, so that is what the worker hangs off.
 
+#   .\deploy\install-windows.ps1              kur (ilk sefer yayınlar)
+#   .\deploy\install-windows.ps1 -Uninstall    kaldır
+#   .\deploy\install-windows.ps1 -Status       durum
+#
+# Kurmak ve kaldırmak tek komut ve saniyeler sürer. Yayınlama zaten yapılmışsa
+# tekrar kurulum onu atlar, yani fikir değiştirmek ucuz - bu kasıtlı.
+
 [CmdletBinding()]
 param(
     [string] $TaskName = 'ProcurementRadar',
-    [switch] $Uninstall
+    [switch] $Uninstall,
+    [switch] $Status,
+    [switch] $Rebuild
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,19 +27,43 @@ $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $publish = Join-Path $repo 'publish'
 
 if ($Uninstall) {
+    # Stop first: an unregister while it is mid-poll leaves the process orphaned.
+    Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
-    Write-Host "Removed the scheduled task '$TaskName'."
+    Get-Process ProcurementRadar.Worker -ErrorAction SilentlyContinue | Stop-Process -Force
+    Write-Host "Kaldirildi: '$TaskName'. Geri kurmak icin ayni betigi parametresiz calistirin."
+    return
+}
+
+if ($Status) {
+    $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if (-not $task) { Write-Host "Kurulu degil."; return }
+    $info = Get-ScheduledTaskInfo -TaskName $TaskName
+    Write-Host "Durum      : $($task.State)"
+    Write-Host "Son calisma: $($info.LastRunTime)"
+    Write-Host "Son sonuc  : $($info.LastTaskResult)  (0 = sorunsuz, 267009 = su an calisiyor)"
+    Write-Host "Sonraki    : $($info.NextRunTime)"
+    $running = Get-Process ProcurementRadar.Worker -ErrorAction SilentlyContinue
+    Write-Host "Surec      : $(if ($running) { "calisiyor, pid $($running.Id)" } else { 'yok' })"
     return
 }
 
 # --- publish -----------------------------------------------------------------
-Write-Host 'Publishing the worker...'
-& dotnet publish (Join-Path $repo 'src\ProcurementRadar.Worker') -c Release -o $publish --nologo -v q
-if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
+# Skipped when it is already there, so re-installing after an uninstall is
+# instant. -Rebuild forces it after a code change.
+$worker = Join-Path $publish 'ProcurementRadar.Worker.exe'
 
-# The worker reads config/*.json at run time and finds it by walking up from its
-# own directory, so a copy has to sit beside the published files.
-Copy-Item (Join-Path $repo 'config') (Join-Path $publish 'config') -Recurse -Force
+if ($Rebuild -or -not (Test-Path $worker)) {
+    Write-Host 'Yayinlaniyor...'
+    & dotnet publish (Join-Path $repo 'src\ProcurementRadar.Worker') -c Release -o $publish --nologo -v q
+    if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
+
+    # The worker reads config/*.json at run time and finds it by walking up from
+    # its own directory, so a copy has to sit beside the published files.
+    Copy-Item (Join-Path $repo 'config') (Join-Path $publish 'config') -Recurse -Force
+} else {
+    Write-Host 'Yayin zaten var, atlaniyor. Kod degistiyse: -Rebuild'
+}
 
 # --- the browser EKAP needs ---------------------------------------------------
 $browsers = Join-Path $repo '.playwright'
@@ -99,7 +132,10 @@ if ($sleep -match 'Current AC Power Setting Index:\s*0x00000000') {
 }
 
 Write-Host ''
-Write-Host 'Start it now without waiting for a logon:'
-Write-Host "    Start-ScheduledTask -TaskName $TaskName"
-Write-Host 'Watch it:'
-Write-Host "    Get-Content '$publish\logs\procurement-radar-*.log' -Tail 20 -Wait"
+Write-Host '--- gunluk kullanim ---'
+Write-Host "  Baslat  : Start-ScheduledTask -TaskName $TaskName"
+Write-Host "  Durdur  : Stop-ScheduledTask -TaskName $TaskName"
+Write-Host "  Durum   : .\deploy\install-windows.ps1 -Status"
+Write-Host "  Kaldir  : .\deploy\install-windows.ps1 -Uninstall"
+Write-Host "  Geri kur: .\deploy\install-windows.ps1"
+Write-Host "  Izle    : Get-Content '$publish\logs\procurement-radar-*.log' -Tail 20 -Wait"

@@ -24,6 +24,12 @@ using Serilog;
 // is exactly what makes the console version easy to miss.
 Console.OutputEncoding = Encoding.UTF8;
 
+// D-06 names .env as how secrets reach a running worker. Loaded before the host
+// is built, because the connection string is read while it is being configured.
+// Anything already in the environment wins, so systemd's EnvironmentFile and a
+// deliberate export both still take precedence.
+var envFile = DotEnv.Load();
+
 var builder = Host.CreateApplicationBuilder(args);
 
 // D-07: compact JSON on the console, daily rolling file on disk. Sinks and
@@ -144,6 +150,14 @@ else
         "PR_TELEGRAM_BOT_TOKEN or PR_TELEGRAM_CHAT_ID is not set; notifications are off. "
         + "Notices are still collected, parsed and scored, and health alarms go to the log. "
         + "See START-HERE.md step 3.");
+}
+
+if (envFile is not null)
+{
+    // Worth one line: when the worker starts from a scheduled task or a service
+    // rather than a shell, which file it read is the first thing you want to
+    // know if a setting is not what you expected.
+    Log.Information("Read environment from {Path}", envFile);
 }
 
 using var host = builder.Build();
