@@ -1001,6 +1001,138 @@
       "poll_interval_minutes": 15,
       "is_active": false,
       "notes": "İhale duyuruları sayfası JavaScript ile kuruluyor; statik gövdede satır yok."
+    },
+    {
+      "authority_name": "EKAP - Doğrudan Temin Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap-dt/search#bilgi-sistemi",
+      "adapter_key": "ekap_direct_procurement",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "notes": "'bilgi sistemi' araması. EKAP'ın arama kutusu ihale adında ve teklif cetvelinde birlikte arıyor, bu yüzden başlığı belirsiz işler de yakalanıyor. Bir terim = bir kaynak satırı: yeni terim için kod değil yeni satır açın. URL'deki # parçası yalnızca satırları birbirinden ayırmak için — sunucuya gönderilmiyor, hepsi aynı sayfayı açıyor.",
+      "adapter_config": {
+        "search_text": "bilgi sistemi",
+        "statuses": [],
+        "prepare_click_selector": "button:has-text('tıklayınız')"
+      }
+    },
+    {
+      "authority_name": "EKAP - İhale Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap/search#bilgi-sistemi",
+      "adapter_key": "ekap_tender",
+      "poll_interval_minutes": 60,
+      "is_active": true,
+      "notes": "'bilgi sistemi' araması. EKAP'ın arama kutusu ihale adında ve teklif cetvelinde birlikte arıyor, bu yüzden başlığı belirsiz işler de yakalanıyor. Bir terim = bir kaynak satırı: yeni terim için kod değil yeni satır açın. URL'deki # parçası yalnızca satırları birbirinden ayırmak için — sunucuya gönderilmiyor, hepsi aynı sayfayı açıyor.",
+      "adapter_config": {
+        "search_text": "bilgi sistemi",
+        "statuses": [
+          "İhale İlanı Yayımlanmış"
+        ]
+      }
+    },
+    {
+      "authority_name": "EKAP - Doğrudan Temin Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap-dt/search#yazilim-bakim",
+      "adapter_key": "ekap_direct_procurement",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "notes": "'yazılım bakım' araması. EKAP'ın arama kutusu ihale adında ve teklif cetvelinde birlikte arıyor, bu yüzden başlığı belirsiz işler de yakalanıyor. Bir terim = bir kaynak satırı: yeni terim için kod değil yeni satır açın. URL'deki # parçası yalnızca satırları birbirinden ayırmak için — sunucuya gönderilmiyor, hepsi aynı sayfayı açıyor.",
+      "adapter_config": {
+        "search_text": "yazılım bakım",
+        "statuses": [],
+        "prepare_click_selector": "button:has-text('tıklayınız')"
+      }
+    },
+    {
+      "authority_name": "EKAP - İhale Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap/search#yazilim-bakim",
+      "adapter_key": "ekap_tender",
+      "poll_interval_minutes": 60,
+      "is_active": true,
+      "notes": "'yazılım bakım' araması. EKAP'ın arama kutusu ihale adında ve teklif cetvelinde birlikte arıyor, bu yüzden başlığı belirsiz işler de yakalanıyor. Bir terim = bir kaynak satırı: yeni terim için kod değil yeni satır açın. URL'deki # parçası yalnızca satırları birbirinden ayırmak için — sunucuya gönderilmiyor, hepsi aynı sayfayı açıyor.",
+      "adapter_config": {
+        "search_text": "yazılım bakım",
+        "statuses": [
+          "İhale İlanı Yayımlanmış"
+        ]
+      }
+    },
+    {
+      "authority_name": "EKAP - Doğrudan Temin Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap-dt/search#web-sitesi",
+      "adapter_key": "ekap_direct_procurement",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "notes": "'web sitesi' araması. EKAP'ın arama kutusu ihale adında ve teklif cetvelinde birlikte arıyor, bu yüzden başlığı belirsiz işler de yakalanıyor. Bir terim = bir kaynak satırı: yeni terim için kod değil yeni satır açın. URL'deki # parçası yalnızca satırları birbirinden ayırmak için — sunucuya gönderilmiyor, hepsi aynı sayfayı açıyor.",
+      "adapter_config": {
+        "search_text": "web sitesi",
+        "statuses": [],
+        "prepare_click_selector": "button:has-text('tıklayınız')"
+      }
+    },
+    {
+      "authority_name": "EKAP - İhale Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap/search#web-sitesi",
+      "adapter_key": "ekap_tender",
+      "poll_interval_minutes": 60,
+      "is_active": true,
+      "notes": "'web sitesi' araması. EKAP'ın arama kutusu ihale adında ve teklif cetvelinde birlikte arıyor, bu yüzden başlığı belirsiz işler de yakalanıyor. Bir terim = bir kaynak satırı: yeni terim için kod değil yeni satır açın. URL'deki # parçası yalnızca satırları birbirinden ayırmak için — sunucuya gönderilmiyor, hepsi aynı sayfayı açıyor.",
+      "adapter_config": {
+        "search_text": "web sitesi",
+        "statuses": [
+          "İhale İlanı Yayımlanmış"
+        ]
+      }
+    },
+    {
+      "authority_name": "EKAP - Doğrudan Temin Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap-dt/search#mobil-uygulama",
+      "adapter_key": "ekap_direct_procurement",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "notes": "'mobil uygulama' araması. EKAP'ın arama kutusu ihale adında ve teklif cetvelinde birlikte arıyor, bu yüzden başlığı belirsiz işler de yakalanıyor. Bir terim = bir kaynak satırı: yeni terim için kod değil yeni satır açın. URL'deki # parçası yalnızca satırları birbirinden ayırmak için — sunucuya gönderilmiyor, hepsi aynı sayfayı açıyor.",
+      "adapter_config": {
+        "search_text": "mobil uygulama",
+        "statuses": [],
+        "prepare_click_selector": "button:has-text('tıklayınız')"
+      }
+    },
+    {
+      "authority_name": "EKAP - İhale Arama",
+      "authority_type": "ekap",
+      "province": "Ankara",
+      "district": null,
+      "url": "https://ekapv2.kik.gov.tr/ekap/search#mobil-uygulama",
+      "adapter_key": "ekap_tender",
+      "poll_interval_minutes": 60,
+      "is_active": true,
+      "notes": "'mobil uygulama' araması. EKAP'ın arama kutusu ihale adında ve teklif cetvelinde birlikte arıyor, bu yüzden başlığı belirsiz işler de yakalanıyor. Bir terim = bir kaynak satırı: yeni terim için kod değil yeni satır açın. URL'deki # parçası yalnızca satırları birbirinden ayırmak için — sunucuya gönderilmiyor, hepsi aynı sayfayı açıyor.",
+      "adapter_config": {
+        "search_text": "mobil uygulama",
+        "statuses": [
+          "İhale İlanı Yayımlanmış"
+        ]
+      }
     }
   ]
 }

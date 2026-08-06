@@ -281,3 +281,55 @@ doğrudan temin numarası üzerinden tekilleştirme çakışmayı zaten halleder
 ve ikisi de aynı tarayıcı istemcisini kullanır, çünkü etkileşim ikisinde de aynı:
 sayfayı aç, tek görünür `input[placeholder='Ara']` alanını doldur, Enter'a bas,
 uygulamanın kendi imzaladığı isteğin yanıtını oku.
+
+---
+
+## D-13 — Kapsam: Türkiye geneli, Ankara ayrıcalığı yok
+
+**Karar:** İl filtresi yok. EKAP ne getiriyorsa yazılır ve skorlanır.
+Alaka kararını yer değil, kelime listesi ve eşik verir.
+
+**Gerekçe.** İki tanesi ölçüldü, biri talep.
+
+`spec.md` Bölüm 2 "önce Ankara" diyordu ve bu bir *çaba* kararıydı: seksen
+kurumun sayfasını elle bulmak pahalı, bir ilden başlanır. EKAP'ta böyle bir
+maliyet yok — tek kaynak, tüm ülke, aynı istek.
+
+Ölçülen taraf şu: EKAP sayfa başına 10 sonuç veriyor ve il filtresini kendi
+tarafımızda uyguluyorduk. "yazılım" için 914 eşleşmenin ilk 10'unda Ankara
+çıkmazsa hiçbir şey görmüyorduk. Üstelik 10 satırı sorunsuz ayrıştırıp 0 ilan
+bildirdiğimiz için T-15'in "parser bozuk" kuralı boşuna ateşliyordu — kural
+doğruydu, ona yalan söyleyen adapter'dı.
+
+Talep tarafı: ekip "Ankara'ya özel olmasına gerek yok, ben zaten filtrelerim"
+dedi. Yazılım işi uzaktan teslim edilebilir; coğrafya bu iş kolunda ihale
+mevzuatı kadar bağlayıcı değil.
+
+**Sonuç.** `EkapAdapterConfig.Province` alanı kodda ve testte duruyor ama
+seed'de kullanılmıyor. Sunucu tarafında il filtresi ancak arayüzdeki açılır
+listeyi sürerek yapılabilir; hacim gerektirirse o zaman bakılır.
+
+Kurumların kendi sayfaları hâlâ Ankara — orada kapsam elle toplanan URL'lerle
+sınırlı ve bu değişmedi.
+
+---
+
+## D-14 — Bildirim eşiği: tek kelime yetmeli
+
+**Karar:** `notify_threshold` 60'tan **30**'a indirildi.
+
+**Gerekçe.** En ağır tek terim 40, çoğu 30. Eşik 60 iken bir ilanın
+duyurulması için **iki ayrı terim** tutması gerekiyordu — yani bir tesadüf.
+
+Bedeli ölçüldü: 572 ilanın 9'u puan aldı, 1'i eşiği geçti. Elenenler arasında
+"36 Aylık Hastane Bilgi Yönetim Sistemi" (aylarca sürecek bir iş) ve "F5 Yük
+Dengeleme Yazılımı" vardı; ikisi de tek terim tutup 30'da kaldı. Hiçbir şey
+bozuk değildi, sistem sessizce bir tesadüf bekleyecek şekilde ayarlanmıştı.
+
+**Koruma:** `RuleScorerTests.One_strong_keyword_is_enough_to_be_told_about`
+artık en ağır terimin eşiğe erişebildiğini doğruluyor. Eşik yükseltilirse veya
+ağırlıklar düşürülürse test düşer.
+
+**Gürültü ne olacak:** `exclude` listesi 25 terimle donanımı zaten eliyor.
+Fazla gürültü gelirse çare eşiği yükseltmek değil, `exclude`'a terim eklemek —
+`spec.md` Bölüm 9'un dediği gibi filtre kalitesi kapsamdan önemli.

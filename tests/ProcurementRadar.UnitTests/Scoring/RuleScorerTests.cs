@@ -148,8 +148,38 @@ public sealed class RuleScorerTests
     [Fact]
     public void The_thresholds_come_from_the_config_file()
     {
-        Assert.Equal(30, Rules.RuleScoreThreshold);
-        Assert.Equal(60, Rules.NotifyThreshold);
+        // Read, not hardcoded. The values themselves are a product decision that
+        // moves, so this pins the mechanism rather than the numbers.
+        var rules = KeywordRules.Load(
+            """
+            {
+              "include": [{ "term": "yazilim", "weight": 30 }],
+              "exclude": [],
+              "rule_score_threshold": 11,
+              "notify_threshold": 22
+            }
+            """);
+
+        Assert.Equal(11, rules.RuleScoreThreshold);
+        Assert.Equal(22, rules.NotifyThreshold);
+    }
+
+    [Fact]
+    public void One_strong_keyword_is_enough_to_be_told_about()
+    {
+        // The invariant that actually matters, and the one that failed in
+        // practice. With the notify threshold above every single term's weight, a
+        // notice had to match two of them to be announced. A tender for a
+        // "Hastane Bilgi Yonetim Sistemi" - months of work - matched one, scored
+        // thirty against a threshold of sixty, and was never mentioned. Nothing
+        // was broken. The system was quietly set to require a coincidence.
+        var heaviest = Rules.Include.Max(term => term.Weight);
+
+        Assert.True(
+            heaviest >= Rules.NotifyThreshold,
+            $"No single keyword can reach the notify threshold: the heaviest term is {heaviest} "
+            + $"and the threshold is {Rules.NotifyThreshold}, so every notification needs two "
+            + "separate matches and real work goes unreported.");
     }
 
     [Fact]
