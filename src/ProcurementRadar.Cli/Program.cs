@@ -41,6 +41,7 @@ try
         "seed" => await SeedCommand.RunAsync(args[1..], shutdown.Token),
         "reparse" => await ReparseCommand.RunAsync(args[1..], shutdown.Token),
         "check-source" => await CheckSourceCommand.RunAsync(args[1..], shutdown.Token),
+        "telegram-check" => await TelegramCheckCommand.RunAsync(args[1..], shutdown.Token),
         null => Usage("no command given"),
         var unknown => Usage($"unknown command '{unknown}'")
     };
@@ -65,7 +66,8 @@ static int Usage(string problem)
     Log.Error(
         "{Problem}. Usage: dotnet run --project src/ProcurementRadar.Cli -- "
         + "seed [--file <path>] | reparse [--source-id <id>] [--batch-size <n>] [--config-dir <path>] | "
-        + "check-source --html <path> --config <path> [--url <url>] [--charset <name>]",
+        + "check-source --html <path> --config <path> [--url <url>] [--charset <name>] | "
+        + "telegram-check [--send]",
         problem);
 
     return 1;

@@ -71,6 +71,63 @@ Loglar JSON (D-07).
 
 ---
 
+## Telegram
+
+Bildirim katmanı token olmadan da sistemi durdurmaz — toplama, ayrıştırma ve
+sağlık izleme çalışmaya devam eder, yalnızca mesaj gitmez. Ama ürünün sözü
+"15 dakika içinde haber ver" olduğuna göre bu adım asıl teslimat.
+
+### 1. Botu oluşturun
+
+Telegram'da **@BotFather**'a yazın:
+
+- `/newbot`
+- Görünen ad (istediğiniz bir şey, örn. `Procurement Radar`)
+- Kullanıcı adı — **`bot` ile bitmek zorunda**, örn. `procurement_radar_bot`
+
+BotFather size `123456789:AAH...` biçiminde bir token verir.
+
+**Token bir paroladır.** Kimseye yollamayın, sohbete yapıştırmayın, ekran
+görüntüsüne almayın. Doğrudan `.env` dosyasına yazın:
+
+```
+PR_TELEGRAM_BOT_TOKEN=buraya
+```
+
+### 2. Grubu ve chat id'yi bulun
+
+Bildirimlerin geleceği grubu açın, **botu gruba ekleyin** ve gruba herhangi bir
+mesaj yazın. Sonra:
+
+```
+dotnet run --project src/ProcurementRadar.Cli -- telegram-check
+```
+
+Token'ın geçerli olduğunu doğrular ve botun görebildiği chat'leri listeler.
+Çıkan id'yi `.env`'e yazın:
+
+```
+PR_TELEGRAM_CHAT_ID=-1001234567890
+```
+
+Grup id'leri **eksi** ile başlar ve eksi işareti id'nin parçasıdır.
+
+Bir bot yalnızca kendisiyle konuşulmuş sohbetleri görebilir — Telegram ona
+kendini arama imkânı vermiyor. Liste boş çıkıyorsa botu gruba eklemeyi veya
+gruba mesaj yazmayı atlamışsınızdır.
+
+### 3. Deneyin
+
+```
+dotnet run --project src/ProcurementRadar.Cli -- telegram-check --send
+```
+
+Gruba bir test mesajı düşer. Düştüyse bildirim hattı hazır.
+
+Komut token'ı hiçbir yere yazmaz ve hiçbir çıktıda göstermez.
+
+---
+
 ## Linux (ileride ayrı bir makine olursa)
 
 ## 1. Bağımlılıklar

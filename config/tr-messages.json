@@ -1,6 +1,7 @@
 {
   "_comment": "Data, not code. Telegram mesaj metinleri — okuyan sizsiniz, o yüzden Türkçe (CLAUDE.md dil kuralı). Yeniden derlemeden değiştirilebilsin diye burada.",
   "_placeholders": "Süslü parantezli alanlar koddan doldurulur: {score} {title} {authority} {cost} {deadline} {remaining} {count} {rationale}. Bilinmeyen bir alan adı yazarsanız olduğu gibi görünür.",
+  "telegram_test": "Procurement Radar bağlandı. Bu bir test mesajıdır — ilan bildirimleri buraya gelecek.",
   "notice": {
     "header": "{icon} {score}/100 — {title}",
     "authority": "🏛 {authority}",
@@ -41,8 +42,17 @@
     ]
   },
   "score_icons": [
-    { "at_least": 60, "icon": "🟢" },
-    { "at_least": 30, "icon": "🟡" },
-    { "at_least": 0, "icon": "🔴" }
+    {
+      "at_least": 60,
+      "icon": "🟢"
+    },
+    {
+      "at_least": 30,
+      "icon": "🟡"
+    },
+    {
+      "at_least": 0,
+      "icon": "🔴"
+    }
   ]
 }
