@@ -1,6 +1,17 @@
 namespace ProcurementRadar.Domain.Fetching;
 
 /// <summary>
+/// One search to run on EKAP: which page to open, what to type into it, and
+/// which of the app's own requests carries the answer.
+/// </summary>
+public sealed record EkapSearchRequest(
+    string SearchUrl,
+    string SearchText,
+    string ApiUrlFragment,
+    /// <summary>Clicked first where the page hides its search box behind something.</summary>
+    string? PrepareClickSelector = null);
+
+/// <summary>
 /// Runs one search on EKAP and hands back the json its own api returned.
 /// </summary>
 /// <remarks>
@@ -12,18 +23,11 @@ namespace ProcurementRadar.Domain.Fetching;
 /// access control, so the only implementation is a real browser running their own
 /// javascript (D-12).
 ///
-/// Keeping that behind an interface is what lets <c>EkapAdapter</c> live in
+/// Keeping that behind an interface is what lets the EKAP adapters live in
 /// Parsers, next to every other adapter, without Parsers ever referencing a
-/// browser - and lets the adapter's tests run against a saved response.
+/// browser - and lets their tests run against a saved response.
 /// </remarks>
 public interface IEkapSearchClient
 {
-    /// <summary>
-    /// Searches <paramref name="searchUrl"/> for <paramref name="searchText"/>
-    /// and returns the raw body of the api response behind it.
-    /// </summary>
-    Task<FetchResult> SearchAsync(
-        string searchUrl,
-        string searchText,
-        CancellationToken cancellationToken);
+    Task<FetchResult> SearchAsync(EkapSearchRequest request, CancellationToken cancellationToken);
 }

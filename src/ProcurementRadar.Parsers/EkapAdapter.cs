@@ -29,6 +29,12 @@ public sealed class EkapAdapter : ISourceAdapter
 {
     public const string AdapterKey = "ekap_tender";
 
+    /// <summary>
+    /// The app's own request that carries the results. Matched as a fragment
+    /// because the rest of the url is theirs to change.
+    /// </summary>
+    public const string ApiUrlFragment = "/b_ihalearama/api/Ihale/GetListByParameters";
+
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
 
     private readonly IEkapSearchClient _search;
@@ -65,7 +71,9 @@ public sealed class EkapAdapter : ISourceAdapter
             return Task.FromResult(FetchResult.Failed(0));
         }
 
-        return _search.SearchAsync(source.Url, config.SearchText, cancellationToken);
+        return _search.SearchAsync(
+            new EkapSearchRequest(source.Url, config.SearchText, ApiUrlFragment, config.PrepareClickSelector),
+            cancellationToken);
     }
 
     public IReadOnlyList<RawNotice> Parse(string body, Source source)

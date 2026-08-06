@@ -123,7 +123,7 @@ public sealed class EkapAdapterTests
     /// <summary>Parse must never reach the network - this would throw if it did.</summary>
     private sealed class UnusableSearchClient : IEkapSearchClient
     {
-        public Task<FetchResult> SearchAsync(string searchUrl, string searchText, CancellationToken cancellationToken)
+        public Task<FetchResult> SearchAsync(EkapSearchRequest request, CancellationToken cancellationToken)
             => throw new InvalidOperationException("Parse must not search.");
     }
 }

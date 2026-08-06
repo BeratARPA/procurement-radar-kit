@@ -88,6 +88,19 @@ builder.Services.AddSingleton(keywords);
 builder.Services.AddSingleton<INoticeScorer, RuleScorer>();
 
 builder.Services.AddSingleton<ISourceAdapter, GenericTableAdapter>();
+
+// EKAP reaches its own host and nothing else does, so this gate is its own. It
+// enforces the same rule as the one inside HttpFetcher - one request at a time,
+// five seconds apart, plus jitter - which is what keeps a browser from being an
+// exception to the politeness rules rather than a participant in them.
+builder.Services.AddSingleton<HostPolitenessGate>();
+builder.Services.AddSingleton(new EkapBrowserOptions());
+builder.Services.AddSingleton<PlaywrightEkapSearchClient>();
+builder.Services.AddSingleton<IEkapSearchClient>(services =>
+    services.GetRequiredService<PlaywrightEkapSearchClient>());
+builder.Services.AddSingleton<ISourceAdapter, EkapAdapter>();
+builder.Services.AddSingleton<ISourceAdapter, EkapDirectProcurementAdapter>();
+
 builder.Services.AddSingleton<ISourceAdapterRegistry, SourceAdapterRegistry>();
 builder.Services.AddSingleton<ParsePipeline>();
 builder.Services.AddSingleton<DocumentTextExtractor>();

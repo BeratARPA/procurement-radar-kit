@@ -44,6 +44,20 @@ public sealed record EkapAdapterConfig
     /// </remarks>
     public IReadOnlyList<string> Statuses { get; init; } = [];
 
+    /// <summary>
+    /// Something to click before the search box exists, or null when the page
+    /// arrives ready to search.
+    /// </summary>
+    /// <remarks>
+    /// The doğrudan temin page needs it. Opening it directly shows only the
+    /// notice that the new application went into pilot on 17.07.2026, with a
+    /// button to reach the listing, and no search box at all until that button is
+    /// pressed. It lives here rather than in the browser client because it is a
+    /// fact about one page on one site, and those are data in this project - the
+    /// same reason the CSS selectors of every other source are in this column.
+    /// </remarks>
+    public string? PrepareClickSelector { get; init; }
+
     public static bool TryRead(string? json, out EkapAdapterConfig config, out string problem)
     {
         config = null!;
@@ -91,7 +105,10 @@ public sealed record EkapAdapterConfig
             Statuses = shape.Statuses?
                 .Where(status => !string.IsNullOrWhiteSpace(status))
                 .Select(status => status.Trim())
-                .ToArray() ?? []
+                .ToArray() ?? [],
+            PrepareClickSelector = string.IsNullOrWhiteSpace(shape.PrepareClickSelector)
+                ? null
+                : shape.PrepareClickSelector.Trim()
         };
 
         problem = string.Empty;
@@ -108,5 +125,8 @@ public sealed record EkapAdapterConfig
 
         [JsonPropertyName("statuses")]
         public string[]? Statuses { get; init; }
+
+        [JsonPropertyName("prepare_click_selector")]
+        public string? PrepareClickSelector { get; init; }
     }
 }

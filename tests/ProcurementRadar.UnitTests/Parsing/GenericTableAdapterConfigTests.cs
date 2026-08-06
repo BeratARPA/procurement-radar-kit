@@ -140,10 +140,16 @@ public sealed class GenericTableAdapterConfigTests
         var path = Path.Combine(RepositoryRoot.Find().FullName, "config", "sources.seed.json");
         var seeded = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
 
+        // Only this adapter's rows. Since T-16 the registry also holds EKAP
+        // sources, whose adapter_config is a search term rather than a set of
+        // selectors - reading one with this parser would fail for a reason that
+        // means nothing.
         var configs = seeded.RootElement
             .GetProperty("sources")
             .EnumerateArray()
-            .Where(entry => entry.TryGetProperty("adapter_config", out _))
+            .Where(entry => entry.TryGetProperty("adapter_config", out _)
+                && entry.TryGetProperty("adapter_key", out var key)
+                && key.GetString() == GenericTableAdapter.AdapterKey)
             .Select(entry => entry.GetProperty("adapter_config").GetRawText())
             .ToArray();
 
