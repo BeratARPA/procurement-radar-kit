@@ -47,6 +47,22 @@ açılışına kaydeder ve çalışmasını engelleyecek şeyleri raporlar.
 
 Kaldırmak için: `.\deploy\install-windows.ps1 -Uninstall`
 
+### Docker Desktop oturum açılışında başlamalı
+
+Veritabanı Docker'ın içinde ve Docker motoru Docker Desktop'ın içinde. Docker
+Desktop kapalıyken PostgreSQL yok demektir: worker çalışır ama bağlanacak bir şey
+bulamaz, her turda hata verir ve sağlık alarmları ateşler — sebebi bir onay
+kutusudur.
+
+**Docker Desktop → Settings → General → "Start Docker Desktop when you sign in"**
+
+Kurulum betiği bunu kontrol edip söylüyor ama değiştirmiyor.
+
+Günlük kullanımda Docker Desktop'ı **kapatmayın**; simge durumuna küçültmek
+sorun değil, çıkış yapmak sistemi durdurur. `docker-compose.yml` içindeki
+`restart: unless-stopped`, Docker Desktop tekrar açıldığında PostgreSQL'i
+kendiliğinden geri getirir.
+
 ### Uyku — en kolay unutulan şey
 
 Uyuyan laptop hiçbir şey toplamaz. Kurulum betiği bunu kontrol edip söylüyor;

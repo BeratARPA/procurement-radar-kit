@@ -149,6 +149,26 @@ if (Test-Path $env) {
     Write-Host '  MISSING: .env (copy .env.example and fill it in)'
 }
 
+# Docker Desktop is what holds the database, and on Windows it starts at sign-in
+# rather than at boot - if it starts at all. With auto-start off, a reboot leaves
+# the worker running against nothing: every cycle fails, the health alarms fire,
+# and the cause is a checkbox.
+$dockerSettings = "$env:APPDATA\Docker\settings-store.json"
+if (-not (Test-Path $dockerSettings)) { $dockerSettings = "$env:APPDATA\Docker\settings.json" }
+
+if (Test-Path $dockerSettings) {
+    $docker = Get-Content $dockerSettings -Raw | ConvertFrom-Json
+    if ($docker.AutoStart -eq $true) {
+        Write-Host '  Docker Desktop: oturum acilisinda basliyor. Iyi.'
+    } else {
+        Write-Host '  Docker Desktop OTURUM ACILISINDA BASLAMIYOR. Veritabani Docker icinde,'
+        Write-Host '  yani makine yeniden baslayinca worker calisir ama baglanacak bir sey bulamaz.'
+        Write-Host '  Acin: Docker Desktop > Settings > General > "Start Docker Desktop when you sign in".'
+    }
+} else {
+    Write-Host '  Docker Desktop ayar dosyasi bulunamadi; oturum acilisinda basladigindan emin olun.'
+}
+
 $sleep = (powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 2>$null | Out-String)
 if ($sleep -match 'Current AC Power Setting Index:\s*0x00000000') {
     Write-Host '  Sleep on AC: off. Good.'
