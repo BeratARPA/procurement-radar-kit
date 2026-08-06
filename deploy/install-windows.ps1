@@ -66,7 +66,15 @@ if ($Rebuild -or -not (Test-Path $worker)) {
 
     # The worker reads config/*.json at run time and finds it by walking up from
     # its own directory, so a copy has to sit beside the published files.
-    Copy-Item (Join-Path $repo 'config') (Join-Path $publish 'config') -Recurse -Force
+    #
+    # Removed first, deliberately. Copy-Item with -Recurse onto an existing
+    # directory copies *into* it - publish\config\config - and the worker goes on
+    # reading the first install's copy forever. Every config change after that is
+    # silently ignored by the running worker while looking applied in the repo,
+    # which is the worst kind of wrong: nothing fails, the behaviour is just old.
+    $configTarget = Join-Path $publish 'config'
+    if (Test-Path $configTarget) { Remove-Item $configTarget -Recurse -Force }
+    Copy-Item (Join-Path $repo 'config') $configTarget -Recurse
 } else {
     Write-Host 'Yayin zaten var, atlaniyor. Kod degistiyse: -Rebuild'
 }

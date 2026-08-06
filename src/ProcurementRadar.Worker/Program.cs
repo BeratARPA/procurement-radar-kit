@@ -145,22 +145,37 @@ if (!string.IsNullOrWhiteSpace(botToken) && !string.IsNullOrWhiteSpace(chatId))
 else
 {
     builder.Services.AddSingleton<IAlertChannel, LoggingAlertChannel>();
+}
 
-    Log.Warning(
+using var host = builder.Build();
+
+// Startup notes go through the host's logger, not Serilog's static Log. Nothing
+// configures the static one here, so everything written to it before this point
+// went nowhere - including the warning about a missing Telegram token, which is
+// precisely the message somebody setting this up needs to see.
+var startup = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+
+if (envFile is not null)
+{
+    // When the worker starts from a scheduled task or a service rather than from
+    // a shell, which file it read is the first thing you want to know if a
+    // setting is not what you expected.
+    startup.LogInformation("Read environment from {Path}", envFile);
+}
+
+// And which config, for a better reason still. A deployed copy that stopped
+// being updated is invisible from the repository: the file there looks right,
+// the running worker simply never sees it. One line turns that from an
+// afternoon into a grep.
+startup.LogInformation("Read configuration from {Path}", configDirectory);
+
+if (string.IsNullOrWhiteSpace(botToken) || string.IsNullOrWhiteSpace(chatId))
+{
+    startup.LogWarning(
         "PR_TELEGRAM_BOT_TOKEN or PR_TELEGRAM_CHAT_ID is not set; notifications are off. "
         + "Notices are still collected, parsed and scored, and health alarms go to the log. "
         + "See START-HERE.md step 3.");
 }
-
-if (envFile is not null)
-{
-    // Worth one line: when the worker starts from a scheduled task or a service
-    // rather than a shell, which file it read is the first thing you want to
-    // know if a setting is not what you expected.
-    Log.Information("Read environment from {Path}", envFile);
-}
-
-using var host = builder.Build();
 
 try
 {
