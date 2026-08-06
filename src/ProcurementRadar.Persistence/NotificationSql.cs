@@ -14,7 +14,15 @@ internal static class NotificationSql
                     s.rule_score     AS "RuleScore",
                     s.rationale      AS "Rationale",
                     (SELECT count(*) FROM notice_document d
-                      WHERE d.notice_id = n.id AND d.downloaded_at IS NOT NULL) AS "DocumentCount"
+                      WHERE d.notice_id = n.id AND d.downloaded_at IS NOT NULL) AS "DocumentCount",
+                    n.ikn            AS "Ikn",
+                    -- The longest extracted text wins: a notice often carries a
+                    -- one-page teklif cetveli beside a real technical spec, and
+                    -- the spec is the one that says what is being bought.
+                    (SELECT d.extracted_text FROM notice_document d
+                      WHERE d.notice_id = n.id AND d.extracted_text IS NOT NULL
+                      ORDER BY length(d.extracted_text) DESC
+                      LIMIT 1) AS "DocumentExcerpt"
         """;
 
     // Nearest deadline first: if the batch is capped, the ones running out of

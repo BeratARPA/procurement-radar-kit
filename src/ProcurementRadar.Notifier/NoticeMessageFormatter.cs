@@ -17,6 +17,12 @@ public sealed record ComposedMessage(string Text, string ReviewLabel, string Not
 /// </remarks>
 public sealed class NoticeMessageFormatter
 {
+    /// <summary>Enough to judge a tender, short enough to read on a phone.</summary>
+    private const int ExcerptLength = 320;
+
+    private static readonly System.Text.RegularExpressions.Regex CollapseWhitespace =
+        new(@"\s+", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
     private static readonly TimeZoneInfo Istanbul = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
 
@@ -77,6 +83,16 @@ public sealed class NoticeMessageFormatter
             }));
         }
 
+        if (!string.IsNullOrWhiteSpace(notice.Ikn))
+        {
+            lines.Add(Fill(_templates.Notice.Ikn, new() { ["ikn"] = notice.Ikn }));
+        }
+
+        if (Excerpt(notice.DocumentExcerpt) is { } excerpt)
+        {
+            lines.Add(Fill(_templates.Notice.Excerpt, new() { ["excerpt"] = excerpt }));
+        }
+
         if (!string.IsNullOrWhiteSpace(notice.Rationale))
         {
             lines.Add(Fill(_templates.Notice.Rationale, new() { ["rationale"] = notice.Rationale }));
@@ -135,6 +151,41 @@ public sealed class NoticeMessageFormatter
     /// alone, so a typo in the config shows up in the message instead of
     /// throwing at three in the morning.
     /// </summary>
+    /// <summary>
+    /// The opening of the specification, cut to something readable on a phone.
+    /// </summary>
+    /// <remarks>
+    /// This is the line that answers the question a title cannot: "yazılım
+    /// geliştirme" tells you nothing about whether it is an HR system or a
+    /// point-of-sale one. Taken from the start because Turkish specifications
+    /// lead with "İhale konusu işin niteliği, türü ve miktarı", which is exactly
+    /// that answer.
+    ///
+    /// Extraction leaves pdf layout behind as runs of whitespace and stray line
+    /// breaks, so it is collapsed first; without that a message arrives shaped
+    /// like a column of confetti.
+    /// </remarks>
+    private static string? Excerpt(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var collapsed = CollapseWhitespace.Replace(text, " ").Trim();
+
+        if (collapsed.Length <= ExcerptLength)
+        {
+            return collapsed;
+        }
+
+        // Cut on a word rather than mid-syllable, then say it was cut.
+        var cut = collapsed[..ExcerptLength];
+        var lastSpace = cut.LastIndexOf(' ');
+
+        return (lastSpace > ExcerptLength / 2 ? cut[..lastSpace] : cut) + "…";
+    }
+
     private static string Fill(string template, Dictionary<string, string> values)
     {
         if (string.IsNullOrEmpty(template))

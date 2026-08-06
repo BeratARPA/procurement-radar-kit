@@ -37,6 +37,26 @@ public sealed record NoticeForNotification
     public string? Rationale { get; init; }
 
     public int DocumentCount { get; init; }
+
+    /// <summary>
+    /// The state's own registration number, where the source publishes one.
+    /// </summary>
+    /// <remarks>
+    /// EKAP gives no per-notice address - only an opaque id - so this is how a
+    /// person actually reaches the tender: paste it into EKAP's İKN filter. It
+    /// is also how you tell two near-identical titles apart.
+    /// </remarks>
+    public string? Ikn { get; init; }
+
+    /// <summary>
+    /// The opening of the specification text, where one was downloaded.
+    /// </summary>
+    /// <remarks>
+    /// The title says "yazılım geliştirme" and stops there. Whether that is an
+    /// HR system, a point-of-sale system or an integration is in the şartname,
+    /// and without it a notification cannot be judged without opening something.
+    /// </remarks>
+    public string? DocumentExcerpt { get; init; }
 }
 
 public interface INotificationRepository

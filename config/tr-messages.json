@@ -9,7 +9,9 @@
     "deadline": "⏰ Son teklif: {deadline} ({remaining})",
     "deadline_unknown": "⚠️ Son teklif tarihi okunamadı — ilanı açıp elle kontrol edin",
     "documents": "📎 Şartname indirildi ({count} dosya)",
-    "rationale": "🔎 Eşleşen: {rationale}"
+    "rationale": "🔎 Eşleşen: {rationale}",
+    "ikn": "🔖 İKN {ikn}",
+    "excerpt": "📄 Şartnameden: {excerpt}"
   },
   "reminder_header": "⏳ HATIRLATMA — son teklife az kaldı",
   "buttons": {

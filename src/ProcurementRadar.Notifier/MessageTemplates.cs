@@ -88,6 +88,12 @@ public sealed class MessageTemplates
         [JsonPropertyName("documents")]
         public string Documents { get; init; } = string.Empty;
 
+        [JsonPropertyName("ikn")]
+        public string Ikn { get; init; } = string.Empty;
+
+        [JsonPropertyName("excerpt")]
+        public string Excerpt { get; init; } = string.Empty;
+
         [JsonPropertyName("rationale")]
         public string Rationale { get; init; } = string.Empty;
     }
