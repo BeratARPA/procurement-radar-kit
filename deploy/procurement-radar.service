@@ -1,0 +1,43 @@
+[Unit]
+Description=Procurement Radar
+# The worker needs PostgreSQL, which runs in docker compose (D-05). Wanted, not
+# Requires: if the database is briefly down the worker should retry rather than
+# be stopped, because a missed poll is a missed notice.
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=radar
+WorkingDirectory=/opt/procurement-radar
+
+# D-06: secrets come from a file that is never committed. 0600, owned by radar.
+EnvironmentFile=/opt/procurement-radar/.env
+
+# Playwright's browser is installed once, under this path, and found here at run
+# time (T-16). Without it EKAP is the only source that fails, which is easy to
+# misread as EKAP being down.
+Environment=PLAYWRIGHT_BROWSERS_PATH=/opt/procurement-radar/.playwright
+
+ExecStart=/usr/bin/dotnet /opt/procurement-radar/ProcurementRadar.Worker.dll
+
+# D-10: the machine is somebody's old laptop, so it will be closed, moved and
+# unplugged. Always coming back is the whole uptime strategy.
+Restart=always
+RestartSec=10
+
+# Journald gets the console sink, which is already JSON (D-07), so
+# journalctl -u procurement-radar -o cat | jq works without any extra setup.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=procurement-radar
+
+# It reads public web pages and writes to one directory. Nothing else.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/procurement-radar/data /opt/procurement-radar/logs
+
+[Install]
+WantedBy=multi-user.target

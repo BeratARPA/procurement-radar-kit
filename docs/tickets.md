@@ -9,6 +9,29 @@ Tüm listeyi birden vermeyin.
 
 ---
 
+## Durum — 6 Ağustos 2026
+
+T-00'dan T-16'ya kadar hepsi bitti; T-13 D-03 gereği açılmadı. Zincirin tamamı
+canlı sitelere karşı çalıştı: robots.txt → nezaket kuyruğu → gzip arşiv →
+kodlama çözümü → ayrıştırma → tekilleştirme → maskeleme → skorlama.
+
+- 33 aktif kaynak, 25 kaynak "kayıtlı ama pasif" (sebebi her birinin `notes`
+  alanında; hiçbiri unutulmuş değil)
+- 539 ilan, 324'ünde son teklif tarihi
+- Aktif her kaynağın kaydedilmiş sayfası fixture olarak depoda, config'i testle
+  korunuyor
+- 342 test
+
+**Yapılmayan iki şey var ve ikisi de kod değil:**
+
+1. **Telegram token** — `.env` içindeki `PR_TELEGRAM_BOT_TOKEN` ve
+   `PR_TELEGRAM_CHAT_ID` boş. Bildirim katmanı yazıldı ve test edildi ama
+   gerçek bir bota karşı tek satır mesaj gönderilmedi.
+2. **Sürekli çalışma** — bkz. `docs/deployment.md`. Sistem şu an yalnızca elle
+   başlatıldığında yaşıyor; `first_seen_at` ancak makine açıkken birikir.
+
+---
+
 ## T-00 — Yerel altyapı
 
 **Kapsam:** Repo kökünde `docker-compose.yml` (PostgreSQL 16, volume
