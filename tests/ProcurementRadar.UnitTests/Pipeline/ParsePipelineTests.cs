@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
@@ -35,8 +36,8 @@ public sealed class ParsePipelineTests : IDisposable
 
     // The real scorer, reading the same keywords.json the worker does.
     private static readonly RuleScorer Scorer = new(
-        KeywordRules.Load(File.ReadAllText(Path.Combine(
-            RepositoryRoot.Find().FullName, "config", "keywords.json"))),
+        new Fixed<KeywordRules>(KeywordRules.Load(File.ReadAllText(Path.Combine(
+            RepositoryRoot.Find().FullName, "config", "keywords.json")))),
         new NoticeNormalizer(NoticeNormalizerTests.Rules));
 
     private static readonly PersonalDataMasker Masker = new(PersonalDataRules.Load(

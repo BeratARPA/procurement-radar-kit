@@ -94,7 +94,7 @@ internal static class ReparseCommand
             new ExternalKeyBuilder(normalizer),
             new PersonalDataMasker(config.PersonalData),
             new NoticeDocumentRepository(connectionFactory),
-            new RuleScorer(config.Keywords, normalizer),
+            new RuleScorer(new Domain.Settings.Fixed<Scoring.KeywordRules>(config.Keywords), normalizer),
             new NoticeScoreRepository(connectionFactory, TimeProvider.System),
             loggerFactory.CreateLogger<ParsePipeline>());
 

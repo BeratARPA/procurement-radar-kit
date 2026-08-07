@@ -47,21 +47,62 @@ public sealed class RuleScorer : Domain.Scoring.INoticeScorer
 
     private const int MaximumScore = 100;
 
-    private readonly KeywordRules _rules;
+    private readonly Domain.Settings.ICurrent<KeywordRules> _current;
     private readonly NoticeNormalizer _normalizer;
-    private readonly IReadOnlyList<(WeightedTerm Term, Regex Pattern)> _include;
-    private readonly IReadOnlyList<(string Term, Regex Pattern)> _exclude;
+    private CompiledRules _compiled;
 
-    public RuleScorer(KeywordRules rules, NoticeNormalizer normalizer)
+    public RuleScorer(Domain.Settings.ICurrent<KeywordRules> rules, NoticeNormalizer normalizer)
     {
-        _rules = rules;
+        _current = rules;
         _normalizer = normalizer;
-
-        _include = rules.Include.Select(term => (term, Matcher(normalizer, term.Term))).ToArray();
-        _exclude = rules.Exclude.Select(term => (term, Matcher(normalizer, term))).ToArray();
+        _compiled = Compile(rules.Value, normalizer);
     }
 
-    public KeywordRules Rules => _rules;
+    public KeywordRules Rules => Current().Rules;
+
+    private IReadOnlyList<(WeightedTerm Term, Regex Pattern)> Include => Current().Include;
+
+    private IReadOnlyList<(string Term, Regex Pattern)> Exclude => Current().Exclude;
+
+    /// <summary>
+    /// The compiled form of whatever the keyword list is right now.
+    /// </summary>
+    /// <remarks>
+    /// Turning thirty terms into thirty regexes is not free, and it does not
+    /// belong on the path of every notice. Compiled once per version of the
+    /// list and kept until the list is replaced - which, once the settings
+    /// screen exists, is a handful of times a week rather than never.
+    ///
+    /// The check is reference equality against the object the setting handed
+    /// out, so a save that produces an identical list still recompiles, and no
+    /// change never does. Two threads arriving together may both compile; they
+    /// produce the same thing and the second simply wins.
+    /// </remarks>
+    private CompiledRules Current()
+    {
+        var rules = _current.Value;
+        var compiled = _compiled;
+
+        if (ReferenceEquals(compiled.Rules, rules))
+        {
+            return compiled;
+        }
+
+        compiled = Compile(rules, _normalizer);
+        _compiled = compiled;
+
+        return compiled;
+    }
+
+    private static CompiledRules Compile(KeywordRules rules, NoticeNormalizer normalizer) => new(
+        rules,
+        rules.Include.Select(term => (term, Matcher(normalizer, term.Term))).ToArray(),
+        rules.Exclude.Select(term => (term, Matcher(normalizer, term))).ToArray());
+
+    private sealed record CompiledRules(
+        KeywordRules Rules,
+        IReadOnlyList<(WeightedTerm Term, Regex Pattern)> Include,
+        IReadOnlyList<(string Term, Regex Pattern)> Exclude);
 
     public Domain.Scoring.NoticeScoreResult Score(Domain.Entities.ProcurementNotice notice)
     {
@@ -77,17 +118,17 @@ public sealed class RuleScorer : Domain.Scoring.INoticeScorer
     {
         // Spec Bölüm 9: a code beats a word. It says the same thing however the
         // authority chose to phrase the title.
-        if (okasCodes is { Count: > 0 } codes && _rules.Okas.IsConfigured)
+        if (okasCodes is { Count: > 0 } codes && Rules.Okas.IsConfigured)
         {
-            if (FirstPrefixMatch(codes, _rules.Okas.ExcludePrefixes) is { } excludedCode)
+            if (FirstPrefixMatch(codes, Rules.Okas.ExcludePrefixes) is { } excludedCode)
             {
                 return new RuleScore(0, ScoreBasis.Excluded, [], excludedCode);
             }
 
-            if (FirstPrefixMatch(codes, _rules.Okas.IncludePrefixes) is { } includedCode)
+            if (FirstPrefixMatch(codes, Rules.Okas.IncludePrefixes) is { } includedCode)
             {
                 return new RuleScore(
-                    Math.Clamp(_rules.Okas.IncludeScore, 0, MaximumScore),
+                    Math.Clamp(Rules.Okas.IncludeScore, 0, MaximumScore),
                     ScoreBasis.Okas,
                     [includedCode]);
             }
@@ -97,7 +138,7 @@ public sealed class RuleScorer : Domain.Scoring.INoticeScorer
 
         // Exclude wins outright. "Bilgisayar yazılım ve donanım alımı" matches
         // both lists and is hardware nine times out of ten.
-        foreach (var (term, pattern) in _exclude)
+        foreach (var (term, pattern) in Exclude)
         {
             if (pattern.IsMatch(text))
             {
@@ -108,7 +149,7 @@ public sealed class RuleScorer : Domain.Scoring.INoticeScorer
         var matched = new List<string>();
         var total = 0;
 
-        foreach (var (term, pattern) in _include)
+        foreach (var (term, pattern) in Include)
         {
             if (!pattern.IsMatch(text))
             {

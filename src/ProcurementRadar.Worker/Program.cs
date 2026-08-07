@@ -9,6 +9,7 @@ using ProcurementRadar.Domain.Repositories;
 using ProcurementRadar.Domain.Health;
 using ProcurementRadar.Domain.Notifications;
 using ProcurementRadar.Domain.Scoring;
+using ProcurementRadar.Domain.Settings;
 using ProcurementRadar.Parsers;
 using ProcurementRadar.Notifier;
 using ProcurementRadar.Persistence;
@@ -94,6 +95,23 @@ builder.Services.AddSingleton<ExternalKeyBuilder>();
 builder.Services.AddSingleton(new PersonalDataMasker(personalData));
 builder.Services.AddSingleton(keywords);
 builder.Services.AddSingleton<INoticeScorer, RuleScorer>();
+
+// The settings the interface will edit (D-16). The value read from the config
+// file is the fallback, used until the database answers - a worker that cannot
+// reach the setting table yet still collects, parses and scores rather than
+// refusing to start.
+builder.Services.AddSingleton<ISettingRepository, SettingRepository>();
+builder.Services.AddSingleton(services => new SettingSeeder(
+    services.GetRequiredService<ISettingRepository>(),
+    configDirectory,
+    services.GetRequiredService<ILogger<SettingSeeder>>()));
+
+var liveKeywords = new LiveSetting<KeywordRules>(SettingKeys.Keywords, KeywordRules.Load, keywords);
+builder.Services.AddSingleton<LiveSetting>(liveKeywords);
+builder.Services.AddSingleton<ICurrent<KeywordRules>>(liveKeywords);
+
+builder.Services.AddSingleton<SettingsRefresher>();
+builder.Services.AddHostedService<SettingsWorker>();
 
 builder.Services.AddSingleton<ISourceAdapter, GenericTableAdapter>();
 

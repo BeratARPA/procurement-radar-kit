@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Scoring;
 using ProcurementRadar.UnitTests.Normalization;
@@ -10,7 +11,7 @@ public sealed class RuleScorerTests
         File.ReadAllText(Path.Combine(RepositoryRoot.Find().FullName, "config", "keywords.json")));
 
     private static readonly RuleScorer Scorer =
-        new(Rules, new NoticeNormalizer(NoticeNormalizerTests.Rules));
+        new(new Fixed<KeywordRules>(Rules), new NoticeNormalizer(NoticeNormalizerTests.Rules));
 
     [Fact]
     public void A_hardware_purchase_is_ruled_out()
@@ -123,7 +124,7 @@ public sealed class RuleScorerTests
     {
         // Spec Bölüm 9: the code says the same thing however the title is worded.
         var configured = new RuleScorer(
-            KeywordRules.Load("""
+            new Fixed<KeywordRules>(KeywordRules.Load("""
                 {
                   "include": [ { "term": "yazılım", "weight": 30 } ],
                   "exclude": [ "toner" ],
@@ -131,7 +132,7 @@ public sealed class RuleScorerTests
                   "rule_score_threshold": 30,
                   "notify_threshold": 60
                 }
-                """),
+                """)),
             new NoticeNormalizer(NoticeNormalizerTests.Rules));
 
         var included = configured.Score("Bir başlık, hiçbir kelime eşleşmiyor", okasCodes: ["72261000"]);
