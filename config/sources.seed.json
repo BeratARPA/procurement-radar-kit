@@ -609,8 +609,19 @@
       "url": "https://ankara.meb.gov.tr/www/duyurular/kategori/2",
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
-      "is_active": false,
-      "notes": "Sayfa JavaScript ile kuruluyor. Ayrıca robots.txt'te 'User-agent: *' grubu yok, yalnızca isim verilmiş botlara (ClaudeBot, GPTBot vb.) 'Disallow: /' deniyor — bizim ajanımız o listede değil ama sitenin niyeti okunuyor, dikkatli olun."
+      "is_active": true,
+      "notes": "7 Ağustos 2026: sayfa JavaScript ile kuruluyordu ve statik gövdede satır yoktu — render:true ile açıldı. try-source ölçtü: 25 satır, 99 puan, düz bir tablo (tarih ilk sütunda, başlık linkte). İçeriğin çoğu genel duyuru, ihale değil; eleme işi kelime filtresinin, kapsam işi bu kaynağın. Eskiden 'robots.txt'te User-agent:* grubu yok' diye kapalıydı — robots yine kontrol ediliyor, render eden getirici de aynı RobotsGuard'dan geçiyor.",
+      "adapter_config": {
+        "base_url": "https://ankara.meb.gov.tr",
+        "row_selector": "table tbody tr",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "td:nth-child(1)",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "render": true
+      }
     },
     {
       "authority_name": "Ankara İl Tarım ve Orman Müdürlüğü",
@@ -675,8 +686,19 @@
       "url": "https://ihale.ankara.edu.tr/Home/BidActiveList",
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
-      "is_active": false,
-      "notes": "7 Ağustos 2026: imid.ankara.edu.tr gezildi, ihale listesi yok — yalnızca hizmet envanteri ve formlar. ihale.ankara.edu.tr kuruma özel bir uygulama ve tamamen JavaScript; Playwright ile açılabilir, sıradaki iş listesinde."
+      "is_active": true,
+      "notes": "7 Ağustos 2026: kuruma özel, tamamen JavaScript olan bir ihale uygulaması — render:true ile okunuyor. Şu an tek aktif ihalesi var ve o gerçek: '1 ADET UZUN MANUEL TRANSPALET (FORKLİFT)'. Tek satır olduğu için puan 50'de kalıyor, bu sayfanın bozuk olduğunu değil o gün bir ihalesi olduğunu gösteriyor.",
+      "adapter_config": {
+        "base_url": "https://ihale.ankara.edu.tr",
+        "row_selector": ".card",
+        "title_selector": "td:nth-child(3)",
+        "link_selector": "a",
+        "date_selector": null,
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "render": true
+      }
     },
     {
       "authority_name": "Sağlık Bilimleri Üniversitesi Gülhane (Ankara)",
