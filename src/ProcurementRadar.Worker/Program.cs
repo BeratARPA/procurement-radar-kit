@@ -147,6 +147,8 @@ builder.Services.AddSingleton<PlaywrightPageRenderer>();
 builder.Services.AddSingleton<IPageRenderer>(services =>
     services.GetRequiredService<PlaywrightPageRenderer>());
 builder.Services.AddSingleton<ISourceAdapter, GenericTableAdapter>();
+// Listeyi sayfa yerine json olarak veren kaynaklar icin.
+builder.Services.AddSingleton<ISourceAdapter, JsonListAdapter>();
 
 // EKAP reaches its own host and nothing else does, so this gate is its own. It
 // enforces the same rule as the one inside HttpFetcher - one request at a time,
