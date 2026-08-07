@@ -1691,9 +1691,9 @@
       "district": null,
       "url": "https://www.ilan.gov.tr/ilan/tum-ilanlar/ihale?ats=3",
       "adapter_key": "generic_table",
-      "poll_interval_minutes": 180,
+      "poll_interval_minutes": 60,
       "is_active": true,
-      "notes": "7 Ağustos 2026: Basın İlan Kurumu'nun ulusal resmî ilan portalı — EKAP'a paralel, ikinci bir ülke çapında kaynak. Bursa Büyükşehir'in sayfasındaki bir linkten bulundu. Angular uygulaması, bu yüzden render:true; sayfa kabuğunu çizdikten sonra listeyi sunucudan istiyor, sabit bekleme yetmiyordu — getirici HTML büyümeyi bırakana kadar bekliyor. try-source ile ölçüldü: 12 satır, 70 puan, gerçek ihaleler (Van Büyükşehir bina inşaatı, Başkale asfalt yol, Dinar Milli Emlak). Tarih başlığın içinde serbest metin olarak geçiyor, date_selector bu yüzden başlığı gösteriyor. Sayfa 12 ilan veriyor ve yeniler üstten giriyor.",
+      "notes": "7 Ağustos 2026: Basın İlan Kurumu'nun ulusal resmî ilan portalı — EKAP'a paralel, ikinci bir ülke çapında kaynak. Bursa Büyükşehir'in sayfasındaki bir linkten bulundu. Angular uygulaması, bu yüzden render:true; sayfa kabuğunu çizdikten sonra listeyi sunucudan istiyor, sabit bekleme yetmiyordu — getirici HTML büyümeyi bırakana kadar bekliyor. try-source ile ölçüldü: 12 satır, 70 puan, gerçek ihaleler (Van Büyükşehir bina inşaatı, Başkale asfalt yol, Dinar Milli Emlak). Tarih başlığın içinde serbest metin olarak geçiyor, date_selector bu yüzden başlığı gösteriyor. Sayfa 12 ilan veriyor ve yeniler üstten giriyor. SINIR: sayfa yalnızca en yeni 12 ilanı veriyor ve searchText parametresi ilk yüklemede uygulanmıyor — Angular aramayı yalnızca kendi arayüzünden yapıyor, yani EKAP'taki 'terim başına bir kaynak' çarpanı burada işlemiyor. Bu yüzden aralık 180 değil 60 dakika: günde 12x24 ilanlık bir pencere. Ülke genelinde bundan fazla ilan yayımlanıyor, yani bu kaynak eksiksiz değil ve öyle olduğu iddia edilmiyor; asıl kapsam EKAP terimlerinden geliyor. Sayfalama (currentPage) denenmedi.",
       "adapter_config": {
         "base_url": "https://www.ilan.gov.tr",
         "row_selector": "ng-component.ng-star-inserted",
