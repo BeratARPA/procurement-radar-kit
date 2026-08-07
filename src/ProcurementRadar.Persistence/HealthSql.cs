@@ -51,6 +51,13 @@ internal static class HealthSql
         WHERE first_seen_at >= @Since
         """;
 
+    // Uses the partial index the schema already carries for unprocessed rows.
+    internal const string CountUnparsed = """
+        SELECT count(*)::int
+        FROM raw_fetch
+        WHERE is_processed = false AND fetched_at < @OlderThan
+        """;
+
     internal const string Summarise = """
         SELECT
             (SELECT count(*)::int FROM source WHERE is_active = true)                        AS "ActiveSources",

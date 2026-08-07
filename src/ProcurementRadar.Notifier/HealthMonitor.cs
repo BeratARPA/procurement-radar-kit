@@ -8,6 +8,16 @@ namespace ProcurementRadar.Notifier;
 
 public sealed record HealthOptions
 {
+    /// <summary>
+    /// How long an archived page may wait to be parsed before that is a fault.
+    /// </summary>
+    /// <remarks>
+    /// The parser runs every minute and takes twenty-five rows a time, so half
+    /// an hour is several hundred chances. Anything still waiting after that is
+    /// not a queue, it is a stop.
+    /// </remarks>
+    public TimeSpan PipelineStallWindow { get; init; } = TimeSpan.FromMinutes(30);
+
     /// <summary>Spec Bölüm 11: three failures in a row is worth saying out loud.</summary>
     public int FailureWarningThreshold { get; init; } = 3;
 
@@ -79,6 +89,7 @@ public sealed class HealthMonitor
         raised += await CheckParsersAsync(cancellationToken).ConfigureAwait(false);
         raised += await CheckSilentSourcesAsync(cancellationToken).ConfigureAwait(false);
         raised += await CheckCollectionAsync(cancellationToken).ConfigureAwait(false);
+        raised += await CheckPipelineAsync(cancellationToken).ConfigureAwait(false);
 
         return new HealthRunSummary(raised);
     }
@@ -181,6 +192,42 @@ public sealed class HealthMonitor
         }
 
         return raised;
+    }
+
+    /// <summary>
+    /// Pages arriving and nothing reading them.
+    /// </summary>
+    /// <remarks>
+    /// The counterpart to the collection alarm, and the one that was missing.
+    /// A stopped parser looks like a healthy system from every angle except this
+    /// one: fetches succeed, the archive grows, sources stay green, and no
+    /// notice is ever created. The backlog is the only thing that says so.
+    ///
+    /// Measured against rows old enough that the parser has had many turns at
+    /// them, so a restart or a slow batch does not raise it.
+    /// </remarks>
+    private async Task<int> CheckPipelineAsync(CancellationToken cancellationToken)
+    {
+        var olderThan = _timeProvider.GetUtcNow() - _options.PipelineStallWindow;
+        var waiting = await _health
+            .CountUnparsedSinceAsync(olderThan, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (waiting == 0)
+        {
+            return 0;
+        }
+
+        return await RaiseAsync(
+            HealthAlertKind.PipelineStalled,
+            sourceId: null,
+            Fill(_templates.Value.Alerts.PipelineStalled, new()
+            {
+                ["count"] = waiting.ToString(CultureInfo.InvariantCulture),
+                ["minutes"] = ((int)_options.PipelineStallWindow.TotalMinutes)
+                    .ToString(CultureInfo.InvariantCulture)
+            }),
+            cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<int> CheckCollectionAsync(CancellationToken cancellationToken)

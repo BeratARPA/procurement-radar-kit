@@ -25,6 +25,38 @@ public sealed class HealthMonitorTests
         _health = new FakeHealthRepository(_time);
     }
 
+    [Fact]
+    public async Task Pages_arriving_and_nothing_reading_them_is_an_alarm()
+    {
+        // The one that was missing. A stopped parser looks healthy from every
+        // other angle: fetches succeed, the archive grows, sources stay green,
+        // and not one notice is ever created. It happened - a missing parameter
+        // killed every parse run for two hours and the only thing that said so
+        // was a line in a log file.
+        _health.NoticesSinceWindow = 1;
+        _health.UnparsedBacklog = 141;
+
+        await Monitor().RunAsync(CancellationToken.None);
+
+        // Asserted as "an alarm went out" rather than by its wording: the
+        // wording is a setting and changing it must not fail a test about
+        // whether the fault is noticed.
+        Assert.NotEmpty(_alerts.Messages);
+    }
+
+    [Fact]
+    public async Task An_archive_that_is_being_read_raises_nothing()
+    {
+        // Rows waiting a minute or two are a queue, not a stop; the window is
+        // what tells them apart, and the repository applies it.
+        _health.NoticesSinceWindow = 1;
+        _health.UnparsedBacklog = 0;
+
+        await Monitor().RunAsync(CancellationToken.None);
+
+        Assert.Empty(_alerts.Messages);
+    }
+
     private HealthMonitor Monitor() => new(
         _health,
         _sources,
@@ -218,6 +250,11 @@ public sealed class HealthMonitorTests
 
         public Task<int> CountNoticesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
             => Task.FromResult(NoticesSinceWindow);
+
+        public int UnparsedBacklog { get; set; }
+
+        public Task<int> CountUnparsedSinceAsync(DateTimeOffset olderThan, CancellationToken cancellationToken)
+            => Task.FromResult(UnparsedBacklog);
 
         public Task<WeeklySummary> SummariseAsync(DateTimeOffset since, CancellationToken cancellationToken)
             => Task.FromResult(Summary);

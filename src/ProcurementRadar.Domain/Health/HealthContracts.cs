@@ -14,6 +14,21 @@ public enum HealthAlertKind
     /// <summary>A source that used to produce notices has produced none for a month.</summary>
     SilentSource,
 
+    /// <summary>
+    /// Pages are being archived and nothing is turning them into notices.
+    /// </summary>
+    /// <remarks>
+    /// spec section 11 has an alarm for a source that goes quiet and had none
+    /// for a pipeline that stops. The difference showed: a missing parameter
+    /// killed every parse run for two hours, the collector carried on filling
+    /// the archive, and the only thing that said so was a line in a log file.
+    ///
+    /// Nothing was lost, because unprocessed rows wait. That is also what makes
+    /// this measurable without a new column: if rows fetched long ago are still
+    /// unprocessed, the half of the system that reads them has stopped.
+    /// </remarks>
+    PipelineStalled,
+
     /// <summary>Nothing at all arrived, anywhere, for a day.</summary>
     NothingCollected,
 
@@ -93,6 +108,11 @@ public interface IHealthRepository
 
     /// <summary>How many notices were first seen since a moment.</summary>
     Task<int> CountNoticesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Archived pages older than the cutoff that nothing has parsed yet.
+    /// </summary>
+    Task<int> CountUnparsedSinceAsync(DateTimeOffset olderThan, CancellationToken cancellationToken);
 
     Task<WeeklySummary> SummariseAsync(DateTimeOffset since, CancellationToken cancellationToken);
 

@@ -32,7 +32,8 @@
     "source_deactivated": "⛔ {authority} — {count} hatadan sonra pasife alındı. Elle bakılması gerekiyor.",
     "parser_broken": "🟠 PARSER BOZUK OLABİLİR — {authority}. Sayfa değişmiş ama ayrıştırıcı hiçbir ilan çıkaramadı ({count} kez). Selector'ları kontrol edin.",
     "silent_source": "🔇 {authority} — {days} gündür yeni ilan yok. Daha önce ilan veriyordu.",
-    "nothing_collected": "🚨 KRİTİK — son {hours} saatte sistem genelinde tek bir yeni ilan yok. Hafta içi bu normal değil."
+    "nothing_collected": "🚨 KRİTİK — son {hours} saatte sistem genelinde tek bir yeni ilan yok. Hafta içi bu normal değil.",
+    "pipeline_stalled": "🔴 AYRIŞTIRMA DURDU — {count} arşiv sayfası {minutes} dakikadır işlenmeyi bekliyor. Sayfalar toplanmaya devam ediyor, hiçbiri ilana dönüşmüyor. Veri kaybı yok, düzeltilince arşivden işlenir. Worker loglarına bakın."
   },
   "weekly_summary": {
     "header": "📊 Haftalık özet",

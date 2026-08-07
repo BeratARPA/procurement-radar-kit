@@ -205,6 +205,9 @@ public sealed class MessageTemplates
 
         [JsonPropertyName("nothing_collected")]
         public string NothingCollected { get; init; } = string.Empty;
+
+        [JsonPropertyName("pipeline_stalled")]
+        public string PipelineStalled { get; init; } = string.Empty;
     }
 
     public sealed record WeeklySummaryTemplates
