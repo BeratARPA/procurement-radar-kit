@@ -141,6 +141,11 @@ builder.Services.AddSingleton<ICurrent<PolitenessSettings>>(livePoliteness);
 builder.Services.AddSingleton<SettingsRefresher>();
 builder.Services.AddHostedService<SettingsWorker>();
 
+// The browser is already here for EKAP; this lends it to the handful of pages
+// whose listings are written by javascript (spec section 13).
+builder.Services.AddSingleton<PlaywrightPageRenderer>();
+builder.Services.AddSingleton<IPageRenderer>(services =>
+    services.GetRequiredService<PlaywrightPageRenderer>());
 builder.Services.AddSingleton<ISourceAdapter, GenericTableAdapter>();
 
 // EKAP reaches its own host and nothing else does, so this gate is its own. It

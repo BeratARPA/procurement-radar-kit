@@ -43,6 +43,18 @@ public sealed record GenericTableAdapterConfig
     /// <summary>Where relative links are resolved against.</summary>
     public required string BaseUrl { get; init; }
 
+    /// <summary>
+    /// Load the page in a browser first, because its list is written by
+    /// javascript and the server sends none of it.
+    /// </summary>
+    /// <remarks>
+    /// Per source, not by default: a browser tab costs a second or two and a few
+    /// hundred megabytes against a few kilobytes of html. spec section 13
+    /// budgeted this for about a tenth of sources, and measurement agrees -
+    /// seven of the pages looked at so far need it.
+    /// </remarks>
+    public bool Render { get; init; }
+
     /// <summary>Optional: many listings carry no usable date.</summary>
     public string? DateSelector { get; init; }
 
@@ -128,7 +140,8 @@ public sealed record GenericTableAdapterConfig
             DateSelector = Optional(shape.DateSelector),
             TimeSelector = Optional(shape.TimeSelector),
             AmountSelector = Optional(shape.AmountSelector),
-            DocumentSelector = Optional(shape.DocumentSelector)
+            DocumentSelector = Optional(shape.DocumentSelector),
+            Render = shape.Render
         };
 
         problem = string.Empty;
@@ -163,6 +176,18 @@ public sealed record GenericTableAdapterConfig
 
         [JsonPropertyName("document_selector")]
         public string? DocumentSelector { get; init; }
+
+        /// <summary>
+        /// Load the page in a browser first, because its list is written by
+        /// javascript and the server sends none of it.
+        /// </summary>
+        /// <remarks>
+        /// Per source, not by default: a browser tab costs a second or two and
+        /// a few hundred megabytes against a few kilobytes of html. spec section
+        /// 13 budgeted this for about a tenth of sources.
+        /// </remarks>
+        [JsonPropertyName("render")]
+        public bool Render { get; init; }
 
         [JsonPropertyName("base_url")]
         public string? BaseUrl { get; init; }

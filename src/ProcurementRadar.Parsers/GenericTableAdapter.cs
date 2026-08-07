@@ -25,14 +25,23 @@ public sealed class GenericTableAdapter : ISourceAdapter
     private readonly ITurkishDateParser _dateParser;
     private readonly ILogger<GenericTableAdapter> _logger;
 
+    private readonly IPageRenderer? _renderer;
+
+    /// <param name="renderer">
+    /// Optional. Without one, a source asking to be rendered is fetched plainly
+    /// and will find nothing - which is visible rather than silent, because the
+    /// never-produced alarm covers a source that reads as empty for a week.
+    /// </param>
     public GenericTableAdapter(
         IHttpFetcher fetcher,
         ITurkishDateParser dateParser,
-        ILogger<GenericTableAdapter> logger)
+        ILogger<GenericTableAdapter> logger,
+        IPageRenderer? renderer = null)
     {
         _fetcher = fetcher;
         _dateParser = dateParser;
         _logger = logger;
+        _renderer = renderer;
     }
 
     public string Key => AdapterKey;
@@ -41,9 +50,21 @@ public sealed class GenericTableAdapter : ISourceAdapter
         Source source,
         ConditionalRequest conditional,
         CancellationToken cancellationToken)
-        => _fetcher.FetchAsync(
+    {
+        // A conditional request is skipped when rendering: there is no ETag on
+        // something a browser assembled, and the whole point is to run the
+        // scripts. Change detection still works, over the rendered bytes.
+        if (_renderer is not null
+            && GenericTableAdapterConfig.TryRead(source.AdapterConfig, out var config, out _)
+            && config!.Render)
+        {
+            return _renderer.RenderAsync(source.Url, cancellationToken);
+        }
+
+        return _fetcher.FetchAsync(
             new FetchRequest(source.Url, conditional.ETag, conditional.LastModified),
             cancellationToken);
+    }
 
     public IReadOnlyList<RawNotice> Parse(string body, Source source)
     {

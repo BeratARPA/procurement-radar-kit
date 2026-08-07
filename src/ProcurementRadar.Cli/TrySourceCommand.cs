@@ -81,7 +81,7 @@ internal static class TrySourceCommand
 
         if (string.IsNullOrWhiteSpace(url))
         {
-            Log.Error("Usage: try-source --url <url> [--charset <name>] [--config-dir <path>]");
+            Log.Error("Usage: try-source --url <url> [--render] [--charset <name>] [--config-dir <path>]");
             return 1;
         }
 
@@ -123,7 +123,20 @@ internal static class TrySourceCommand
             AdapterKey = GenericTableAdapter.AdapterKey
         };
 
-        var result = await fetcher.FetchAsync(new FetchRequest(url), cancellationToken).ConfigureAwait(false);
+        // --render answers a different question: not "can this page be read"
+        // but "is there anything on it once the scripts have run". Seven pages
+        // read as empty without it and certainly carry tenders.
+        var render = args.Contains("--render", StringComparer.Ordinal);
+
+        await using var renderer = new PlaywrightPageRenderer(
+            new HostPolitenessGate(TimeProvider.System, options),
+            options,
+            new EkapBrowserOptions { AnnouncementButtonName = "-" },
+            loggerFactory.CreateLogger<PlaywrightPageRenderer>());
+
+        var result = render
+            ? await renderer.RenderAsync(url, cancellationToken).ConfigureAwait(false)
+            : await fetcher.FetchAsync(new FetchRequest(url), cancellationToken).ConfigureAwait(false);
 
         if (result.Outcome != FetchOutcome.Fetched || result.Body is null)
         {
