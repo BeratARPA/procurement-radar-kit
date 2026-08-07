@@ -24,6 +24,7 @@ namespace ProcurementRadar.Collector;
 public sealed class PlaywrightPageRenderer : IPageRenderer, IAsyncDisposable
 {
     private readonly HostPolitenessGate _gate;
+    private readonly RobotsGuard _robots;
     private readonly HttpFetcherOptions _options;
     private readonly EkapBrowserOptions _browserOptions;
     private readonly ILogger<PlaywrightPageRenderer> _logger;
@@ -33,18 +34,39 @@ public sealed class PlaywrightPageRenderer : IPageRenderer, IAsyncDisposable
     private IBrowser? _browser;
 
     public PlaywrightPageRenderer(
+        HttpClient httpClient,
         HostPolitenessGate gate,
+        TimeProvider timeProvider,
         HttpFetcherOptions options,
         EkapBrowserOptions browserOptions,
         ILogger<PlaywrightPageRenderer> logger)
     {
         _gate = gate;
+        // The same guard HttpFetcher uses. A browser is still a request, and a
+        // rendering fetch that skipped robots.txt would be this project quietly
+        // making an exception of itself - CLAUDE.md calls that non-negotiable,
+        // and one source is already off the list because of a Disallow.
+        _robots = new RobotsGuard(httpClient, gate, timeProvider, options, logger);
         _options = options;
         _browserOptions = browserOptions;
         _logger = logger;
     }
 
     public async Task<FetchResult> RenderAsync(string url, CancellationToken cancellationToken)
+    {
+        var uri = new Uri(url);
+
+        if (!await _robots.IsAllowedAsync(uri, cancellationToken).ConfigureAwait(false))
+        {
+            _logger.LogWarning("robots.txt disallows {Url}; not rendering it", url);
+
+            return FetchResult.SkippedByRobots();
+        }
+
+        return await RenderPolitelyAsync(url, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<FetchResult> RenderPolitelyAsync(string url, CancellationToken cancellationToken)
         => await _gate
             .RunAsync(
                 new Uri(url).Host,

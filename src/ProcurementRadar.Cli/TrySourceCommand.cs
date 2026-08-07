@@ -129,7 +129,9 @@ internal static class TrySourceCommand
         var render = args.Contains("--render", StringComparer.Ordinal);
 
         await using var renderer = new PlaywrightPageRenderer(
+            httpClient,
             new HostPolitenessGate(TimeProvider.System, options),
+            TimeProvider.System,
             options,
             new EkapBrowserOptions { AnnouncementButtonName = "-" },
             loggerFactory.CreateLogger<PlaywrightPageRenderer>());

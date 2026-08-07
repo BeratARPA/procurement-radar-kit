@@ -1683,6 +1683,28 @@
         "amount_selector": null,
         "document_selector": null
       }
+    },
+    {
+      "authority_name": "Basın İlan Kurumu - Resmî İlan Portalı (İhale)",
+      "authority_type": "provincial_directorate",
+      "province": "Türkiye",
+      "district": null,
+      "url": "https://www.ilan.gov.tr/ilan/tum-ilanlar/ihale?ats=3",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 180,
+      "is_active": true,
+      "notes": "7 Ağustos 2026: Basın İlan Kurumu'nun ulusal resmî ilan portalı — EKAP'a paralel, ikinci bir ülke çapında kaynak. Bursa Büyükşehir'in sayfasındaki bir linkten bulundu. Angular uygulaması, bu yüzden render:true; sayfa kabuğunu çizdikten sonra listeyi sunucudan istiyor, sabit bekleme yetmiyordu — getirici HTML büyümeyi bırakana kadar bekliyor. try-source ile ölçüldü: 12 satır, 70 puan, gerçek ihaleler (Van Büyükşehir bina inşaatı, Başkale asfalt yol, Dinar Milli Emlak). Tarih başlığın içinde serbest metin olarak geçiyor, date_selector bu yüzden başlığı gösteriyor. Sayfa 12 ilan veriyor ve yeniler üstten giriyor.",
+      "adapter_config": {
+        "base_url": "https://www.ilan.gov.tr",
+        "row_selector": "ng-component.ng-star-inserted",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "a",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "render": true
+      }
     }
   ]
 }
