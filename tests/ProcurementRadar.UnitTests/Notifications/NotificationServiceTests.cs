@@ -1,3 +1,5 @@
+using ProcurementRadar.Domain.Settings;
+using ProcurementRadar.Scoring;
 using System.Net;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
@@ -45,9 +47,16 @@ public sealed class NotificationServiceTests
             _notifications,
             new NoticeMessageFormatter(NoticeMessageFormatterTests.Templates, _time),
             client,
-            new NotificationOptions { MinimumScore = 60 },
+            new NotificationOptions(new Fixed<KeywordRules>(KeywordRules.Load(ThresholdOfSixty))),
             NullLogger<NotificationService>.Instance);
     }
+
+    // The threshold now comes from the keyword rules rather than being set
+    // beside them, so a test that wants a particular one states it the way the
+    // settings table would.
+    private const string ThresholdOfSixty = """
+        {"include": [ { "term": "yazılım", "weight": 40 } ], "exclude": [], "notify_threshold": 60}
+        """;
 
     [Fact]
     public async Task A_notice_is_announced_once_and_never_again()

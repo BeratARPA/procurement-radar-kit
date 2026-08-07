@@ -163,7 +163,7 @@ if (!string.IsNullOrWhiteSpace(botToken) && !string.IsNullOrWhiteSpace(chatId))
 {
     builder.Services.AddSingleton(new TelegramOptions { BotToken = botToken, ChatId = chatId });
     builder.Services.AddSingleton<IAlertChannel, TelegramAlertChannel>();
-    builder.Services.AddSingleton(new NotificationOptions { MinimumScore = keywords.NotifyThreshold });
+    builder.Services.AddSingleton(new NotificationOptions(liveKeywords));
     builder.Services.AddSingleton<TelegramClient>();
     builder.Services.AddSingleton<NoticeMessageFormatter>();
     builder.Services.AddSingleton<NotificationService>();

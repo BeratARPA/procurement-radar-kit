@@ -146,10 +146,25 @@ public sealed class NotificationService
     }
 }
 
-public sealed record NotificationOptions
+public sealed class NotificationOptions
 {
-    /// <summary>From <c>notify_threshold</c> in keywords.json.</summary>
-    public required int MinimumScore { get; init; }
+    private readonly Domain.Settings.ICurrent<Scoring.KeywordRules> _keywords;
+
+    public NotificationOptions(Domain.Settings.ICurrent<Scoring.KeywordRules> keywords)
+    {
+        _keywords = keywords;
+    }
+
+    /// <summary>
+    /// <c>notify_threshold</c> as it is now, not as it was at startup.
+    /// </summary>
+    /// <remarks>
+    /// Read through the keyword rules rather than copied out of them once,
+    /// because the threshold is the setting most likely to be moved and the one
+    /// where a stale copy is hardest to spot: notifications simply keep arriving
+    /// at the old rate and nothing looks wrong.
+    /// </remarks>
+    public int MinimumScore => _keywords.Value.NotifyThreshold;
 
     /// <summary>Spec Bölüm 10: one nudge six hours before the deadline.</summary>
     public TimeSpan ReminderWindow { get; init; } = TimeSpan.FromHours(6);
