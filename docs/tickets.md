@@ -271,3 +271,96 @@ alın, gerekiyorsa fork'layın.
 (T-15'teki parser broken kuralı bu adapter için de geçerli).
 
 **Bağımlılık:** T-15
+
+---
+
+# v2 — Arayüz
+
+Sıra gerçek: T-17 olmadan ayar ekranının kaydet tuşu hiçbir şey yapmaz,
+T-18 olmadan Flutter veritabanını göremez.
+
+---
+
+## T-17 — Ayar omurgası
+
+**Kapsam:** `setting` (key, jsonb value, updated_at, updated_by) ve
+`setting_history` tabloları. `SettingRepository`. `SettingSeeder`: tabloda
+karşılığı olmayan her anahtarı `config/*.json` dosyasından doldurur, dolu
+olanlara dokunmaz. `SettingProvider`: 30 saniyede bir yalnızca `max(updated_at)`
+sorar, değiştiyse ilgili ayarı tazeler ve bağımlıları yeniden kurar.
+
+Taşınan anahtarlar: `keywords`, `messages`, `date_patterns`, `normalization`,
+`personal_data`, `award_labels`, `ekap_ui`, ve yeni `politeness` ile `schedule`
+(bugün kodda sabit olan aralıklar, batch boyutları, olgunluk günü).
+
+**Kabul:** Eşiği veritabanından değiştirince worker yeniden başlatılmadan yeni
+eşiğe göre bildirim üretiyor — bunu doğrulayan test zorunlu. Boş bir
+veritabanında seed dosyalardan doluyor, ikinci çalıştırmada üzerine yazmıyor.
+Her değişiklik `setting_history`'de.
+
+**Bağımlılık:** yok
+
+---
+
+## T-18 — HTTP API
+
+**Kapsam:** `src/ProcurementRadar.Api`, ASP.NET Core minimal API. Uçlar:
+ilanlar (liste, filtre, detay, durum güncelleme), kaynaklar (liste, ekle,
+düzenle, sağlık), ayarlar (oku, yaz, geçmiş), sonuçlar, sağlık/alarm, ve
+filtre önizleme (`POST /api/filter/preview` — verilen kelime listesi ve eşikle
+arşivin kaçı bildirilirdi). `PR_API_TOKEN` başlığı zorunlu. Nezaket ayarlarında
+alt sınırlar burada zorlanır.
+
+**Kabul:** Token'sız istek 401. 5 saniyenin altında bir bekleme veya kapalı
+robots kabul edilmiyor — testi var. Önizleme ucu veritabanını değiştirmiyor.
+
+**Bağımlılık:** T-17
+
+---
+
+## T-19 — Flutter iskeleti (Web)
+
+**Kapsam:** `ui/` altında tek kod tabanı. Riverpod + go_router, duyarlı yerleşim
+(dar ekranda alt gezinme, geniş ekranda yan ray), API istemcisi, token saklama,
+karanlık/aydınlık tema. İlk ekran: ilan listesi + detay + durum butonları.
+
+**Kabul:** `flutter run -d chrome` ile açılıyor, telefonun tarayıcısından ev
+ağı üzerinden de açılıyor ve iki yerleşim de kullanılabilir.
+
+**Bağımlılık:** T-18
+
+---
+
+## T-20 — Filtre ve ayar ekranları
+
+**Kapsam:** Kelime ekle/sil/ağırlıkla, eşiği kaydır ve **canlı önizleme**:
+"bu ayarla arşivdeki N ilanın M'si bildirilirdi, şunlar". Ayar ekranı:
+aralıklar, Telegram, süpürme, nezaket (alt sınırlar görünür ve gerekçeli).
+
+**Kabul:** Eşik değişikliği kaydedildikten sonra worker yeniden başlatılmadan
+etkili oluyor. Önizleme gerçek arşiv üzerinden sayı veriyor.
+
+**Bağımlılık:** T-19
+
+---
+
+## T-21 — Kaynak yönetimi ekranı
+
+**Kapsam:** Kaynak ekleme/düzenleme, adapter seçimi, CSS selector alanları ve
+**kaydedilmiş sayfaya karşı test** ("bu ayarla ne bulurdu" — `check-source`
+komutunun ekran hali). Sağlık, hata sayacı, pasife alma.
+
+**Kabul:** Yeni bir kaynak tek satır SQL yazmadan eklenip test edilebiliyor.
+
+**Bağımlılık:** T-19
+
+---
+
+## T-22 — Sonuçlar ve masaüstü/Android derlemeleri
+
+**Kapsam:** Sonuç ekranı (kazanan, sözleşme/tahmin oranı, kurum bazlı geçmiş).
+Aynı koddan Windows masaüstü ve Android derlemesi, kurulum notları.
+
+**Kabul:** Üç platformda da aynı ekranlar çalışıyor.
+
+**Bağımlılık:** T-20, T-21

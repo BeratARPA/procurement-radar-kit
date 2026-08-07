@@ -382,3 +382,52 @@ alan yazılıyor — ilanın görevli adı ve santral numarası taşıyan gerisi
 **Uygulama:** `AwardParser` (saf, fixture'ı `ekap_award/2026-1166872-sonuc.json`),
 `AwardSweeper` + `AwardWorker`, `008_award_sweep.sql` (`checked_at`, `attempts`),
 Telegram'da `/sonuclar`.
+
+---
+
+## D-16 — Arayüz: Flutter + yerel HTTP API, ayarlar veritabanında
+
+**Karar:** Tek Flutter kod tabanı (önce Web, sonra Windows masaüstü, sonra
+Android), aynı makinede çalışan bir ASP.NET Core minimal API üzerinden konuşur.
+Ayarlar `config/*.json` dosyalarından `setting` tablosuna taşınır; dosyalar
+ilk değer (seed) olarak kalır.
+
+**Neden API var.** Flutter veritabanına doğrudan bağlanamaz: tarayıcıda ham TCP
+soketi yok, mobilde de bağlantı dizesini uygulamanın içine gömmek demek.
+`ProcurementRadar.Api` aynı solution'da, aynı Dapper repository'lerini kullanır,
+yeni SQL yazmaz. ASP.NET Core .NET 8'in içinde geliyor — yeni bağımlılık, hesap
+veya gider yok.
+
+`CLAUDE.md` "arayüz, auth, çok kiracılılık yapma" diyordu. Bu madde ekibin
+kendi kararıyla açıldı; auth ve çok kiracılılık hâlâ kapsam dışı — tek takım,
+tek token.
+
+**Neden ayarlar veritabanında.** Bugün ayarlar üç yerde ve hiçbiri çalışırken
+değişmiyor: `config/*.json` (yeniden başlatma ister), `source` tablosu (elle
+SQL), koddaki sabitler (yeniden derleme ister). Ayar ekranının "Kaydet" tuşunun
+bir anlamı olması için ayarların tek yerde ve sıcak okunabilir olması gerekiyor.
+
+`setting` tablosu anahtar + `jsonb` tutar. Worker 30 saniyede bir yalnızca en
+son `updated_at`'e bakar; değişmişse ilgili ayarı tazeler. Dosyalar silinmiyor:
+tablo boşsa dosyadan doldurulur, doluysa dosyaya bakılmaz. Böylece temiz kurulum
+da, kurulmuş sistem de aynı kodla çalışır.
+
+Her değişiklik `setting_history`'ye yazılır. Yanlış bir kelime listesi
+bildirimleri sessizce kesebilir; geri alınamayan bir ayar ekranı, ayarı
+olmayan bir sistemden kötüdür.
+
+**Nezaket ayarlarının alt sınırı sunucuda.** Host başına asgari bekleme, gece
+penceresi ve `robots.txt` uyumu ekranda görünür ve düzenlenebilir, ama API
+5 saniyenin altını ve robots'un kapatılmasını reddeder. `CLAUDE.md`'nin
+dediği gibi kazanılacak hız yok, kaybedilecek IP var; bir ayar ekranı bunu
+tek yazı hatasıyla mümkün kılmamalı.
+
+**Erişim: şimdilik ev ağı.** API `http://0.0.0.0:5080` dinler, telefondan
+`http://<makine-ip>:5080` ile açılır. Dışarıdan erişim (Tailscale veya
+Cloudflare Tunnel) sonraya bırakıldı ve API'de değişiklik gerektirmiyor.
+Yine de istek başlığında tek bir statik token aranır (`PR_API_TOKEN`) —
+kullanıcı hesabı değil, ev ağındaki başka bir cihazın yanlışlıkla ayar
+değiştirmesine karşı.
+
+**iOS yok.** Derlemesi Mac istiyor, ekipte Mac yok. Safari'den web sürümü
+açılır ve ana ekrana eklenir; bu bir eksiklik, gizlenmiyor.

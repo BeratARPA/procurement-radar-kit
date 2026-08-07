@@ -30,7 +30,8 @@ public sealed class RepositorySqlTests
             ["health_alert", "source", "raw_fetch", "procurement_notice", "notification"]),
         // The sweep asks which concluded notices have no result yet, so it reads
         // the notice it is about as well as the award it is looking for.
-        (typeof(AwardSql), ["award", "procurement_notice"])
+        (typeof(AwardSql), ["award", "procurement_notice"]),
+        (typeof(SettingSql), ["setting", "setting_history"])
     ];
 
     // Words that follow FROM/INTO/UPDATE/JOIN without being a table name.
@@ -61,7 +62,7 @@ public sealed class RepositorySqlTests
             new[]
             {
                 "award", "health_alert", "notice_document", "notice_score", "notification",
-                "procurement_notice", "raw_fetch", "source"
+                "procurement_notice", "raw_fetch", "setting", "setting_history", "source"
             },
             _schema.TableNames.Order(StringComparer.Ordinal));
     }
