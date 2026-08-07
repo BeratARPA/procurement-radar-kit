@@ -208,6 +208,9 @@ public sealed class MessageTemplates
 
         [JsonPropertyName("pipeline_stalled")]
         public string PipelineStalled { get; init; } = string.Empty;
+
+        [JsonPropertyName("never_produced")]
+        public string NeverProduced { get; init; } = string.Empty;
     }
 
     public sealed record WeeklySummaryTemplates

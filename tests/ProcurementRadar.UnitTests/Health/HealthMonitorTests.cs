@@ -57,6 +57,25 @@ public sealed class HealthMonitorTests
         Assert.Empty(_alerts.Messages);
     }
 
+    [Fact]
+    public async Task A_source_that_has_never_produced_anything_is_an_alarm()
+    {
+        // The gap the other two leave. Selectors written against a page that
+        // happened to be empty that day fetch perfectly for ever and find
+        // nothing, and neither ParserBroken nor SilentSource fires - one wants a
+        // previous success, the other wants a month of history to have stopped.
+        _health.NoticesSinceWindow = 1;
+        _health.NeverProduced.Add(new NeverProducedSource
+        {
+            SourceId = 43,
+            AuthorityName = "Mamak Belediyesi"
+        });
+
+        await Monitor().RunAsync(CancellationToken.None);
+
+        Assert.NotEmpty(_alerts.Messages);
+    }
+
     private HealthMonitor Monitor() => new(
         _health,
         _sources,
@@ -252,6 +271,13 @@ public sealed class HealthMonitorTests
             => Task.FromResult(NoticesSinceWindow);
 
         public int UnparsedBacklog { get; set; }
+
+        public List<NeverProducedSource> NeverProduced { get; } = [];
+
+        public Task<IReadOnlyList<NeverProducedSource>> ListNeverProducedAsync(
+            DateTimeOffset fetchedSince,
+            CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<NeverProducedSource>>(NeverProduced);
 
         public Task<int> CountUnparsedSinceAsync(DateTimeOffset olderThan, CancellationToken cancellationToken)
             => Task.FromResult(UnparsedBacklog);

@@ -39,6 +39,14 @@ public sealed class HealthRepository : IHealthRepository
             new { OlderThan = olderThan.ToUniversalTime() },
             cancellationToken);
 
+    public Task<IReadOnlyList<NeverProducedSource>> ListNeverProducedAsync(
+        DateTimeOffset fetchedSince,
+        CancellationToken cancellationToken)
+        => QueryAsync<NeverProducedSource>(
+            HealthSql.ListNeverProduced,
+            new { FetchedSince = fetchedSince.ToUniversalTime() },
+            cancellationToken);
+
     public async Task<int> CountNoticesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
     {
         await using var connection = await _connectionFactory

@@ -52,6 +52,20 @@ internal static class HealthSql
         """;
 
     // Uses the partial index the schema already carries for unprocessed rows.
+    // Fetched for long enough to have had many chances, and nothing to show for
+    // it. The join is on the archive rather than on a column, because there is
+    // no record of when a source was switched on - only of what it has fetched.
+    internal const string ListNeverProduced = """
+        SELECT s.id AS "SourceId", s.authority_name AS "AuthorityName"
+        FROM source s
+        WHERE s.is_active
+          AND s.last_new_notice_at IS NULL
+          AND EXISTS (
+              SELECT 1 FROM raw_fetch r
+              WHERE r.source_id = s.id AND r.fetched_at < @FetchedSince)
+        ORDER BY s.authority_name
+        """;
+
     internal const string CountUnparsed = """
         SELECT count(*)::int
         FROM raw_fetch

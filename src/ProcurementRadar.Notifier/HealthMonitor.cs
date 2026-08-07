@@ -18,6 +18,17 @@ public sealed record HealthOptions
     /// </remarks>
     public TimeSpan PipelineStallWindow { get; init; } = TimeSpan.FromMinutes(30);
 
+    /// <summary>
+    /// How long a source may be fetched without producing anything before that
+    /// is a fault rather than a quiet week.
+    /// </summary>
+    /// <remarks>
+    /// Seven days is roughly seven hundred polls. A listing that is genuinely
+    /// empty for a week is possible; selectors that never matched anything look
+    /// exactly the same, and only one of the two is worth an evening.
+    /// </remarks>
+    public TimeSpan NeverProducedWindow { get; init; } = TimeSpan.FromDays(7);
+
     /// <summary>Spec Bölüm 11: three failures in a row is worth saying out loud.</summary>
     public int FailureWarningThreshold { get; init; } = 3;
 
@@ -90,6 +101,7 @@ public sealed class HealthMonitor
         raised += await CheckSilentSourcesAsync(cancellationToken).ConfigureAwait(false);
         raised += await CheckCollectionAsync(cancellationToken).ConfigureAwait(false);
         raised += await CheckPipelineAsync(cancellationToken).ConfigureAwait(false);
+        raised += await CheckNeverProducedAsync(cancellationToken).ConfigureAwait(false);
 
         return new HealthRunSummary(raised);
     }
@@ -206,6 +218,41 @@ public sealed class HealthMonitor
     /// Measured against rows old enough that the parser has had many turns at
     /// them, so a restart or a slow batch does not raise it.
     /// </remarks>
+    /// <summary>
+    /// Sources that have never produced anything.
+    /// </summary>
+    /// <remarks>
+    /// The gap the other two leave. ParserBroken wants the source to have found
+    /// something before; SilentSource wants a month of history to have stopped.
+    /// A source whose selectors were written against a page that happened to be
+    /// empty trips neither and looks healthy from every angle: the fetch
+    /// succeeds, the hash moves, the failure count stays at zero.
+    /// </remarks>
+    private async Task<int> CheckNeverProducedAsync(CancellationToken cancellationToken)
+    {
+        var sources = await _health
+            .ListNeverProducedAsync(
+                _timeProvider.GetUtcNow() - _options.NeverProducedWindow,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        var raised = 0;
+
+        foreach (var source in sources)
+        {
+            raised += await RaiseAsync(
+                HealthAlertKind.NeverProduced,
+                source.SourceId,
+                Fill(_templates.Value.Alerts.NeverProduced, new()
+                {
+                    ["authority"] = source.AuthorityName
+                }),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        return raised;
+    }
+
     private async Task<int> CheckPipelineAsync(CancellationToken cancellationToken)
     {
         var olderThan = _timeProvider.GetUtcNow() - _options.PipelineStallWindow;

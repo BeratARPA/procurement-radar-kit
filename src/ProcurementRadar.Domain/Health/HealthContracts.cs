@@ -29,6 +29,23 @@ public enum HealthAlertKind
     /// </remarks>
     PipelineStalled,
 
+    /// <summary>
+    /// A source that has been fetched successfully for a week and has never
+    /// produced a notice.
+    /// </summary>
+    /// <remarks>
+    /// The gap the other two leave open. ParserBroken needs the source to have
+    /// found something before; SilentSource needs a month of history to have
+    /// gone quiet. A source that never worked in the first place trips neither,
+    /// and looks perfect from the outside: the fetch succeeds, the hash changes,
+    /// consecutive_failures stays at zero.
+    ///
+    /// It matters because selectors get written against a page that happened to
+    /// be empty that day. Eleven sources were switched back on in exactly that
+    /// state.
+    /// </remarks>
+    NeverProduced,
+
     /// <summary>Nothing at all arrived, anywhere, for a day.</summary>
     NothingCollected,
 
@@ -114,6 +131,11 @@ public interface IHealthRepository
     /// </summary>
     Task<int> CountUnparsedSinceAsync(DateTimeOffset olderThan, CancellationToken cancellationToken);
 
+    /// <summary>Active sources fetched since before the cutoff that have never produced a notice.</summary>
+    Task<IReadOnlyList<NeverProducedSource>> ListNeverProducedAsync(
+        DateTimeOffset fetchedSince,
+        CancellationToken cancellationToken);
+
     Task<WeeklySummary> SummariseAsync(DateTimeOffset since, CancellationToken cancellationToken);
 
     /// <summary>
@@ -133,4 +155,20 @@ public interface IHealthRepository
 public interface IAlertChannel
 {
     Task SendAsync(string message, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// A source that has been fetched for a while and has produced nothing, ever.
+/// </summary>
+/// <remarks>
+/// Its own type rather than SilentSource, whose LastNewNoticeAt cannot be null -
+/// and null is the entire condition here. Reusing it would have compiled, passed
+/// the tests with a fake behind the interface, and thrown against Npgsql, which
+/// is a mistake this project has now paid for four times.
+/// </remarks>
+public sealed record NeverProducedSource
+{
+    public long SourceId { get; init; }
+
+    public string AuthorityName { get; init; } = string.Empty;
 }
