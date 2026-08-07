@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
+using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Microsoft.Extensions.Logging;
 using ProcurementRadar.Collector;
@@ -153,6 +155,8 @@ internal static class TrySourceCommand
         // document instead.
         var rowSelectors = RowSelectors.Concat(Derived(body)).Distinct(StringComparer.Ordinal).ToList();
 
+        var document = new HtmlParser().ParseDocument(body);
+
         foreach (var rowSelector in rowSelectors)
         {
             foreach (var titleSelector in TitleSelectors)
@@ -180,7 +184,7 @@ internal static class TrySourceCommand
                         continue;
                     }
 
-                    if (notices.Count == 0)
+                    if (notices.Count == 0 || IsFurniture(document, rowSelector))
                     {
                         continue;
                     }
@@ -290,6 +294,48 @@ internal static class TrySourceCommand
             .OrderByDescending(pair => pair.Value)
             .Select(pair => pair.Key)
             .Take(60);
+    }
+
+    /// <summary>
+    /// Whether this selector is picking up the site's furniture rather than its
+    /// content.
+    /// </summary>
+    /// <remarks>
+    /// A navigation menu is a repetition of linked items with short titles, which
+    /// is also the description of a listing, and the scoring could not tell them
+    /// apart: Bursa read as BELEDİYE and MECLİS, Antalya as Vizyonumuz/Misyonumuz.
+    /// The html says which is which, though. Menus live in nav, header, footer
+    /// and aside; announcements do not.
+    /// </remarks>
+    private static bool IsFurniture(IHtmlDocument document, string rowSelector)
+    {
+        IHtmlCollection<IElement> matches;
+
+        try
+        {
+            matches = document.QuerySelectorAll(rowSelector);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return true;
+        }
+
+        if (matches.Length == 0)
+        {
+            return true;
+        }
+
+        var inChrome = matches.Count(element => element.Ancestors<IElement>().Any(ancestor =>
+            ancestor.LocalName is "nav" or "header" or "footer" or "aside"
+            || ancestor.ClassList.Any(name =>
+                name.Contains("nav", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("menu", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("footer", StringComparison.OrdinalIgnoreCase)
+                || name.Contains("header", StringComparison.OrdinalIgnoreCase))));
+
+        // Half, not all: a listing can sit inside a container that happens to
+        // carry a layout class with "header" in its name.
+        return inChrome * 2 > matches.Length;
     }
 
     private static void Count(Dictionary<string, int> counts, string selector)
