@@ -209,14 +209,6 @@ public sealed class ParsePipeline
             masked.Title,
             masked.BidDeadlineAt);
 
-        if (masked.BidDeadlineAt is null)
-        {
-            _logger.LogWarning(
-                "No bid deadline could be read for '{Title}' ({SourceUrl})",
-                masked.Title,
-                masked.SourceUrl);
-        }
-
         var notice = new ProcurementNotice
             {
                 SourceId = source.Id,
@@ -238,6 +230,23 @@ public sealed class ParsePipeline
             // Only last_seen_at moved. The wording has not changed, so neither
             // would the score.
             return false;
+        }
+
+        if (masked.BidDeadlineAt is null)
+        {
+            // Warned once, when the notice is first seen, and not on every pass
+            // over it afterwards.
+            //
+            // Several sources hand back bytes that differ on every fetch - a
+            // token, a counter, an advertisement - so the content hash moves,
+            // the page is archived again and every row on it is parsed again.
+            // One of them alone accounted for four thousand of these. A log
+            // where warnings outnumber everything else is a log nobody reads,
+            // and this is the field the whole product turns on.
+            _logger.LogWarning(
+                "No bid deadline could be read for '{Title}' ({SourceUrl})",
+                masked.Title,
+                masked.SourceUrl);
         }
 
         // Only the url is recorded here. Fetching it is the downloader's job:
