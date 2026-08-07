@@ -631,7 +631,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "Site Angular SPA; robots.txt isteği bile HTML kabuk döndürüyor. Statik HTML'de duyuru yok."
+      "notes": "7 Ağustos 2026: site Angular SPA, statik gövdede duyuru yok. Ayrıca arama sonuçlarında kuruma ait bir ihale sayfası bulunamadı — duyurular EKAP'tan gidiyor. Playwright'a değecek bir içerik olduğu gösterilmeden açılmamalı."
     },
     {
       "authority_name": "Ankara Müzik ve Güzel Sanatlar Üniversitesi",
@@ -664,7 +664,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "Genel duyuru sayfası; 25 satırın ilki sınav sonucu duyurusu. İhale ilanları büyük ihtimalle İdari ve Mali İşler Daire Başkanlığı alt sitesinde."
+      "notes": "7 Ağustos 2026 araştırması: aybu.edu.tr/imid altında 'İhale Birimi' (sayfa/10280) ve 'Doğrudan Temin Birimi' (sayfa/10279) sayfaları var ama ikisi de personel listesi — ilan yayımlamıyorlar. Bu üniversite duyurularını EKAP üzerinden veriyor, kendi sitesinde taranacak bir liste yok. Kapalı kalması doğru."
     },
     {
       "authority_name": "Ankara Üniversitesi",
@@ -675,7 +675,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "ihale.ankara.edu.tr/Home/BidActiveList kuruma özel bir ihale uygulaması ve tamamen JavaScript ile kuruluyor; ilk yanıtın gövdesinde ilan yok. GenericTableAdapter statik HTML okur. Playwright gerekirse ilk aday bu."
+      "notes": "7 Ağustos 2026: imid.ankara.edu.tr gezildi, ihale listesi yok — yalnızca hizmet envanteri ve formlar. ihale.ankara.edu.tr kuruma özel bir uygulama ve tamamen JavaScript; Playwright ile açılabilir, sıradaki iş listesinde."
     },
     {
       "authority_name": "Sağlık Bilimleri Üniversitesi Gülhane (Ankara)",
@@ -719,7 +719,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "Sayfa gerçek ihale listesi (9 ilan, 'Taşınmazlar Satılacak ve Kiraya Verilecektir') ama ilan başına saran bir eleman yok: başlık h3.title, gövde kardeş div.faaliyet-raporlari. GenericTableAdapter satır başına tek eleman ister. Bu kaynak ya özel adapter ister ya da satırın kendisini başlık olarak kullanmaya izin veren bir değişiklik."
+      "notes": "7 Ağustos 2026 doğrulandı: gerçek ihale listesi — başlık, ihale tarihi, saati ve şartname indirme linki. İlanların çoğu taşınmaz satış/kiralama, yani skorlayıcı çoğunu eleyecek; ama bu kurumun ihale sayfası ve yazılım aldığında burada çıkar. Aktif edildi; selector'lar tutmuyorsa 'hiç ilan üretmedi' alarmı bir hafta içinde söyleyecek."
     },
     {
       "authority_name": "Güdül Belediyesi",
