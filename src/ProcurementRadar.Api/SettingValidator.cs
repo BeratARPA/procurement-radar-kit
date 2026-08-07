@@ -1,3 +1,4 @@
+using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Domain.Settings;
 using ProcurementRadar.Notifier;
@@ -27,7 +28,12 @@ public static class SettingValidator
         [SettingKeys.DatePatterns] = json => TurkishDatePatterns.Load(json),
         [SettingKeys.Normalization] = json => NormalizationRules.Load(json),
         [SettingKeys.PersonalData] = json => PersonalDataRules.Load(json),
-        [SettingKeys.AwardLabels] = json => AwardLabels.Load(json)
+        [SettingKeys.AwardLabels] = json => AwardLabels.Load(json),
+
+        // The one with floors rather than a shape: five seconds between
+        // requests to a host, and robots.txt obeyed. Refused here and
+        // refused again in the worker (D-16).
+        [SettingKeys.Politeness] = json => PolitenessSettings.Load(json)
     };
 
     public static bool IsKnown(string key)

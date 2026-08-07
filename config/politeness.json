@@ -1,0 +1,20 @@
+{
+  "_comment": "Nezaket bütçesi. CLAUDE.md'nin 'pazarlık konusu değil' dediği kurallar burada — ama artık ekrandan görülebilir ve düzenlenebilir. Alt sınırlar kodda zorlanıyor: bu dosyaya ya da ayar ekranına 5 saniyenin altında bir değer yazılamaz, robots.txt kapatılamaz. Sebep basit ve ölçüldü: kazanılacak hız yok, kaybedilecek IP var. Ankara Büyükşehir bize zaten 403 dönüyor, bir kaynak da robots.txt gereği listede değil.",
+
+  "_minimum_host_interval": "Aynı host'a iki istek arasındaki en kısa süre. 5'in altı reddedilir.",
+  "minimum_host_interval_seconds": 5,
+
+  "_maximum_jitter": "Üstüne eklenen rastgele gecikme; trafiğin metronom gibi görünmemesi için.",
+  "maximum_jitter_seconds": 3,
+
+  "_respect_robots": "false yazılamaz. Yazılırsa ayar reddedilir ve worker eski değeriyle devam eder.",
+  "respect_robots": true,
+
+  "_night_window": "02:00-05:00 Europe/Istanbul arası tarama aralığı bu katsayıyla çarpılır (spec Bölüm 6). Bakım pencereleri o saatlerde.",
+  "night_window_start_hour": 2,
+  "night_window_end_hour": 5,
+  "night_interval_multiplier": 3,
+
+  "request_timeout_seconds": 30,
+  "maximum_attempts": 3
+}

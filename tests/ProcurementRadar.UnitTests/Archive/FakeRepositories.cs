@@ -109,6 +109,17 @@ internal sealed class FakeSourceRepository : ISourceRepository
         Deactivated.Add(sourceId);
         return Task.CompletedTask;
     }
+
+    public List<long> Activated { get; } = [];
+
+    public Task ActivateAsync(long sourceId, CancellationToken cancellationToken)
+    {
+        Activated.Add(sourceId);
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Source>> ListAllAsync(CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyList<Source>>(Sources.ToList());
 }
 
 /// <summary>

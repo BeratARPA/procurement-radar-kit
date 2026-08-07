@@ -316,8 +316,10 @@ robots kabul edilmiyor — testi var. Önizleme ucu veritabanını değiştirmiy
 
 **Bağımlılık:** T-17
 
-**Durum:** Uçlar, token ve filtre önizleme çalışıyor. Kalan: kaynak ekleme/düzenleme
-uçları ve nezaket ayarlarının alt sınırları (o ayar anahtarları henüz açılmadı).
+**Durum:** Bitti. Uçlar, token, filtre önizleme, kaynak listeleme/açma-kapama ve
+nezaket alt sınırları çalışıyor ve canlı doğrulandı. Kaynak *ekleme* ucu T-21'e
+bırakıldı: selector'ları kaydedilmiş sayfaya karşı test etmeden yeni kaynak
+eklemek, üç gün gözlem kuralını (spec Bölüm 5) atlamak olur.
 
 ---
 

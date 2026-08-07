@@ -158,6 +158,45 @@ app.MapPost("/api/notices/{id:long}/status", async (
 app.MapGet("/api/sources", async (ISourceRepository sources, CancellationToken cancellationToken)
     => Results.Ok(await sources.ListActiveAsync(cancellationToken).ConfigureAwait(false)));
 
+// Every source, switched-off ones included, because the reason a source is off
+// is exactly what somebody opening this screen wants to read.
+app.MapGet("/api/sources/all", async (ISourceRepository sources, CancellationToken cancellationToken)
+    => Results.Ok(await sources.ListAllAsync(cancellationToken).ConfigureAwait(false)));
+
+app.MapGet("/api/sources/{id:long}", async (
+    long id,
+    ISourceRepository sources,
+    CancellationToken cancellationToken) =>
+{
+    var source = await sources.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+    return source is null ? Results.NotFound() : Results.Ok(source);
+});
+
+app.MapPost("/api/sources/{id:long}/active", async (
+    long id,
+    ActiveChange change,
+    ISourceRepository sources,
+    ILoggerFactory loggers,
+    CancellationToken cancellationToken) =>
+{
+    if (change.IsActive)
+    {
+        await sources.ActivateAsync(id, cancellationToken).ConfigureAwait(false);
+    }
+    else
+    {
+        await sources.DeactivateAsync(id, cancellationToken).ConfigureAwait(false);
+    }
+
+    loggers.CreateLogger("Sources").LogInformation(
+        "Source {SourceId} was switched {State} from the interface",
+        id,
+        change.IsActive ? "on" : "off");
+
+    return Results.NoContent();
+});
+
 app.MapGet("/api/sources/troubled", async (ICommandQueries queries, CancellationToken cancellationToken)
     => Results.Ok(await queries.ListTroubledSourcesAsync(30, cancellationToken).ConfigureAwait(false)));
 
@@ -273,6 +312,8 @@ app.Run();
 internal sealed record StatusChange(string Status);
 
 internal sealed record FilterPreview(string Keywords, int? Threshold, int? Limit);
+
+internal sealed record ActiveChange(bool IsActive);
 
 internal sealed record SettingChange(string Value, string? UpdatedBy);
 

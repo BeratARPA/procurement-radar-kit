@@ -94,6 +94,22 @@ public sealed class SourceRepository : ISourceRepository
     public Task DeactivateAsync(long sourceId, CancellationToken cancellationToken)
         => ExecuteAsync(SourceSql.Deactivate, new { SourceId = sourceId }, cancellationToken);
 
+    public Task ActivateAsync(long sourceId, CancellationToken cancellationToken)
+        => ExecuteAsync(SourceSql.Activate, new { SourceId = sourceId }, cancellationToken);
+
+    public async Task<IReadOnlyList<Source>> ListAllAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var rows = await connection.QueryAsync<Source>(
+            new CommandDefinition(SourceSql.ListAll, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return rows.AsList();
+    }
+
     private async Task ExecuteAsync(string sql, object parameters, CancellationToken cancellationToken)
     {
         await using var connection = await _connectionFactory

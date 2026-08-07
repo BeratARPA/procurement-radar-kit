@@ -41,6 +41,21 @@ internal static class SourceSql
     //
     // xmax is zero only on a freshly inserted row, which is how one statement can
     // report whether this source was already registered.
+    internal const string ListAll = $"""
+        SELECT {SelectColumns}
+        FROM source
+        ORDER BY is_active DESC, authority_name
+        """;
+
+    // The counter is cleared with the switch. Leaving it at ten would take the
+    // source straight back out on its next failure, and the reason it failed
+    // ten times is usually the thing that was just fixed.
+    internal const string Activate = """
+        UPDATE source
+        SET is_active = true, consecutive_failures = 0
+        WHERE id = @SourceId
+        """;
+
     internal const string Upsert = """
         INSERT INTO source (
             authority_name, authority_type, province, district, url, adapter_key,

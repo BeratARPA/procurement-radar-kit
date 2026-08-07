@@ -8,6 +8,20 @@ public interface ISourceRepository
     Task<IReadOnlyList<Source>> ListActiveAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// Every source, the switched-off ones included.
+    /// </summary>
+    /// <remarks>
+    /// The collector only ever wants the active ones. A person wants all of
+    /// them: twenty-five of these are registered and inactive, each with its
+    /// reason in its notes, and one was switched off automatically after ten
+    /// consecutive failures without anybody being able to see it afterwards.
+    /// </remarks>
+    Task<IReadOnlyList<Source>> ListAllAsync(CancellationToken cancellationToken);
+
+    /// <summary>Puts a source back in the rotation and clears its failure count.</summary>
+    Task ActivateAsync(long sourceId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// One source, active or not. The parse pipeline needs it to know which
     /// adapter an archived body belongs to, and reprocessing has to work for a
     /// source that was taken out of the rotation.

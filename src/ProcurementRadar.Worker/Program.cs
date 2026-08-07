@@ -58,12 +58,18 @@ var personalData = PersonalDataRules.Load(ReadConfig("tr-personal-data.json"));
 var keywords = KeywordRules.Load(ReadConfig("keywords.json"));
 var messages = MessageTemplates.Load(ReadConfig("tr-messages.json"));
 var awardLabels = AwardLabels.Load(ReadConfig("tr-award-labels.json"));
+var politeness = PolitenessSettings.Load(ReadConfig("politeness.json"));
 
 PersistenceSetup.RegisterTypeHandlers();
 
 builder.Services.AddSingleton(TimeProvider.System);
 
-builder.Services.AddSingleton(new HttpFetcherOptions { ContactEmail = contactEmail });
+// The politeness budget is a setting now, with floors it cannot cross
+// (D-16). Read once at startup rather than live: a five-second gap that
+// becomes six on the next restart costs nothing, and a gate that changes
+// its mind between two requests to the same host is harder to reason
+// about than one that does not.
+builder.Services.AddSingleton(politeness.ToFetcherOptions(contactEmail));
 builder.Services.AddSingleton(_ => new HttpClient(new SocketsHttpHandler
 {
     // One long-lived client rather than one per request, with a connection
@@ -109,6 +115,8 @@ var liveMessages = new LiveSetting<MessageTemplates>(SettingKeys.Messages, Messa
 var liveDates = new LiveSetting<TurkishDatePatterns>(
     SettingKeys.DatePatterns, TurkishDatePatterns.Load, datePatterns);
 var liveAwardLabels = new LiveSetting<AwardLabels>(SettingKeys.AwardLabels, AwardLabels.Load, awardLabels);
+var livePoliteness = new LiveSetting<PolitenessSettings>(
+    SettingKeys.Politeness, PolitenessSettings.Load, politeness);
 
 // The masker rather than the rules: it compiles its patterns once, and the
 // thing every caller wants is the compiled object.
@@ -117,7 +125,8 @@ var liveMasker = new LiveSetting<PersonalDataMasker>(
     json => new PersonalDataMasker(PersonalDataRules.Load(json)),
     new PersonalDataMasker(personalData));
 
-foreach (var live in new LiveSetting[] { liveKeywords, liveMessages, liveDates, liveAwardLabels, liveMasker })
+foreach (var live in new LiveSetting[]
+         { liveKeywords, liveMessages, liveDates, liveAwardLabels, liveMasker, livePoliteness })
 {
     builder.Services.AddSingleton(live);
 }
@@ -127,6 +136,7 @@ builder.Services.AddSingleton<ICurrent<MessageTemplates>>(liveMessages);
 builder.Services.AddSingleton<ICurrent<TurkishDatePatterns>>(liveDates);
 builder.Services.AddSingleton<ICurrent<AwardLabels>>(liveAwardLabels);
 builder.Services.AddSingleton<ICurrent<PersonalDataMasker>>(liveMasker);
+builder.Services.AddSingleton<ICurrent<PolitenessSettings>>(livePoliteness);
 
 builder.Services.AddSingleton<SettingsRefresher>();
 builder.Services.AddHostedService<SettingsWorker>();
