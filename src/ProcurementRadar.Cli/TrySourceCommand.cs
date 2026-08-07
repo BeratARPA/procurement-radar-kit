@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using AngleSharp.Html.Parser;
 using Microsoft.Extensions.Logging;
 using ProcurementRadar.Collector;
@@ -60,11 +59,6 @@ internal static class TrySourceCommand
         "time", ".date", ".tarih", "span.date", "td:nth-child(1)",
         "td:nth-child(3)", ".meta", "small"
     ];
-
-    /// <summary>Anything that looks like a Turkish date, cheaply.</summary>
-    private static readonly Regex LooksLikeDate = new(
-        @"\d{1,2}[./]\d{1,2}[./]\d{4}|\d{1,2}\s+(Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)",
-        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     public static async Task<int> RunAsync(string[] args, CancellationToken cancellationToken)
     {
