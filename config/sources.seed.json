@@ -566,7 +566,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "79 kayıt var ama hepsi personel/kura duyurusu. İhale sayfası değil."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: 80 puan / 1 satır — okunan şey '2828 Sayılı Sosyal Hizmetler' personel duyurusu. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Ankara Gençlik ve Spor İl Müdürlüğü",
@@ -588,7 +588,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "/duyurular genel duyuru sayfası; ilk satır köpekli arama timleri sınav sonucu. İhale ilanı buradan yayınlanmıyor görünüyor."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: 66 puan / 7 satır — okunan şey '2024 Yılı Köpekli Arama' sınav duyurusu. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Ankara İl Kültür ve Turizm Müdürlüğü",
@@ -632,7 +632,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "Sayfa açılıyor, robots serbest, ama şu an ilan listesi boş. Tekrar bakılmalı."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: 25 puan / 1 satır — okunan şey 'Arşiv' bağlantısı. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Ankara Hacı Bayram Veli Üniversitesi",
@@ -643,7 +643,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "7 Ağustos 2026: site Angular SPA, statik gövdede duyuru yok. Ayrıca arama sonuçlarında kuruma ait bir ihale sayfası bulunamadı — duyurular EKAP'tan gidiyor. Playwright'a değecek bir içerik olduğu gösterilmeden açılmamalı."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: hiçbir aday satır üretmedi. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Ankara Müzik ve Güzel Sanatlar Üniversitesi",
@@ -654,7 +654,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "Genel haber/duyuru akışı — ilk satır özel yetenek sınavı toplantısı. İhale sayfası ayrıca aranmalı."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: 70 puan / 10 satır — okunan şey fakülte akademik duyuruları. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Ankara Sosyal Bilimler Üniversitesi",
@@ -665,7 +665,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "7 Ağustos 2026: açıldığından beri hiç ilan üretmiyordu ve sebebi sayfa değil config'di — try-source ölçtü, 3 satır 70 puan, satır article ve başlık h2 a. Eski selector'lar boş bir sayfaya bakılarak yazılmıştı.",
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: hiçbir aday satır üretmedi. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor.",
       "adapter_config": {
         "base_url": "https://imidb.asbu.edu.tr",
         "row_selector": "article",
@@ -686,7 +686,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "7 Ağustos 2026 araştırması: aybu.edu.tr/imid altında 'İhale Birimi' (sayfa/10280) ve 'Doğrudan Temin Birimi' (sayfa/10279) sayfaları var ama ikisi de personel listesi — ilan yayımlamıyorlar. Bu üniversite duyurularını EKAP üzerinden veriyor, kendi sitesinde taranacak bir liste yok. Kapalı kalması doğru."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: hiçbir aday satır üretmedi. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Ankara Üniversitesi",
@@ -719,7 +719,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "guncel-ilanlar.html açılıyor ama şu an kayıt yok. Ankara İl Sağlık Müdürlüğü ile aynı altyapı (saglik.gov.tr), ilan çıktığında selector'lar oradan uyarlanabilir."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: hiçbir aday satır üretmedi. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Altındağ Belediyesi",
@@ -784,7 +784,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "7 Ağustos 2026 ölçüldü: en iyi aday div.container ile 49 puan, yani aracın kendi eşiğinin altında ve bulduğu satırlar sayfanın yerleşim kabı. Sayfada şu an gerçek bir ilan listesi yok. Config'i değiştirmedim: 49 puanlık bir aday uygulamak, menüyü kaynak yapmak olurdu. İlan çıktığında 'hiç ilan üretmedi' alarmı bir hafta içinde konuşacak."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: 49 puan / 6 satır — okunan ilk satır bir telefon numarası (0533 811 83 83). Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Pursaklar Belediyesi",
@@ -795,7 +795,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "Sayfa ihale listesi değil, genel duyuru akışı: gerçek parser'la ilk satır 'Kedi Evi 7/24 Canlı Yayında!' çıkıyor. Belediyenin ayrı bir ihale sayfası varsa bulunup buraya yazılmalı."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: 50 puan / 1 satır — okunan şey 'Kedi Evi 7/24 Canlı Yayında!'. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Sincan Belediyesi",
@@ -828,7 +828,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "URL ve robots.txt doğrulandı, sayfa çalışıyor ama o gün 'İhale bulunamadı' diyordu — satır yapısı görülmeden selector yazılmaz."
+      "notes": "8 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: hiçbir aday satır üretmedi. Yani sayfa okunabiliyor ama okunan şey ihale değil — ilk notundaki teşhis doğruymuş. 7 Ağustos akşamı bu kaynağı 'sayfası çalışıyor, o gün boştu' diye açmıştım; yanlıştı, adapter_config'i hiç yazılmamıştı ve sayfasında zaten ihale yok. Kapalı kalıyor. Bu kurumun ihaleleri büyük ihtimalle EKAP üzerinden gidiyor ve oradan zaten taranıyor."
     },
     {
       "authority_name": "Şereflikoçhisar Belediyesi",

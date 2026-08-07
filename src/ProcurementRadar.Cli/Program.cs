@@ -51,6 +51,7 @@ try
         "award-probe" => await AwardProbeCommand.RunAsync(args[1..], shutdown.Token),
         "preflight" => await PreflightCommand.RunAsync(args[1..], shutdown.Token),
         "try-source" => await TrySourceCommand.RunAsync(args[1..], shutdown.Token),
+        "watch-requests" => await WatchRequestsCommand.RunAsync(args[1..], shutdown.Token),
         null => Usage("no command given"),
         var unknown => Usage($"unknown command '{unknown}'")
     };
@@ -77,7 +78,7 @@ static int Usage(string problem)
         + "seed [--file <path>] | reparse [--source-id <id>] [--batch-size <n>] [--config-dir <path>] | "
         + "check-source --html <path> --config <path> [--url <url>] [--charset <name>] | "
         + "telegram-check [--send] | ekap-probe [--url <u>] [--search <s>] [--button <name>] | "
-        + "ekap-ilan [--limit <n>] | award-probe --ikn <ikn> | preflight | try-source --url <url>",
+        + "ekap-ilan [--limit <n>] | award-probe --ikn <ikn> | preflight | try-source --url <url> | watch-requests --url <url>",
         problem);
 
     return 1;
