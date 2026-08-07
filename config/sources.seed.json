@@ -665,7 +665,17 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "imidb.asbu.edu.tr/tr/duyurular doğru daire (İdari ve Mali İşler) ama şu an sayfadaki 3 kayıt ihale değil, eğitim/haber duyurusu. İlan çıktığında yapısı görülüp aktif edilebilir."
+      "notes": "7 Ağustos 2026: açıldığından beri hiç ilan üretmiyordu ve sebebi sayfa değil config'di — try-source ölçtü, 3 satır 70 puan, satır article ve başlık h2 a. Eski selector'lar boş bir sayfaya bakılarak yazılmıştı.",
+      "adapter_config": {
+        "base_url": "https://imidb.asbu.edu.tr",
+        "row_selector": "article",
+        "title_selector": "h2 a",
+        "link_selector": "a",
+        "date_selector": null,
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null
+      }
     },
     {
       "authority_name": "Ankara Yıldırım Beyazıt Üniversitesi",
@@ -764,7 +774,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "URL ve robots doğrulandı, sayfada şu an ilan yok. İlan çıktığında yapıya bakılıp doldurulacak."
+      "notes": "7 Ağustos 2026 ölçüldü: en iyi aday div.container ile 49 puan, yani aracın kendi eşiğinin altında ve bulduğu satırlar sayfanın yerleşim kabı. Sayfada şu an gerçek bir ilan listesi yok. Config'i değiştirmedim: 49 puanlık bir aday uygulamak, menüyü kaynak yapmak olurdu. İlan çıktığında 'hiç ilan üretmedi' alarmı bir hafta içinde konuşacak."
     },
     {
       "authority_name": "Pursaklar Belediyesi",
