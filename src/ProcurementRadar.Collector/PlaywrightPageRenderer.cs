@@ -81,12 +81,7 @@ public sealed class PlaywrightPageRenderer : IPageRenderer, IAsyncDisposable
                 Timeout = (float)_browserOptions.PageTimeout.TotalMilliseconds
             }).ConfigureAwait(false);
 
-            // The list is usually written a moment after the document is ready.
-            // A short settle costs a second and is the difference between an
-            // empty page and the one a person sees.
-            await page.WaitForTimeoutAsync(2500).ConfigureAwait(false);
-
-            var html = await page.ContentAsync().ConfigureAwait(false);
+            var html = await SettledAsync(page).ConfigureAwait(false);
             var bytes = Encoding.UTF8.GetBytes(html);
 
             _logger.LogInformation("Rendered {Url}: {ByteCount} bytes after scripts", url, bytes.Length);
@@ -115,6 +110,44 @@ public sealed class PlaywrightPageRenderer : IPageRenderer, IAsyncDisposable
                 await context.CloseAsync().ConfigureAwait(false);
             }
         }
+    }
+
+    /// <summary>
+    /// The html once the page has stopped changing.
+    /// </summary>
+    /// <remarks>
+    /// A fixed pause is a guess at somebody else's application. Two and a half
+    /// seconds was enough for a page that renders its list from data it already
+    /// has, and not enough for an Angular application that asks a server for the
+    /// list after it has drawn its shell - which is what ilan.gov.tr does, and
+    /// what it looked like when it came back holding its own category labels.
+    ///
+    /// So the page is sampled instead: when the html stops growing between two
+    /// looks, it is done. Bounded, because a page with a carousel or a clock in
+    /// it never truly settles.
+    /// </remarks>
+    private static async Task<string> SettledAsync(IPage page)
+    {
+        var previous = string.Empty;
+
+        for (var attempt = 0; attempt < 8; attempt++)
+        {
+            await page.WaitForTimeoutAsync(1200).ConfigureAwait(false);
+
+            var html = await page.ContentAsync().ConfigureAwait(false);
+
+            // Compared by length rather than by content: a timestamp or a
+            // rotating banner changes the html on every look without changing
+            // anything worth waiting for.
+            if (html.Length == previous.Length && attempt > 0)
+            {
+                return html;
+            }
+
+            previous = html;
+        }
+
+        return previous;
     }
 
     /// <summary>
