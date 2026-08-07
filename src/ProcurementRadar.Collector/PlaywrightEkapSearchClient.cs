@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 using ProcurementRadar.Domain.Fetching;
@@ -155,7 +157,8 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
             // while we are still setting up the wait.
             var waitingForResults = page.WaitForResponseAsync(
                 response => response.Url.Contains(request.ApiUrlFragment, StringComparison.Ordinal)
-                    && response.Status == 200,
+                    && response.Status == 200
+                    && Asks(response.Request.PostData, request.SearchText),
                 new PageWaitForResponseOptions { Timeout = (float)_browserOptions.ResultTimeout.TotalMilliseconds });
 
             await input.FillAsync(request.SearchText).ConfigureAwait(false);
@@ -338,6 +341,56 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
     /// would be the most expensive thing the worker does. Each search still gets
     /// its own context, so nothing is shared between them but the process.
     /// </remarks>
+    /// <summary>
+    /// Whether this request is the search we asked for, rather than one the
+    /// application made for itself.
+    /// </summary>
+    /// <remarks>
+    /// The page searches on its own while it is still being prepared, with no
+    /// criteria, and answers itself with an empty list. The wait has to be armed
+    /// before the term is typed - otherwise the real answer can arrive while the
+    /// wait is still being set up - so both responses are in flight at once and
+    /// only the payload tells them apart.
+    ///
+    /// Taking the wrong one is quiet and expensive: an empty body is archived as
+    /// though it were the page, the parser is never called, and the health check
+    /// reports a broken parser for a source that is working. That is what
+    /// happened - the same source answered with 935 matches two hours after
+    /// answering with none.
+    /// </remarks>
+    internal static bool Asks(string? payload, string searchText)
+    {
+        if (string.IsNullOrEmpty(payload) || string.IsNullOrEmpty(searchText))
+        {
+            return false;
+        }
+
+        // Both spellings, because whether a serializer writes a Turkish letter
+        // straight out or as an escape is its own business, not something to
+        // depend on.
+        return payload.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+            || payload.Contains(Escaped(searchText), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string Escaped(string text)
+    {
+        var builder = new StringBuilder(text.Length);
+
+        foreach (var character in text)
+        {
+            if (character < 128)
+            {
+                builder.Append(character);
+            }
+            else
+            {
+                builder.Append(@"\u").Append(((int)character).ToString("x4", CultureInfo.InvariantCulture));
+            }
+        }
+
+        return builder.ToString();
+    }
+
     private async Task<IBrowser> BrowserAsync(CancellationToken cancellationToken)
     {
         if (_browser is { IsConnected: true } running)
