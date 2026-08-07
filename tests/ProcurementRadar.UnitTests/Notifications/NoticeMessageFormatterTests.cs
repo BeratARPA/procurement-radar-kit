@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using Microsoft.Extensions.Time.Testing;
 using ProcurementRadar.Domain.Notifications;
 using ProcurementRadar.Notifier;
@@ -14,7 +15,7 @@ public sealed class NoticeMessageFormatterTests
 
     private static readonly FakeTimeProvider Time = new(Now);
 
-    private static readonly NoticeMessageFormatter Formatter = new(Templates, Time);
+    private static readonly NoticeMessageFormatter Formatter = new(new Fixed<MessageTemplates>(Templates), Time);
 
     private static NoticeForNotification Notice(
         DateTimeOffset? deadline = null,
@@ -162,7 +163,7 @@ public sealed class NoticeMessageFormatterTests
             }
             """);
 
-        var message = new NoticeMessageFormatter(templates, Time)
+        var message = new NoticeMessageFormatter(new Fixed<MessageTemplates>(templates), Time)
             .Compose(Notice(), NotificationKind.NewNotice);
 
         Assert.Contains("{typo}", message.Text, StringComparison.Ordinal);

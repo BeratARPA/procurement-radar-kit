@@ -38,7 +38,7 @@ public sealed class ParsePipeline
     private readonly INoticeRepository _notices;
     private readonly ISourceAdapterRegistry _adapters;
     private readonly ExternalKeyBuilder _keyBuilder;
-    private readonly PersonalDataMasker _masker;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<PersonalDataMasker> _masker;
     private readonly INoticeDocumentRepository _documents;
     private readonly INoticeScorer _scorer;
     private readonly INoticeScoreRepository _scores;
@@ -51,7 +51,7 @@ public sealed class ParsePipeline
         INoticeRepository notices,
         ISourceAdapterRegistry adapters,
         ExternalKeyBuilder keyBuilder,
-        PersonalDataMasker masker,
+        ProcurementRadar.Domain.Settings.ICurrent<PersonalDataMasker> masker,
         INoticeDocumentRepository documents,
         INoticeScorer scorer,
         INoticeScoreRepository scores,
@@ -201,7 +201,7 @@ public sealed class ParsePipeline
         CancellationToken cancellationToken)
     {
         // Before anything is written, and centrally, so no adapter can forget.
-        var masked = _masker.Mask(raw);
+        var masked = _masker.Value.Mask(raw);
 
         var externalKey = _keyBuilder.Build(
             masked.Ikn,

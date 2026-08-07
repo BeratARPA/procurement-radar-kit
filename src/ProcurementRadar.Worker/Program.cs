@@ -88,11 +88,9 @@ builder.Services.AddSingleton<INotificationRepository, NotificationRepository>()
 builder.Services.AddSingleton<IHealthRepository, HealthRepository>();
 builder.Services.AddSingleton<IAwardRepository, AwardRepository>();
 
-builder.Services.AddSingleton(datePatterns);
 builder.Services.AddSingleton<ITurkishDateParser, TurkishDateParser>();
 builder.Services.AddSingleton(new NoticeNormalizer(normalization));
 builder.Services.AddSingleton<ExternalKeyBuilder>();
-builder.Services.AddSingleton(new PersonalDataMasker(personalData));
 builder.Services.AddSingleton(keywords);
 builder.Services.AddSingleton<INoticeScorer, RuleScorer>();
 
@@ -107,8 +105,28 @@ builder.Services.AddSingleton(services => new SettingSeeder(
     services.GetRequiredService<ILogger<SettingSeeder>>()));
 
 var liveKeywords = new LiveSetting<KeywordRules>(SettingKeys.Keywords, KeywordRules.Load, keywords);
-builder.Services.AddSingleton<LiveSetting>(liveKeywords);
+var liveMessages = new LiveSetting<MessageTemplates>(SettingKeys.Messages, MessageTemplates.Load, messages);
+var liveDates = new LiveSetting<TurkishDatePatterns>(
+    SettingKeys.DatePatterns, TurkishDatePatterns.Load, datePatterns);
+var liveAwardLabels = new LiveSetting<AwardLabels>(SettingKeys.AwardLabels, AwardLabels.Load, awardLabels);
+
+// The masker rather than the rules: it compiles its patterns once, and the
+// thing every caller wants is the compiled object.
+var liveMasker = new LiveSetting<PersonalDataMasker>(
+    SettingKeys.PersonalData,
+    json => new PersonalDataMasker(PersonalDataRules.Load(json)),
+    new PersonalDataMasker(personalData));
+
+foreach (var live in new LiveSetting[] { liveKeywords, liveMessages, liveDates, liveAwardLabels, liveMasker })
+{
+    builder.Services.AddSingleton(live);
+}
+
 builder.Services.AddSingleton<ICurrent<KeywordRules>>(liveKeywords);
+builder.Services.AddSingleton<ICurrent<MessageTemplates>>(liveMessages);
+builder.Services.AddSingleton<ICurrent<TurkishDatePatterns>>(liveDates);
+builder.Services.AddSingleton<ICurrent<AwardLabels>>(liveAwardLabels);
+builder.Services.AddSingleton<ICurrent<PersonalDataMasker>>(liveMasker);
 
 builder.Services.AddSingleton<SettingsRefresher>();
 builder.Services.AddHostedService<SettingsWorker>();
@@ -141,7 +159,6 @@ builder.Services.AddHostedService<DocumentWorker>();
 
 // What the tenders we watched ended up as. Runs on its own slow clock, behind
 // the same browser and the same politeness gate as the EKAP search.
-builder.Services.AddSingleton(awardLabels);
 builder.Services.AddSingleton<AwardParser>();
 builder.Services.AddSingleton<AwardSweeper>();
 builder.Services.AddHostedService<AwardWorker>();
@@ -154,7 +171,6 @@ var chatId = builder.Configuration["PR_TELEGRAM_CHAT_ID"];
 
 // Health monitoring runs either way, so a half-finished bot setup does not
 // also mean nobody is watching the sources.
-builder.Services.AddSingleton(messages);
 builder.Services.AddSingleton(new HealthOptions());
 builder.Services.AddSingleton<HealthMonitor>();
 builder.Services.AddHostedService<HealthWorker>();

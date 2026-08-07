@@ -48,7 +48,7 @@ public sealed class HealthMonitor
     private readonly IHealthRepository _health;
     private readonly ISourceRepository _sources;
     private readonly IAlertChannel _alerts;
-    private readonly MessageTemplates _templates;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<MessageTemplates> _templates;
     private readonly HealthOptions _options;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<HealthMonitor> _logger;
@@ -57,7 +57,7 @@ public sealed class HealthMonitor
         IHealthRepository health,
         ISourceRepository sources,
         IAlertChannel alerts,
-        MessageTemplates templates,
+        ProcurementRadar.Domain.Settings.ICurrent<MessageTemplates> templates,
         HealthOptions options,
         TimeProvider timeProvider,
         ILogger<HealthMonitor> logger)
@@ -108,7 +108,7 @@ public sealed class HealthMonitor
                 raised += await RaiseAsync(
                     HealthAlertKind.SourceDeactivated,
                     source.SourceId,
-                    Fill(_templates.Alerts.SourceDeactivated, new()
+                    Fill(_templates.Value.Alerts.SourceDeactivated, new()
                     {
                         ["authority"] = source.AuthorityName,
                         ["count"] = source.ConsecutiveFailures.ToString(CultureInfo.InvariantCulture)
@@ -121,7 +121,7 @@ public sealed class HealthMonitor
             raised += await RaiseAsync(
                 HealthAlertKind.FetchFailures,
                 source.SourceId,
-                Fill(_templates.Alerts.FetchFailures, new()
+                Fill(_templates.Value.Alerts.FetchFailures, new()
                 {
                     ["authority"] = source.AuthorityName,
                     ["count"] = source.ConsecutiveFailures.ToString(CultureInfo.InvariantCulture)
@@ -145,7 +145,7 @@ public sealed class HealthMonitor
             raised += await RaiseAsync(
                 HealthAlertKind.ParserBroken,
                 source.SourceId,
-                Fill(_templates.Alerts.ParserBroken, new()
+                Fill(_templates.Value.Alerts.ParserBroken, new()
                 {
                     ["authority"] = source.AuthorityName,
                     ["count"] = source.EmptyParses.ToString(CultureInfo.InvariantCulture)
@@ -171,7 +171,7 @@ public sealed class HealthMonitor
             raised += await RaiseAsync(
                 HealthAlertKind.SilentSource,
                 source.SourceId,
-                Fill(_templates.Alerts.SilentSource, new()
+                Fill(_templates.Value.Alerts.SilentSource, new()
                 {
                     ["authority"] = source.AuthorityName,
                     ["days"] = ((int)(now - source.LastNewNoticeAt).TotalDays)
@@ -195,7 +195,7 @@ public sealed class HealthMonitor
         return await RaiseAsync(
             HealthAlertKind.NothingCollected,
             sourceId: null,
-            Fill(_templates.Alerts.NothingCollected, new()
+            Fill(_templates.Value.Alerts.NothingCollected, new()
             {
                 ["hours"] = ((int)_options.CollectionWindow.TotalHours).ToString(CultureInfo.InvariantCulture)
             }),
@@ -253,9 +253,9 @@ public sealed class HealthMonitor
             ["sources_in_trouble"] = summary.SourcesInTrouble.ToString(CultureInfo.InvariantCulture)
         };
 
-        var message = new StringBuilder(_templates.WeeklySummary.Header);
+        var message = new StringBuilder(_templates.Value.WeeklySummary.Header);
 
-        foreach (var line in _templates.WeeklySummary.Lines)
+        foreach (var line in _templates.Value.WeeklySummary.Lines)
         {
             message.Append('\n').Append(Fill(line, values));
         }

@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using ProcurementRadar.Collector;
@@ -71,9 +72,8 @@ internal static class AwardProbeCommand
 
         Log.Information("{Characters} characters of announcement came back", text.Length);
 
-        var parser = new AwardParser(
-            config.AwardLabels,
-            new TurkishDateParser(config.DatePatterns, loggerFactory.CreateLogger<TurkishDateParser>()));
+        var parser = new AwardParser(new Fixed<AwardLabels>(config.AwardLabels),
+            new TurkishDateParser(new Fixed<TurkishDatePatterns>(config.DatePatterns), loggerFactory.CreateLogger<TurkishDateParser>()));
 
         var award = parser.Parse(text);
 

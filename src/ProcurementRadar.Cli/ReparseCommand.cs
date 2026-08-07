@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using Microsoft.Extensions.Logging;
 using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Adapters;
@@ -86,13 +87,12 @@ internal static class ReparseCommand
             [
                 new GenericTableAdapter(
                     new UnusableFetcher(),
-                    new TurkishDateParser(
-                        config.DatePatterns,
+                    new TurkishDateParser(new Fixed<TurkishDatePatterns>(config.DatePatterns),
                         loggerFactory.CreateLogger<TurkishDateParser>()),
                     loggerFactory.CreateLogger<GenericTableAdapter>())
             ]),
             new ExternalKeyBuilder(normalizer),
-            new PersonalDataMasker(config.PersonalData),
+            new Domain.Settings.Fixed<PersonalDataMasker>(new PersonalDataMasker(config.PersonalData)),
             new NoticeDocumentRepository(connectionFactory),
             new RuleScorer(new Domain.Settings.Fixed<Scoring.KeywordRules>(config.Keywords), normalizer),
             new NoticeScoreRepository(connectionFactory, TimeProvider.System),

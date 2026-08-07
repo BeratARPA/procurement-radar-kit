@@ -35,14 +35,14 @@ public sealed class EkapAnnouncementEnricher
 
     private readonly IEkapSearchClient _search;
     private readonly INoticeDocumentRepository _documents;
-    private readonly PersonalDataMasker _masker;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<PersonalDataMasker> _masker;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<EkapAnnouncementEnricher> _logger;
 
     public EkapAnnouncementEnricher(
         IEkapSearchClient search,
         INoticeDocumentRepository documents,
-        PersonalDataMasker masker,
+        ProcurementRadar.Domain.Settings.ICurrent<PersonalDataMasker> masker,
         TimeProvider timeProvider,
         ILogger<EkapAnnouncementEnricher> logger)
     {
@@ -92,7 +92,7 @@ public sealed class EkapAnnouncementEnricher
             // and often a named officer. Personal data never reaches the database
             // (CLAUDE.md), and arriving as one blob of text rather than a parsed
             // field does not make it an exception.
-            var text = _masker.MaskText(PlainText(Encoding.UTF8.GetString(result.Body)));
+            var text = _masker.Value.MaskText(PlainText(Encoding.UTF8.GetString(result.Body)));
 
             if (string.IsNullOrWhiteSpace(text))
             {

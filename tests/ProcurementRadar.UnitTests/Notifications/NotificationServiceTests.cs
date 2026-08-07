@@ -45,7 +45,7 @@ public sealed class NotificationServiceTests
 
         return new NotificationService(
             _notifications,
-            new NoticeMessageFormatter(NoticeMessageFormatterTests.Templates, _time),
+            new NoticeMessageFormatter(new Fixed<MessageTemplates>(NoticeMessageFormatterTests.Templates), _time),
             client,
             new NotificationOptions(new Fixed<KeywordRules>(KeywordRules.Load(ThresholdOfSixty))),
             NullLogger<NotificationService>.Instance);

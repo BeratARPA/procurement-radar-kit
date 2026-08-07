@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using Microsoft.Extensions.Logging.Abstractions;
 using ProcurementRadar.Parsers;
 
@@ -10,7 +11,7 @@ public sealed class TurkishDateParserTests
             RepositoryRoot.Find().FullName, "config", "tr-date-patterns.json")));
 
     private static readonly TurkishDateParser Parser =
-        new(Patterns, NullLogger<TurkishDateParser>.Instance);
+        new(new Fixed<TurkishDatePatterns>(Patterns), NullLogger<TurkishDateParser>.Instance);
 
     /// <summary>
     /// One line per pattern in config/tr-date-patterns.json, written the way the

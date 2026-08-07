@@ -36,20 +36,28 @@ public sealed record ParsedAward
 /// </remarks>
 public sealed class AwardParser
 {
-    private readonly AwardLabels _labels;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<AwardLabels> _labels;
     private readonly ITurkishDateParser _dates;
-    private readonly string _terminator;
 
-    public AwardParser(AwardLabels labels, ITurkishDateParser dates)
+    public AwardParser(
+        ProcurementRadar.Domain.Settings.ICurrent<AwardLabels> labels,
+        ITurkishDateParser dates)
     {
         _labels = labels;
         _dates = dates;
-
-        // A value runs until the next lettered item ("b) Bedeli"), the next
-        // numbered section ("4- Sözleşmenin"), or the end of the announcement.
-        var letters = Regex.Escape(_labels.ItemLetters);
-        _terminator = $@"(?=\s+[{letters}]\)\s|\s+\d+\s*-\s|$)";
     }
+
+    /// <summary>
+    /// Where a value ends: the next lettered item ("b) Bedeli"), the next
+    /// numbered section ("4- Sözleşmenin"), or the end of the announcement.
+    /// </summary>
+    /// <remarks>
+    /// Built per parse rather than once in the constructor, because the letters
+    /// it is built from are a setting now and this object outlives a change to
+    /// them. Two string joins against a browser round trip is nothing.
+    /// </remarks>
+    private static string Terminator(AwardLabels labels)
+        => $@"(?=\s+[{Regex.Escape(labels.ItemLetters)}]\)\s|\s+\d+\s*-\s|$)";
 
     /// <summary>
     /// Returns null when the text is not a result announcement at all - which is
@@ -66,7 +74,9 @@ public sealed class AwardParser
         // Ordinal: the marker is already upper case in both the config and the
         // page, and Turkish case folding is the wrong tool for deciding whether
         // two identical strings are identical.
-        if (!announcementText.Contains(_labels.ResultMarker, StringComparison.Ordinal))
+        var labels = _labels.Value;
+
+        if (!announcementText.Contains(labels.ResultMarker, StringComparison.Ordinal))
         {
             return null;
         }
@@ -75,8 +85,10 @@ public sealed class AwardParser
         // "Tarihi" means the day the tender was held and "Bedeli" does not
         // appear at all; taking the first match would silently record the wrong
         // date on every award.
-        var contractIndex = announcementText.IndexOf(_labels.ContractSection, StringComparison.Ordinal);
+        var contractIndex = announcementText.IndexOf(labels.ContractSection, StringComparison.Ordinal);
         var contract = contractIndex >= 0 ? announcementText[contractIndex..] : string.Empty;
+
+        var terminator = Terminator(labels);
 
         var award = new ParsedAward
         {
@@ -87,16 +99,16 @@ public sealed class AwardParser
             // nothing. Only these four fields are taken; the rest of the text,
             // which does carry an officer and a switchboard number, is not stored
             // by this path at all.
-            WinnerName = Value(contract, _labels.WinnerLabel),
-            ContractAmount = TurkishMoneyParser.TryParse(Value(contract, _labels.AmountLabel)),
-            BidCount = Count(announcementText),
-            AwardedAt = _dates.TryParse(Value(contract, _labels.DateLabel))
+            WinnerName = Value(contract, terminator, labels.WinnerLabel),
+            ContractAmount = TurkishMoneyParser.TryParse(Value(contract, terminator, labels.AmountLabel)),
+            BidCount = Count(announcementText, terminator),
+            AwardedAt = _dates.TryParse(Value(contract, terminator, labels.DateLabel))
         };
 
         return award.IsEmpty ? null : award;
     }
 
-    private string? Value(string text, string label)
+    private static string? Value(string text, string terminator, string label)
     {
         if (text.Length == 0)
         {
@@ -107,7 +119,7 @@ public sealed class AwardParser
         // "Yüklenici :" apart from "Yüklenicinin uyruğu :" two rows below it.
         var match = Regex.Match(
             text,
-            Regex.Escape(label) + @"\s*:\s*(?<value>\S.*?)" + _terminator,
+            Regex.Escape(label) + @"\s*:\s*(?<value>\S.*?)" + terminator,
             RegexOptions.CultureInvariant,
             TimeSpan.FromSeconds(2));
 
@@ -118,12 +130,12 @@ public sealed class AwardParser
     /// How many bids arrived. Read from the whole text: it sits in the bids
     /// section, above the contract.
     /// </summary>
-    private int? Count(string text)
+    private int? Count(string text, string terminator)
     {
         // The valid-bid row is read first and preferred. A tender with four bids
         // of which one was valid was not a contested tender, and the number worth
         // keeping is the one that says so.
-        var value = Value(text, _labels.ValidBidCountLabel) ?? Value(text, _labels.BidCountLabel);
+        var value = Value(text, terminator, _labels.Value.ValidBidCountLabel) ?? Value(text, terminator, _labels.Value.BidCountLabel);
 
         return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var count)
             ? count

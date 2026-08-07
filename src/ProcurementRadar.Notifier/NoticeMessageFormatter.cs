@@ -26,10 +26,10 @@ public sealed class NoticeMessageFormatter
     private static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
     private static readonly TimeZoneInfo Istanbul = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
 
-    private readonly MessageTemplates _templates;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<MessageTemplates> _templates;
     private readonly TimeProvider _timeProvider;
 
-    public NoticeMessageFormatter(MessageTemplates templates, TimeProvider timeProvider)
+    public NoticeMessageFormatter(ProcurementRadar.Domain.Settings.ICurrent<MessageTemplates> templates, TimeProvider timeProvider)
     {
         _templates = templates;
         _timeProvider = timeProvider;
@@ -41,23 +41,23 @@ public sealed class NoticeMessageFormatter
 
         if (kind == NotificationKind.DeadlineReminder)
         {
-            lines.Add(_templates.ReminderHeader);
+            lines.Add(_templates.Value.ReminderHeader);
         }
 
         var score = notice.RuleScore ?? 0;
 
-        lines.Add(Fill(_templates.Notice.Header, new()
+        lines.Add(Fill(_templates.Value.Notice.Header, new()
         {
-            ["icon"] = _templates.IconFor(score),
+            ["icon"] = _templates.Value.IconFor(score),
             ["score"] = score.ToString(CultureInfo.InvariantCulture),
             ["title"] = notice.Title
         }));
 
-        lines.Add(Fill(_templates.Notice.Authority, new() { ["authority"] = notice.AuthorityName }));
+        lines.Add(Fill(_templates.Value.Notice.Authority, new() { ["authority"] = notice.AuthorityName }));
 
         if (notice.EstimatedCost is { } cost)
         {
-            lines.Add(Fill(_templates.Notice.Cost, new()
+            lines.Add(Fill(_templates.Value.Notice.Cost, new()
             {
                 ["cost"] = cost.ToString("N0", Turkish) + " TL"
             }));
@@ -67,17 +67,17 @@ public sealed class NoticeMessageFormatter
         // missing. When it is, say so rather than leaving a gap somebody reads
         // as "no hurry".
         lines.Add(notice.BidDeadlineAt is { } deadline
-            ? Fill(_templates.Notice.Deadline, new()
+            ? Fill(_templates.Value.Notice.Deadline, new()
             {
                 ["deadline"] = TimeZoneInfo.ConvertTime(deadline, Istanbul)
                     .ToString("d MMMM HH:mm", Turkish),
                 ["remaining"] = Remaining(deadline)
             })
-            : _templates.Notice.DeadlineUnknown);
+            : _templates.Value.Notice.DeadlineUnknown);
 
         if (notice.DocumentCount > 0)
         {
-            lines.Add(Fill(_templates.Notice.Documents, new()
+            lines.Add(Fill(_templates.Value.Notice.Documents, new()
             {
                 ["count"] = notice.DocumentCount.ToString(CultureInfo.InvariantCulture)
             }));
@@ -85,17 +85,17 @@ public sealed class NoticeMessageFormatter
 
         if (!string.IsNullOrWhiteSpace(notice.Ikn))
         {
-            lines.Add(Fill(_templates.Notice.Ikn, new() { ["ikn"] = notice.Ikn }));
+            lines.Add(Fill(_templates.Value.Notice.Ikn, new() { ["ikn"] = notice.Ikn }));
         }
 
         if (Excerpt(notice.DocumentExcerpt) is { } excerpt)
         {
-            lines.Add(Fill(_templates.Notice.Excerpt, new() { ["excerpt"] = excerpt }));
+            lines.Add(Fill(_templates.Value.Notice.Excerpt, new() { ["excerpt"] = excerpt }));
         }
 
         if (!string.IsNullOrWhiteSpace(notice.Rationale))
         {
-            lines.Add(Fill(_templates.Notice.Rationale, new() { ["rationale"] = notice.Rationale }));
+            lines.Add(Fill(_templates.Value.Notice.Rationale, new() { ["rationale"] = notice.Rationale }));
         }
 
         if (!string.IsNullOrWhiteSpace(notice.Description))
@@ -109,8 +109,8 @@ public sealed class NoticeMessageFormatter
 
         return new ComposedMessage(
             string.Join('\n', lines),
-            _templates.Buttons.Review,
-            _templates.Buttons.NotRelevant);
+            _templates.Value.Buttons.Review,
+            _templates.Value.Buttons.NotRelevant);
     }
 
     private string Remaining(DateTimeOffset deadline)
@@ -119,19 +119,19 @@ public sealed class NoticeMessageFormatter
 
         if (left <= TimeSpan.Zero)
         {
-            return _templates.Remaining.Expired;
+            return _templates.Value.Remaining.Expired;
         }
 
         // One unit only. "kalan 2 gün 7 saat 14 dakika" is not a number anybody
         // acts on differently from "kalan 2 gün".
         if (left.TotalDays >= 1)
         {
-            return Fill(_templates.Remaining.Days, Count(left.TotalDays));
+            return Fill(_templates.Value.Remaining.Days, Count(left.TotalDays));
         }
 
         return left.TotalHours >= 1
-            ? Fill(_templates.Remaining.Hours, Count(left.TotalHours))
-            : Fill(_templates.Remaining.Minutes, Count(left.TotalMinutes));
+            ? Fill(_templates.Value.Remaining.Hours, Count(left.TotalHours))
+            : Fill(_templates.Value.Remaining.Minutes, Count(left.TotalMinutes));
     }
 
     private static Dictionary<string, string> Count(double value) => new()

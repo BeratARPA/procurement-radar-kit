@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using Microsoft.Extensions.Logging.Abstractions;
 using ProcurementRadar.Collector;
 
@@ -20,8 +21,8 @@ public sealed class AwardParserTests
         File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "config", "tr-date-patterns.json")));
 
     private static AwardParser Parser() => new(
-        Labels,
-        new TurkishDateParser(DatePatterns, NullLogger<TurkishDateParser>.Instance));
+        new Fixed<AwardLabels>(Labels),
+        new TurkishDateParser(new Fixed<TurkishDatePatterns>(DatePatterns), NullLogger<TurkishDateParser>.Instance));
 
     private static string Announcement() => EkapAnnouncementEnricher.PlainText(File.ReadAllText(FixturePath));
 

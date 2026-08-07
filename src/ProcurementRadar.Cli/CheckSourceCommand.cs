@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using Microsoft.Extensions.Logging;
 using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Entities;
@@ -81,7 +82,7 @@ internal static class CheckSourceCommand
 
         var adapter = new GenericTableAdapter(
             new UnusableFetcher(),
-            new TurkishDateParser(config.DatePatterns, loggerFactory.CreateLogger<TurkishDateParser>()),
+            new TurkishDateParser(new Fixed<TurkishDatePatterns>(config.DatePatterns), loggerFactory.CreateLogger<TurkishDateParser>()),
             loggerFactory.CreateLogger<GenericTableAdapter>());
 
         var source = new Source

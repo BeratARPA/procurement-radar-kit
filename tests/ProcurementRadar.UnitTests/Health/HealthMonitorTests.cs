@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ProcurementRadar.Domain.Entities;
@@ -28,7 +29,7 @@ public sealed class HealthMonitorTests
         _health,
         _sources,
         _alerts,
-        NoticeMessageFormatterTests.Templates,
+        new Fixed<MessageTemplates>(NoticeMessageFormatterTests.Templates),
         new HealthOptions(),
         _time,
         NullLogger<HealthMonitor>.Instance);

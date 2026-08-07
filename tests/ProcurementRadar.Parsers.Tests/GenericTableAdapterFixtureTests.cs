@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -59,7 +60,7 @@ public sealed class GenericTableAdapterFixtureTests
             var source = SourceFor(expectation);
             var adapter = new GenericTableAdapter(
                 new UnusableFetcher(),
-                new TurkishDateParser(DatePatterns, NullLogger<TurkishDateParser>.Instance),
+                new TurkishDateParser(new Fixed<TurkishDatePatterns>(DatePatterns), NullLogger<TurkishDateParser>.Instance),
                 NullLogger<GenericTableAdapter>.Instance);
 
             // Decoded the way the parse pipeline decodes (D-11), not read as

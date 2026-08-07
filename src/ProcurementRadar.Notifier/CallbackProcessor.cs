@@ -44,14 +44,14 @@ public sealed class CallbackProcessor
 {
     private readonly TelegramClient _telegram;
     private readonly INoticeRepository _notices;
-    private readonly MessageTemplates _messages;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<MessageTemplates> _messages;
     private readonly CommandResponder _commands;
     private readonly ILogger<CallbackProcessor> _logger;
 
     public CallbackProcessor(
         TelegramClient telegram,
         INoticeRepository notices,
-        MessageTemplates messages,
+        ProcurementRadar.Domain.Settings.ICurrent<MessageTemplates> messages,
         CommandResponder commands,
         ILogger<CallbackProcessor> logger)
     {
@@ -99,7 +99,7 @@ public sealed class CallbackProcessor
             // either way, but a button that changes nothing on screen is a button
             // people press twice and then stop trusting.
             await _telegram
-                .AnswerCallbackAsync(callback.Id, _messages.Buttons.ConfirmationFor(status), cancellationToken)
+                .AnswerCallbackAsync(callback.Id, _messages.Value.Buttons.ConfirmationFor(status), cancellationToken)
                 .ConfigureAwait(false);
 
             // And the message keeps the answer. The toast is gone in three
@@ -123,10 +123,10 @@ public sealed class CallbackProcessor
     private IReadOnlyList<TelegramButton> Buttons(NoticeStatus chosen, long noticeId) =>
     [
         new TelegramButton(
-            Mark(_messages.Buttons.Review, chosen == NoticeStatus.Reviewed),
+            Mark(_messages.Value.Buttons.Review, chosen == NoticeStatus.Reviewed),
             CallbackData.For(NoticeStatus.Reviewed, noticeId)),
         new TelegramButton(
-            Mark(_messages.Buttons.NotRelevant, chosen == NoticeStatus.NotRelevant),
+            Mark(_messages.Value.Buttons.NotRelevant, chosen == NoticeStatus.NotRelevant),
             CallbackData.For(NoticeStatus.NotRelevant, noticeId))
     ];
 

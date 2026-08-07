@@ -1,3 +1,4 @@
+using ProcurementRadar.Domain.Settings;
 using Microsoft.Extensions.Logging.Abstractions;
 using ProcurementRadar.Domain.Adapters;
 using ProcurementRadar.Domain.Entities;
@@ -29,7 +30,7 @@ public sealed class EkapAdapterTests
 
     private static EkapAdapter Adapter() => new(
         new UnusableSearchClient(),
-        new TurkishDateParser(DatePatterns, NullLogger<TurkishDateParser>.Instance),
+        new TurkishDateParser(new Fixed<TurkishDatePatterns>(DatePatterns), NullLogger<TurkishDateParser>.Instance),
         NullLogger<EkapAdapter>.Instance);
 
     private static Source SourceWith(string config) => new()

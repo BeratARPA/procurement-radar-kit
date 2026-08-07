@@ -48,10 +48,10 @@ public sealed class TurkishDateParser : ITurkishDateParser
 
     private static readonly Regex CollapseWhitespace = new(@"\s+", RegexOptions.CultureInvariant);
 
-    private readonly TurkishDatePatterns _patterns;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<TurkishDatePatterns> _patterns;
     private readonly ILogger<TurkishDateParser> _logger;
 
-    public TurkishDateParser(TurkishDatePatterns patterns, ILogger<TurkishDateParser> logger)
+    public TurkishDateParser(ProcurementRadar.Domain.Settings.ICurrent<TurkishDatePatterns> patterns, ILogger<TurkishDateParser> logger)
     {
         _patterns = patterns;
         _logger = logger;
@@ -68,7 +68,7 @@ public sealed class TurkishDateParser : ITurkishDateParser
 
         var normalized = Normalize(text);
 
-        foreach (var pattern in _patterns.Patterns)
+        foreach (var pattern in _patterns.Value.Patterns)
         {
             var match = pattern.Regex.Match(normalized);
             if (!match.Success)
@@ -103,7 +103,7 @@ public sealed class TurkishDateParser : ITurkishDateParser
     {
         var working = text.ToLower(Turkish);
 
-        foreach (var noise in _patterns.Noise)
+        foreach (var noise in _patterns.Value.Noise)
         {
             working = noise == ":"
                 ? LooseColon.Replace(working, " ")
@@ -179,7 +179,7 @@ public sealed class TurkishDateParser : ITurkishDateParser
 
     private DateTimeOffset? TryConvertToUtc(DateTime local, string original)
     {
-        var zone = _patterns.TimeZone;
+        var zone = _patterns.Value.TimeZone;
 
         if (zone.IsInvalidTime(local))
         {
@@ -207,7 +207,7 @@ public sealed class TurkishDateParser : ITurkishDateParser
         }
 
         return parts.TryGetValue("month_name", out var name)
-            && _patterns.Months.TryGetValue(name, out month);
+            && _patterns.Value.Months.TryGetValue(name, out month);
     }
 
     private static bool TryReadInt(IReadOnlyDictionary<string, string> parts, string key, out int value)

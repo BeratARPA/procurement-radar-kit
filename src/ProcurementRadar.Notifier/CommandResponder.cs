@@ -23,7 +23,7 @@ public sealed class CommandResponder
 {
     private readonly TelegramClient _telegram;
     private readonly ICommandQueries _queries;
-    private readonly MessageTemplates _messages;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<MessageTemplates> _messages;
     private readonly NotificationOptions _options;
     private readonly Scoring.KeywordRules _keywords;
     private readonly IAwardRepository _awards;
@@ -33,7 +33,7 @@ public sealed class CommandResponder
     public CommandResponder(
         TelegramClient telegram,
         ICommandQueries queries,
-        MessageTemplates messages,
+        ProcurementRadar.Domain.Settings.ICurrent<MessageTemplates> messages,
         NotificationOptions options,
         Scoring.KeywordRules keywords,
         IAwardRepository awards,
@@ -52,7 +52,7 @@ public sealed class CommandResponder
 
     public async Task RespondAsync(string command, string argument, CancellationToken cancellationToken)
     {
-        var templates = _messages.Commands;
+        var templates = _messages.Value.Commands;
 
         // Matched against the config, so the commands themselves are Turkish data
         // rather than identifiers in code.
@@ -95,8 +95,8 @@ public sealed class CommandResponder
             .ConfigureAwait(false);
 
         return notices.Count == 0
-            ? _messages.Commands.NothingOpen
-            : _messages.Commands.OpenHeader + "\n\n" + string.Join("\n", notices.Select(Line));
+            ? _messages.Value.Commands.NothingOpen
+            : _messages.Value.Commands.OpenHeader + "\n\n" + string.Join("\n", notices.Select(Line));
     }
 
     private async Task<string> TodayAsync(CancellationToken cancellationToken)
@@ -105,15 +105,15 @@ public sealed class CommandResponder
         var notices = await _queries.ListSeenSinceAsync(since, 10, cancellationToken).ConfigureAwait(false);
 
         return notices.Count == 0
-            ? _messages.Commands.NothingToday
-            : _messages.Commands.TodayHeader + "\n\n" + string.Join("\n", notices.Select(Line));
+            ? _messages.Value.Commands.NothingToday
+            : _messages.Value.Commands.TodayHeader + "\n\n" + string.Join("\n", notices.Select(Line));
     }
 
     private async Task<string> StatusAsync(CancellationToken cancellationToken)
     {
         var status = await _queries.GetStatusAsync(cancellationToken).ConfigureAwait(false);
 
-        return _messages.Commands.Status
+        return _messages.Value.Commands.Status
             .Replace("{active}", status.ActiveSources.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
             .Replace("{failing}", status.FailingSources.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
             .Replace("{notices}", status.Notices.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
@@ -132,8 +132,8 @@ public sealed class CommandResponder
     /// to scroll back and find the notification it came from.
     /// </summary>
     private string Line(CommandNotice notice)
-        => _messages.Commands.Line
-            .Replace("{icon}", _messages.IconFor(notice.Score), StringComparison.Ordinal)
+        => _messages.Value.Commands.Line
+            .Replace("{icon}", _messages.Value.IconFor(notice.Score), StringComparison.Ordinal)
             .Replace("{score}", notice.Score.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
             .Replace(
                 "{deadline}",
@@ -148,8 +148,8 @@ public sealed class CommandResponder
         var notices = await _queries.ListClosingSoonAsync(48, 10, cancellationToken).ConfigureAwait(false);
 
         return notices.Count == 0
-            ? _messages.Commands.ClosingEmpty
-            : _messages.Commands.ClosingHeader + "\n\n" + string.Join("\n", notices.Select(Line));
+            ? _messages.Value.Commands.ClosingEmpty
+            : _messages.Value.Commands.ClosingHeader + "\n\n" + string.Join("\n", notices.Select(Line));
     }
 
     private async Task<string> SearchAsync(string term, CancellationToken cancellationToken)
@@ -157,14 +157,14 @@ public sealed class CommandResponder
         if (term.Length < 3)
         {
             // Two letters match half the archive and answer nothing.
-            return _messages.Commands.SearchUsage;
+            return _messages.Value.Commands.SearchUsage;
         }
 
         var notices = await _queries.SearchAsync(term, 10, cancellationToken).ConfigureAwait(false);
 
         return notices.Count == 0
-            ? _messages.Commands.SearchEmpty.Replace("{term}", term, StringComparison.Ordinal)
-            : _messages.Commands.SearchHeader.Replace("{term}", term, StringComparison.Ordinal)
+            ? _messages.Value.Commands.SearchEmpty.Replace("{term}", term, StringComparison.Ordinal)
+            : _messages.Value.Commands.SearchHeader.Replace("{term}", term, StringComparison.Ordinal)
               + "\n\n" + string.Join("\n", notices.Select(Line));
     }
 
@@ -172,24 +172,24 @@ public sealed class CommandResponder
     {
         if (ikn.Length < 5)
         {
-            return _messages.Commands.DetailUsage;
+            return _messages.Value.Commands.DetailUsage;
         }
 
         var detail = await _queries.GetDetailAsync(ikn, cancellationToken).ConfigureAwait(false);
 
         if (detail is null)
         {
-            return _messages.Commands.DetailMissing.Replace("{ikn}", ikn, StringComparison.Ordinal);
+            return _messages.Value.Commands.DetailMissing.Replace("{ikn}", ikn, StringComparison.Ordinal);
         }
 
         // Telegram refuses anything over 4096 characters, and an announcement runs
         // to seven thousand. Cut with room left for everything above it.
         var text = detail.AnnouncementText is { Length: > 0 } announcement
             ? (announcement.Length > 3200 ? announcement[..3200] + "…" : announcement)
-            : _messages.Commands.DetailNoText;
+            : _messages.Value.Commands.DetailNoText;
 
-        return _messages.Commands.Detail
-            .Replace("{icon}", _messages.IconFor(detail.Score), StringComparison.Ordinal)
+        return _messages.Value.Commands.Detail
+            .Replace("{icon}", _messages.Value.IconFor(detail.Score), StringComparison.Ordinal)
             .Replace("{score}", detail.Score.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
             .Replace("{title}", detail.Title, StringComparison.Ordinal)
             .Replace("{authority}", detail.AuthorityName, StringComparison.Ordinal)
@@ -205,10 +205,10 @@ public sealed class CommandResponder
 
         if (sources.Count == 0)
         {
-            return _messages.Commands.SourcesHealthy;
+            return _messages.Value.Commands.SourcesHealthy;
         }
 
-        var lines = sources.Select(source => _messages.Commands.SourcesLine
+        var lines = sources.Select(source => _messages.Value.Commands.SourcesLine
             .Replace("{name}", source.AuthorityName, StringComparison.Ordinal)
             .Replace(
                 "{failures}",
@@ -216,7 +216,7 @@ public sealed class CommandResponder
                 StringComparison.Ordinal)
             .Replace("{lastNotice}", Moment(source.LastNewNoticeAt), StringComparison.Ordinal));
 
-        return _messages.Commands.SourcesHeader + "\n\n" + string.Join("\n", lines);
+        return _messages.Value.Commands.SourcesHeader + "\n\n" + string.Join("\n", lines);
     }
 
     private async Task<string> ReportAsync(CancellationToken cancellationToken)
@@ -225,10 +225,10 @@ public sealed class CommandResponder
 
         if (rows.Count == 0)
         {
-            return _messages.Commands.ReportEmpty;
+            return _messages.Value.Commands.ReportEmpty;
         }
 
-        var lines = rows.Select(row => _messages.Commands.ReportLine
+        var lines = rows.Select(row => _messages.Value.Commands.ReportLine
             .Replace("{status}", row.Status, StringComparison.Ordinal)
             .Replace("{count}", row.Count.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
             .Replace(
@@ -237,8 +237,8 @@ public sealed class CommandResponder
                 StringComparison.Ordinal)
             .Replace("{max}", row.MaximumScore.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal));
 
-        return _messages.Commands.ReportHeader + "\n\n" + string.Join("\n", lines)
-            + "\n" + _messages.Commands.ReportNote;
+        return _messages.Value.Commands.ReportHeader + "\n\n" + string.Join("\n", lines)
+            + "\n" + _messages.Value.Commands.ReportNote;
     }
 
     /// <summary>
@@ -247,7 +247,7 @@ public sealed class CommandResponder
     /// </summary>
     private string Keywords()
     {
-        var header = _messages.Commands.KeywordsHeader.Replace(
+        var header = _messages.Value.Commands.KeywordsHeader.Replace(
             "{threshold}",
             _options.MinimumScore.ToString(CultureInfo.InvariantCulture),
             StringComparison.Ordinal);
@@ -257,7 +257,7 @@ public sealed class CommandResponder
             .Select(term => $"• {term.Term} ({term.Weight})");
 
         return header + "\n" + string.Join("\n", include)
-            + "\n" + _messages.Commands.KeywordsExcluded + "\n"
+            + "\n" + _messages.Value.Commands.KeywordsExcluded + "\n"
             + string.Join(", ", _keywords.Exclude);
     }
 
@@ -276,17 +276,17 @@ public sealed class CommandResponder
 
         if (awards.Count == 0)
         {
-            return _messages.Commands.AwardsEmpty;
+            return _messages.Value.Commands.AwardsEmpty;
         }
 
-        var lines = awards.Select(award => _messages.Commands.AwardsLine
+        var lines = awards.Select(award => _messages.Value.Commands.AwardsLine
             .Replace("{title}", Shorten(award.Title), StringComparison.Ordinal)
-            .Replace("{winner}", award.WinnerName ?? _messages.Commands.AwardsUnknown, StringComparison.Ordinal)
+            .Replace("{winner}", award.WinnerName ?? _messages.Value.Commands.AwardsUnknown, StringComparison.Ordinal)
             .Replace("{amount}", Money(award.ContractAmount), StringComparison.Ordinal)
             .Replace(
                 "{estimate}",
                 award.EstimatedCost is { } estimate
-                    ? _messages.Commands.AwardsEstimate.Replace(
+                    ? _messages.Value.Commands.AwardsEstimate.Replace(
                         "{estimate}",
                         Money(estimate),
                         StringComparison.Ordinal)
@@ -294,22 +294,22 @@ public sealed class CommandResponder
                 StringComparison.Ordinal)
             .Replace(
                 "{bids}",
-                award.BidCount?.ToString(CultureInfo.InvariantCulture) ?? _messages.Commands.AwardsUnknown,
+                award.BidCount?.ToString(CultureInfo.InvariantCulture) ?? _messages.Value.Commands.AwardsUnknown,
                 StringComparison.Ordinal)
             .Replace(
                 "{date}",
                 award.AwardedAt is { } at
                     ? at.ToOffset(TimeSpan.FromHours(3)).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)
-                    : _messages.Commands.AwardsUnknown,
+                    : _messages.Value.Commands.AwardsUnknown,
                 StringComparison.Ordinal));
 
-        return _messages.Commands.AwardsHeader + "\n\n" + string.Join("\n", lines);
+        return _messages.Value.Commands.AwardsHeader + "\n\n" + string.Join("\n", lines);
     }
 
     private string Money(decimal? amount)
         => amount is { } value
             ? value.ToString("N0", CultureInfo.GetCultureInfo("tr-TR")) + " TL"
-            : _messages.Commands.AwardsUnknown;
+            : _messages.Value.Commands.AwardsUnknown;
 
     private static string Moment(DateTimeOffset? at)
         => at is { } value
