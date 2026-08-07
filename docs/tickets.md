@@ -316,6 +316,9 @@ robots kabul edilmiyor — testi var. Önizleme ucu veritabanını değiştirmiy
 
 **Bağımlılık:** T-17
 
+**Durum:** Uçlar, token ve filtre önizleme çalışıyor. Kalan: kaynak ekleme/düzenleme
+uçları ve nezaket ayarlarının alt sınırları (o ayar anahtarları henüz açılmadı).
+
 ---
 
 ## T-19 — Flutter iskeleti (Web)

@@ -4,7 +4,9 @@ using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Enums;
 using ProcurementRadar.Domain.Notifications;
 using ProcurementRadar.Domain.Repositories;
+using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Domain.Settings;
+using ProcurementRadar.Scoring;
 using ProcurementRadar.Persistence;
 using Serilog;
 
@@ -38,6 +40,19 @@ builder.Services.AddSingleton<INoticeRepository, NoticeRepository>();
 builder.Services.AddSingleton<IAwardRepository, AwardRepository>();
 builder.Services.AddSingleton<ISettingRepository, SettingRepository>();
 builder.Services.AddSingleton<ICommandQueries, CommandQueries>();
+
+// The preview scores notices itself, so it needs the same normalizer the worker
+// scores with - the one that folds Turkish letters and strips the suffixes. Read
+// from the setting table, because that is where it lives now (D-16); the file is
+// only what an empty table is seeded from.
+builder.Services.AddSingleton(services =>
+{
+    var settings = services.GetRequiredService<ISettingRepository>();
+    var stored = settings.GetAsync(SettingKeys.Normalization, CancellationToken.None).GetAwaiter().GetResult();
+
+    return new NoticeNormalizer(NormalizationRules.Load(
+        stored?.Value ?? ConfigDirectory.Read(ConfigDirectory.Find(), "tr-normalization.json")));
+});
 
 // The interface is served from a different origin while it is being developed
 // (flutter run puts it on its own port), and from the same machine either way.
@@ -155,6 +170,58 @@ app.MapGet("/api/awards", async (int? limit, IAwardRepository awards, Cancellati
 
 // --- settings ----------------------------------------------------------------
 
+// --- what a filter would have caught ------------------------------------------
+
+app.MapPost("/api/filter/preview", async (
+    FilterPreview request,
+    ICommandQueries queries,
+    NoticeNormalizer normalizer,
+    CancellationToken cancellationToken) =>
+{
+    if (SettingValidator.Validate(SettingKeys.Keywords, request.Keywords) is { } problem)
+    {
+        return Results.BadRequest(new { problem });
+    }
+
+    var rules = KeywordRules.Load(request.Keywords);
+    var threshold = request.Threshold ?? rules.NotifyThreshold;
+
+    // Built here and thrown away. Nothing is written and nothing the worker
+    // holds is touched: a preview that changed what the worker is doing would be
+    // the opposite of a preview.
+    var scorer = new RuleScorer(new Fixed<KeywordRules>(rules), normalizer);
+
+    var notices = await queries
+        .ListForPreviewAsync(Math.Clamp(request.Limit ?? 1000, 1, 5000), cancellationToken)
+        .ConfigureAwait(false);
+
+    var scored = notices
+        .Select(notice => new
+        {
+            notice.NoticeId,
+            notice.Title,
+            notice.AuthorityName,
+            Score = scorer.Score(notice.Title, notice.Description, notice.OkasCodes).Value
+        })
+        .ToList();
+
+    var passing = scored.Where(row => row.Score >= threshold).OrderByDescending(row => row.Score).ToList();
+
+    return Results.Ok(new
+    {
+        considered = scored.Count,
+        wouldNotify = passing.Count,
+        threshold,
+        // Enough to recognise the answer, not so much that the response is the
+        // archive again. What was missed matters as much as what was caught.
+        caught = passing.Take(25),
+        missed = scored
+            .Where(row => row.Score > 0 && row.Score < threshold)
+            .OrderByDescending(row => row.Score)
+            .Take(25)
+    });
+});
+
 app.MapGet("/api/settings", async (ISettingRepository settings, CancellationToken cancellationToken)
     => Results.Ok(await settings.ListAsync(cancellationToken).ConfigureAwait(false)));
 
@@ -204,6 +271,8 @@ startup.LogInformation("Api listening on {Urls}", string.Join(", ", app.Urls.Def
 app.Run();
 
 internal sealed record StatusChange(string Status);
+
+internal sealed record FilterPreview(string Keywords, int? Threshold, int? Limit);
 
 internal sealed record SettingChange(string Value, string? UpdatedBy);
 

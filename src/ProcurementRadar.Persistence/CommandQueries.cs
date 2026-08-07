@@ -192,6 +192,31 @@ public sealed class CommandQueries : ICommandQueries
         => await QueryAsync(ClosingSoon, new { WithinHours = withinHours, Limit = limit }, cancellationToken)
             .ConfigureAwait(false);
 
+    // No join and no score: a preview is asked about a filter that does not
+    // exist yet, so the stored score is the wrong answer by definition.
+    private const string ForPreview = """
+        SELECT id AS "NoticeId", title AS "Title", authority_name AS "AuthorityName",
+               description AS "Description", okas_codes AS "OkasCodes"
+        FROM procurement_notice
+        ORDER BY first_seen_at DESC
+        LIMIT @Limit
+        """;
+
+    public async Task<IReadOnlyList<PreviewNotice>> ListForPreviewAsync(
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var rows = await connection.QueryAsync<PreviewNotice>(
+            new CommandDefinition(ForPreview, new { Limit = limit }, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return rows.AsList();
+    }
+
     private async Task<IReadOnlyList<CommandNotice>> QueryAsync(
         string sql,
         object parameters,

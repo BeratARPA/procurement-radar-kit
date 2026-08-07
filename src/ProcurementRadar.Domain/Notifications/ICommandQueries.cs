@@ -76,6 +76,18 @@ public interface ICommandQueries
     /// <summary>What the team's own verdicts scored - the calibration data.</summary>
     Task<IReadOnlyList<ScoreByStatus>> GetScoreReportAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Everything the archive knows, in the shape a filter is tried against.
+    /// </summary>
+    /// <remarks>
+    /// The filter screen asks a question no amount of reasoning answers: with
+    /// this word list and this threshold, how many of the notices we already
+    /// have would have been announced, and which ones. Six hundred rows of title
+    /// and description is a fraction of a megabyte and scoring them takes
+    /// milliseconds, so the answer is exact rather than sampled.
+    /// </remarks>
+    Task<IReadOnlyList<PreviewNotice>> ListForPreviewAsync(int limit, CancellationToken cancellationToken);
+
     /// <summary>Still new, closing within the window.</summary>
     Task<IReadOnlyList<CommandNotice>> ListClosingSoonAsync(
         int withinHours,
@@ -131,4 +143,18 @@ public sealed record ScoreByStatus
     public double AverageScore { get; init; }
 
     public int MaximumScore { get; init; }
+}
+
+/// <summary>One archived notice, as a filter sees it.</summary>
+public sealed record PreviewNotice
+{
+    public long NoticeId { get; init; }
+
+    public string Title { get; init; } = string.Empty;
+
+    public string AuthorityName { get; init; } = string.Empty;
+
+    public string? Description { get; init; }
+
+    public string[]? OkasCodes { get; init; }
 }
