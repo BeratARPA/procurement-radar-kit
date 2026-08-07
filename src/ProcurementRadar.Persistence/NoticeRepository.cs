@@ -22,33 +22,31 @@ public sealed class NoticeRepository : INoticeRepository
     {
         var seenAt = _timeProvider.GetUtcNow();
 
-        var parameters = new
-        {
-            notice.SourceId,
-            notice.RawFetchId,
-            notice.ExternalKey,
-            notice.Ikn,
-            notice.AuthorityName,
-            notice.Title,
-            notice.Description,
-            notice.ProcurementType,
-            notice.ProcedureCode,
-            notice.OkasCodes,
-            notice.EstimatedCost,
-            notice.Currency,
-            // Deadlines arrive from Parse() already converted out of
-            // Europe/Istanbul, but normalize anyway: a non-zero offset is a hard
-            // error on a timestamptz parameter and this is the field we cannot
-            // afford to drop.
-            BidDeadlineAt = notice.BidDeadlineAt?.ToUniversalTime(),
-            OpeningAt = notice.OpeningAt?.ToUniversalTime(),
-            notice.SourceUrl,
-            // Fills both first_seen_at and last_seen_at on insert, and only
-            // last_seen_at on conflict. The caller's values are ignored by design.
-            SeenAt = seenAt,
-            // Text, not the enum: see the note in SourceRepository.UpsertAsync.
-            Status = EnumText.ToText(notice.Status)
-        };
+        // Built from the notice itself rather than listed by hand, then
+        // overridden where the repository knows better. The hand-written list
+        // this replaces was one property behind the schema for two hours:
+        // bid_deadline_time_assumed was added to the table and to the statement
+        // and nobody added it here, and PostgreSQL does not report a missing
+        // parameter - @ is its absolute-value operator, so it reported a missing
+        // column for a column that existed. Every parse run failed until
+        // somebody read the log.
+        //
+        // Taking the properties off the entity means the next column added to
+        // the notice cannot go missing on this path at all.
+        var parameters = new DynamicParameters(notice);
+
+        // Deadlines arrive from Parse() already converted out of Europe/Istanbul,
+        // but normalize anyway: a non-zero offset is a hard error on a
+        // timestamptz parameter and this is the field we cannot afford to drop.
+        parameters.Add("BidDeadlineAt", notice.BidDeadlineAt?.ToUniversalTime());
+        parameters.Add("OpeningAt", notice.OpeningAt?.ToUniversalTime());
+
+        // Fills both first_seen_at and last_seen_at on insert, and only
+        // last_seen_at on conflict. The caller's values are ignored by design.
+        parameters.Add("SeenAt", seenAt);
+
+        // Text, not the enum: see the note in SourceRepository.UpsertAsync.
+        parameters.Add("Status", EnumText.ToText(notice.Status));
 
         await using var connection = await _connectionFactory
             .OpenConnectionAsync(cancellationToken)
