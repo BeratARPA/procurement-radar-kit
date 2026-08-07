@@ -13,4 +13,15 @@ namespace ProcurementRadar.Domain.Parsing;
 public interface ITurkishDateParser
 {
     DateTimeOffset? TryParse(string? text);
+
+    /// <summary>
+    /// The same reading, with what had to be guessed to produce it.
+    /// </summary>
+    /// <remarks>
+    /// A notice that says only "12.03.2026" does not say when on that day, and
+    /// the hour is the difference between having time and not having it. The
+    /// guess is made here and declared here, so the notification can say it was
+    /// a guess instead of presenting it as the deadline.
+    /// </remarks>
+    TurkishDateParseResult Read(string? text);
 }

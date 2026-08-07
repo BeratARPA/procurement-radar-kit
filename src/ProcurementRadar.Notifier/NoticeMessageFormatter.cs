@@ -75,6 +75,16 @@ public sealed class NoticeMessageFormatter
             })
             : _templates.Value.Notice.DeadlineUnknown);
 
+        if (notice.BidDeadlineAt is not null && notice.BidDeadlineTimeAssumed)
+        {
+            // The date was on the page and the hour was not. 17:00 is where the
+            // parser puts it - the end of a working day rather than the end of
+            // the calendar one - but a guess presented as a deadline is worse
+            // than a guess admitted to, and the person reading this is the one
+            // deciding whether there is still time to bid.
+            lines.Add(_templates.Value.Notice.DeadlineAssumed);
+        }
+
         if (notice.DocumentCount > 0)
         {
             lines.Add(Fill(_templates.Value.Notice.Documents, new()

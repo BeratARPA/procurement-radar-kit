@@ -21,7 +21,11 @@ public sealed record RawNotice(
     // Not in spec.md section 6, but deduplication turns on it: where a page
     // carries the state's own tender number, that number is the identity and
     // nothing computed can beat it (spec Bölüm 8). Only EKAP pages have one.
-    string? Ikn = null)
+    string? Ikn = null,
+    // The hour was not on the page and had to be assumed. Carried through to the
+    // notification rather than left in a log line, because the reader is the one
+    // deciding whether there is still time.
+    bool BidDeadlineTimeAssumed = false)
 {
     public IReadOnlyList<string> DocumentUrls { get; init; } = DocumentUrls ?? [];
 }

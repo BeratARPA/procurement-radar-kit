@@ -87,6 +87,8 @@ public sealed class MessageTemplates
         [JsonPropertyName("deadline")]
         public string Deadline { get; init; } = string.Empty;
 
+        [JsonPropertyName("deadline_assumed")] public string DeadlineAssumed { get; init; } = string.Empty;
+
         [JsonPropertyName("deadline_unknown")]
         public string DeadlineUnknown { get; init; } = string.Empty;
 

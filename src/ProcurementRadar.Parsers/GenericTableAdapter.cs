@@ -152,8 +152,8 @@ public sealed class GenericTableAdapter : ISourceAdapter
         // Never DateTime.Parse: the formats are data (config/tr-date-patterns.json)
         // and the conversion out of Europe/Istanbul has to happen in one place.
         var deadline = config.DateSelector is null
-            ? null
-            : _dateParser.TryParse(DateText(row, config));
+            ? TurkishDateParseResult.Unreadable
+            : _dateParser.Read(DateText(row, config));
 
         var amount = config.AmountSelector is null
             ? null
@@ -163,7 +163,8 @@ public sealed class GenericTableAdapter : ISourceAdapter
             Title: title,
             SourceUrl: sourceUrl,
             AuthorityName: source.AuthorityName,
-            BidDeadlineAt: deadline,
+            BidDeadlineAt: deadline.Value,
+            BidDeadlineTimeAssumed: deadline.TimeWasAssumed,
             EstimatedCost: amount,
             DocumentUrls: DocumentUrls(row, config));
 

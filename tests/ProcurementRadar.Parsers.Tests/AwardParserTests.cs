@@ -66,14 +66,14 @@ public sealed class AwardParserTests
         // Contract 16.07.2026, tender 30.06.2026, both labelled "Tarihi", and
         // the wrong one is the one that appears first.
         //
-        // The time is the end of that day in Istanbul (20:59 UTC in summer), not
-        // midnight: a bare date means "up to and including" everywhere else in
-        // this system, because everywhere else it is a deadline. Reused here
-        // rather than given a second meaning - the day is what an award date is
-        // for, and one parser that treats a date one way is worth more than two
-        // that disagree.
+        // The time is the end of the working day in Istanbul - 17:00, so 14:00
+        // here in July - because a bare date means that everywhere else in this
+        // system, where it is a deadline and guessing late is the dangerous
+        // direction. Reused here rather than given a second meaning: the day is
+        // what an award date is for, and one parser that treats a date one way
+        // is worth more than two that disagree.
         Assert.Equal(
-            new DateTimeOffset(2026, 7, 16, 20, 59, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 7, 16, 14, 0, 0, TimeSpan.Zero),
             award!.AwardedAt);
     }
 

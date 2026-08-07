@@ -29,6 +29,9 @@ public sealed record NoticeForNotification
 
     public DateTimeOffset? BidDeadlineAt { get; init; }
 
+    /// <summary>The hour was assumed, not read off the page.</summary>
+    public bool BidDeadlineTimeAssumed { get; init; }
+
     public required string SourceUrl { get; init; }
 
     public int? RuleScore { get; init; }

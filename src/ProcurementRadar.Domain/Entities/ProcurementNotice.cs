@@ -42,6 +42,9 @@ public sealed record ProcurementNotice
     /// <summary>The most critical field in the product.</summary>
     public DateTimeOffset? BidDeadlineAt { get; init; }
 
+    /// <summary>The hour was not on the page and had to be assumed (17:00).</summary>
+    public bool BidDeadlineTimeAssumed { get; init; }
+
     public DateTimeOffset? OpeningAt { get; init; }
 
     public required string SourceUrl { get; init; }

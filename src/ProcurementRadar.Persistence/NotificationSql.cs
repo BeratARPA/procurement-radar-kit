@@ -10,6 +10,7 @@ internal static class NotificationSql
                     n.description    AS "Description",
                     n.estimated_cost AS "EstimatedCost",
                     n.bid_deadline_at AS "BidDeadlineAt",
+                    n.bid_deadline_time_assumed AS "BidDeadlineTimeAssumed",
                     n.source_url     AS "SourceUrl",
                     s.rule_score     AS "RuleScore",
                     s.rationale      AS "Rationale",

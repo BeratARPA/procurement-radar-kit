@@ -220,6 +220,7 @@ public sealed class ParsePipeline
                 Description = masked.Description,
                 EstimatedCost = masked.EstimatedCost,
                 BidDeadlineAt = masked.BidDeadlineAt,
+                BidDeadlineTimeAssumed = masked.BidDeadlineTimeAssumed,
                 SourceUrl = masked.SourceUrl
             };
 

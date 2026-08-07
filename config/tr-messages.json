@@ -11,7 +11,8 @@
     "documents": "📎 Şartname indirildi ({count} dosya)",
     "rationale": "🔎 Eşleşen: {rationale}",
     "ikn": "🔖 İKN {ikn}",
-    "excerpt": "📄 Şartnameden: {excerpt}"
+    "excerpt": "📄 Şartnameden: {excerpt}",
+    "deadline_assumed": "⚠️ Saat belirtilmemiş, 17:00 varsayıldı — ilandan teyit edin"
   },
   "reminder_header": "⏳ HATIRLATMA — son teklife az kaldı",
   "buttons": {

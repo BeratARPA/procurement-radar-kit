@@ -27,7 +27,7 @@
       "name": "dotted_date_only",
       "regex": "(\\d{1,2})[.\\-/](\\d{1,2})[.\\-/](\\d{4})",
       "groups": ["day", "month", "year"],
-      "default_time": "23:59"
+      "default_time": "17:00"
     },
     {
       "name": "long_month_time",
@@ -38,7 +38,7 @@
       "name": "long_month_only",
       "regex": "(\\d{1,2})\\s+([a-zçğıöşü]+)\\s+(\\d{4})",
       "groups": ["day", "month_name", "year"],
-      "default_time": "23:59"
+      "default_time": "17:00"
     },
     {
       "name": "iso",
@@ -46,5 +46,5 @@
       "groups": ["year", "month", "day", "hour", "minute"]
     }
   ],
-  "_default_time_note": "Saat verilmemişse 23:59 kabul edilir ve WARN loglanır. Bildirimde 'saat belirtilmemiş' uyarısı gösterilir — bu bir tahmin, güvenilir veri değil."
+  "_default_time_note": "Saat verilmemişse 17:00 kabul edilir ve WARN loglanır. Bildirimde 'saat belirtilmemiş' uyarısı gösterilir — bu bir tahmin, güvenilir veri değil. 23:59 değil çünkü son teklif saati için geç tahmin yapmak tehlikeli yön: kurumlar mesai bitiminde kapatıyor, ve 23:59 varsayımı hem 'hâlâ vaktim var' dedirtiyor hem de 6 saat kala hatırlatmayı 17:59'a, yani kapanıştan sonraya atıyordu."
 }

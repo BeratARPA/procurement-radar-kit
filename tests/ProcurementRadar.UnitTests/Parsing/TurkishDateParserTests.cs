@@ -24,10 +24,10 @@ public sealed class TurkishDateParserTests
         { "dotted_date_time", "12.03.2026 10:00", "2026-03-12T07:00:00Z" },
         { "dotted_date_time", "12/03/2026 saat 10:00", "2026-03-12T07:00:00Z" },
         { "dotted_date_time", "12.03.2026 tarihinde saat 10:00'a kadar", "2026-03-12T07:00:00Z" },
-        { "dotted_date_only", "12.03.2026", "2026-03-12T20:59:00Z" },
+        { "dotted_date_only", "12.03.2026", "2026-03-12T14:00:00Z" },
         { "long_month_time", "12 Mart 2026 Perşembe günü saat 14:30", "2026-03-12T11:30:00Z" },
-        { "long_month_only", "12 Mart 2026 Perşembe", "2026-03-12T20:59:00Z" },
-        { "long_month_only", "5 Mayıs 2026", "2026-05-05T20:59:00Z" },
+        { "long_month_only", "12 Mart 2026 Perşembe", "2026-03-12T14:00:00Z" },
+        { "long_month_only", "5 Mayıs 2026", "2026-05-05T14:00:00Z" },
         { "iso", "2026-03-12T10:00", "2026-03-12T07:00:00Z" },
         { "iso", "2026-03-12 10:00", "2026-03-12T07:00:00Z" }
     };

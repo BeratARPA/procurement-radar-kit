@@ -18,6 +18,7 @@ internal static class NoticeSql
                     estimated_cost   AS "EstimatedCost",
                     currency         AS "Currency",
                     bid_deadline_at  AS "BidDeadlineAt",
+                    bid_deadline_time_assumed AS "BidDeadlineTimeAssumed",
                     opening_at       AS "OpeningAt",
                     source_url       AS "SourceUrl",
                     first_seen_at    AS "FirstSeenAt",
@@ -34,13 +35,13 @@ internal static class NoticeSql
         INSERT INTO procurement_notice (
             source_id, raw_fetch_id, external_key, ikn, authority_name, title,
             description, procurement_type, procedure_code, okas_codes,
-            estimated_cost, currency, bid_deadline_at, opening_at, source_url,
-            first_seen_at, last_seen_at, status)
+            estimated_cost, currency, bid_deadline_at, bid_deadline_time_assumed,
+            opening_at, source_url, first_seen_at, last_seen_at, status)
         VALUES (
             @SourceId, @RawFetchId, @ExternalKey, @Ikn, @AuthorityName, @Title,
             @Description, @ProcurementType, @ProcedureCode, @OkasCodes,
-            @EstimatedCost, @Currency, @BidDeadlineAt, @OpeningAt, @SourceUrl,
-            @SeenAt, @SeenAt, @Status)
+            @EstimatedCost, @Currency, @BidDeadlineAt, @BidDeadlineTimeAssumed,
+            @OpeningAt, @SourceUrl, @SeenAt, @SeenAt, @Status)
         ON CONFLICT (external_key) DO UPDATE
             SET last_seen_at = EXCLUDED.last_seen_at
         RETURNING id AS "NoticeId", (xmax = 0) AS "WasInserted"
