@@ -752,7 +752,17 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "7 Ağustos 2026 doğrulandı: gerçek ihale listesi — başlık, ihale tarihi, saati ve şartname indirme linki. İlanların çoğu taşınmaz satış/kiralama, yani skorlayıcı çoğunu eleyecek; ama bu kurumun ihale sayfası ve yazılım aldığında burada çıkar. Aktif edildi; selector'lar tutmuyorsa 'hiç ilan üretmedi' alarmı bir hafta içinde söyleyecek."
+      "notes": "7 Ağustos 2026: try-source ile ölçüldü, 9 satır 64 puan, satır div.faaliyet-raporlari.mb-5.page-content. Ölçüm o gün yapılmış ama config uygulanmamıştı — kaynak aktifti ve adapter_config'i boştu, yani her taramada istek atıp hiçbir şey üretemiyordu. İlanların çoğu taşınmaz satış/kiralama; skorlayıcı eler, ama bu o belediyenin ihale sayfası.",
+      "adapter_config": {
+        "base_url": "https://www.ankaragolbasi.bel.tr",
+        "row_selector": "div.faaliyet-raporlari.mb-5.page-content",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": null,
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null
+      }
     },
     {
       "authority_name": "Güdül Belediyesi",

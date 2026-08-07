@@ -65,6 +65,30 @@ internal static class PreflightCommand
             await new AwardRepository(connectionFactory, TimeProvider.System)
                 .ListRecentAsync(1, cancellationToken).ConfigureAwait(false));
 
+        // 1b. An active source with no selectors can only fail. Eleven of them
+        //     were switched on at once and spent an evening fetching pages
+        //     nothing could read - one of them thirty-three times - and the only
+        //     sign was a warning in a log nobody was reading yet.
+        await CheckAsync(problems, "source.configured", async () =>
+        {
+            var sources = await new SourceRepository(connectionFactory, TimeProvider.System)
+                .ListActiveAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var unconfigured = sources
+                .Where(source => source.AdapterKey == "generic_table")
+                .Where(source => string.IsNullOrWhiteSpace(source.AdapterConfig)
+                    || source.AdapterConfig.Trim() is "{}" or "null")
+                .Select(source => source.Id.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                .ToList();
+
+            return unconfigured.Count == 0
+                ? true
+                : throw new InvalidOperationException(
+                    "active sources with no adapter_config: " + string.Join(", ", unconfigured)
+                    + ". Measure one with try-source or switch it off.");
+        });
+
         // 2. The scalar the settings refresher reads every thirty seconds. It
         //    threw for half an hour before anybody noticed, because @ is
         //    PostgreSQL's absolute-value operator and the error named a column.
