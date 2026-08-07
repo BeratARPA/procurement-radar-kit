@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Persistence\ProcurementRadar.Persistence.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Collector\ProcurementRadar.Collector.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Scoring\ProcurementRadar.Scoring.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Notifier\ProcurementRadar.Notifier.csproj" />
+    <ProjectReference Include="..\ProcurementRadar.Parsers\ProcurementRadar.Parsers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.4" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

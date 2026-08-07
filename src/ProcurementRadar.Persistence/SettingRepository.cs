@@ -46,9 +46,18 @@ public sealed class SettingRepository : ISettingRepository
             .OpenConnectionAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return await connection.ExecuteScalarAsync<DateTimeOffset?>(
+        // Read as DateTime and converted here, not asked for as a DateTimeOffset.
+        // Npgsql hands a timestamptz back as a DateTime with Kind Utc, and
+        // Dapper's scalar path converts with System.Convert, which has no cast
+        // between the two: asking for the offset type throws at run time while
+        // compiling perfectly and passing every test with a fake repository
+        // behind it. The same trap took a day over the notice records; this is
+        // the scalar version of it.
+        var version = await connection.ExecuteScalarAsync<DateTime?>(
             new CommandDefinition(SettingSql.Version, cancellationToken: cancellationToken))
             .ConfigureAwait(false);
+
+        return version is { } value ? new DateTimeOffset(value.ToUniversalTime()) : null;
     }
 
     public async Task SaveAsync(string key, string json, string? updatedBy, CancellationToken cancellationToken)

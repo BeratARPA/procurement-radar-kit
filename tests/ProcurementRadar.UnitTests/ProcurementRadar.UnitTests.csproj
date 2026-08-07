@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\src\ProcurementRadar.Scoring\ProcurementRadar.Scoring.csproj" />
     <ProjectReference Include="..\..\src\ProcurementRadar.Notifier\ProcurementRadar.Notifier.csproj" />
     <ProjectReference Include="..\..\src\ProcurementRadar.Cli\ProcurementRadar.Cli.csproj" />
+    <ProjectReference Include="..\..\src\ProcurementRadar.Api\ProcurementRadar.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
