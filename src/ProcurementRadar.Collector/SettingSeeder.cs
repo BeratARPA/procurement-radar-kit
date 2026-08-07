@@ -31,6 +31,31 @@ public sealed class SettingSeeder
         _logger = logger;
     }
 
+    /// <summary>
+    /// Whether two json documents say the same thing, formatting aside.
+    /// </summary>
+    /// <remarks>
+    /// Text comparison would report a difference for every reindented file and
+    /// train everybody to ignore the warning.
+    /// </remarks>
+    private static bool SameJson(string left, string right)
+    {
+        try
+        {
+            using var a = System.Text.Json.JsonDocument.Parse(left);
+            using var b = System.Text.Json.JsonDocument.Parse(right);
+
+            return string.Equals(
+                System.Text.Json.JsonSerializer.Serialize(a.RootElement),
+                System.Text.Json.JsonSerializer.Serialize(b.RootElement),
+                StringComparison.Ordinal);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
+    }
+
     /// <summary>Returns how many keys were new.</summary>
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
@@ -58,6 +83,27 @@ public sealed class SettingSeeder
             {
                 _logger.LogInformation("Seeded setting {Key} from {FileName}", key, fileName);
                 seeded++;
+
+                continue;
+            }
+
+            // Already stored, so the file was not read - which is the rule, and
+            // which is also how a change to a config file can do nothing at all
+            // and look like it worked. It happened: the assumed deadline hour was
+            // changed from 23:59 to 17:00 in the file, every test passed because
+            // the tests read the file, and the worker went on assuming 23:59
+            // because the worker reads the table.
+            //
+            // Nothing is overwritten. It is only said out loud.
+            var stored = await _settings.GetAsync(key, cancellationToken).ConfigureAwait(false);
+
+            if (stored is not null && !SameJson(stored.Value, json))
+            {
+                _logger.LogWarning(
+                    "Setting {Key} differs from {FileName}; the stored value is in use and the file is not. "
+                    + "Edit it through the api if the file is the one you meant.",
+                    key,
+                    fileName);
             }
         }
 
