@@ -1662,6 +1662,27 @@
           "İhale İlanı Yayımlanmış"
         ]
       }
+    },
+    {
+      "authority_name": "Kocaeli Büyükşehir Belediyesi",
+      "authority_type": "municipality",
+      "province": "Kocaeli",
+      "district": null,
+      "url": "https://www.kocaeli.bel.tr/duyurular/ihale-duyurulari/",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "notes": "7 Ağustos 2026, try-source ile canlı sayfaya karşı ölçüldü: 30 satır, 68 puan, satır div.col-md-4, başlık h4. Ankara dışındaki ilk kurum sayfası — D-13 il filtresini kaldırdığı için kapsam dışı değil, ve bu belediyenin güvenlik yazılımı lisans yenileme ihalesi EKAP üzerinden zaten yakalandı (İKN 2026/1321104), yani burada iş var. Listede tarih sütunu yok; son teklif tarihi ilan detayından ya da EKAP eşleşmesinden gelir.",
+      "adapter_config": {
+        "base_url": "https://www.kocaeli.bel.tr",
+        "row_selector": "div.col-md-4",
+        "title_selector": "h4",
+        "link_selector": "a",
+        "date_selector": null,
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null
+      }
     }
   ]
 }
