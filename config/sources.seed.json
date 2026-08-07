@@ -373,15 +373,16 @@
       "poll_interval_minutes": 15,
       "is_active": true,
       "adapter_config": {
-        "row_selector": ".space-y-4 a[href^=\"/ihaleler/\"]",
+        "base_url": "https://www.nallihan.bel.tr",
+        "row_selector": ".transition-all",
         "title_selector": "h3",
         "link_selector": null,
-        "date_selector": "span.text-stone-custom",
+        "date_selector": null,
+        "time_selector": null,
         "amount_selector": null,
-        "document_selector": null,
-        "base_url": "https://www.nallihan.bel.tr"
+        "document_selector": null
       },
-      "notes": "Next.js tabanlı liste; satırın kendisi <a> etiketi olduğu için detay linki satır içinde değil, satır elemanının kendi href'inde ve \"/ihaleler/<uuid>\" biçiminde göreli — base_url ile birleştirilmeli. Liste hem \"Aktif\" hem \"Tamamlandı\" ihaleleri birlikte gösteriyor, durum rozeti span[data-slot=\"badge\"] içinde; tarih hücresinde saat varsa ikinci bir span olarak ayrı geliyor. Fixture: nallihan.html."
+      "notes": "7 Ağustos 2026: site yenilendi, eski selector'lar hiçbir şey bulmuyordu ve 'parser bozuk' alarmı dört kez çaldı — alarm haklıydı. Yeni site Tailwind ve her ihale bir kartı saran <a> içinde; satır .transition-all, başlık h3, detay linki yok (satırın kendisi link olduğu için ilan listeleme sayfasına yazılıyor). try-source ile canlı sayfaya karşı ölçüldü: 13 satır, 51 puan."
     },
     {
       "authority_name": "Polatlı Belediyesi",

@@ -54,6 +54,19 @@ internal static class TrySourceCommand
         "a.title", "a", "h2", "h3", "h4", ".title", "td:nth-child(2)", "td"
     ];
 
+    /// <summary>
+    /// Where the row's own link is.
+    /// </summary>
+    /// <remarks>
+    /// Three cases, all of them real. Usually an anchor inside the row. Sometimes
+    /// the row is the anchor - a whole card wrapped in one link, which :scope
+    /// picks up and a descendant search never will; Nallıhan is built that way
+    /// and its twelve tenders were invisible because of it. And sometimes there
+    /// are no detail pages at all, which is not an error: the notice is recorded
+    /// against the listing, where a person would go to read it anyway.
+    /// </remarks>
+    private static readonly string?[] LinkSelectors = ["a", ":scope", null];
+
     private static readonly string[] DateSelectors =
     [
         "time", ".date", ".tarih", "span.date", "td:nth-child(1)",
@@ -145,8 +158,9 @@ internal static class TrySourceCommand
             foreach (var titleSelector in TitleSelectors)
             {
                 foreach (var dateSelector in DateSelectors.Prepend(null))
+                foreach (var linkSelector in LinkSelectors)
                 {
-                    var json = Config(origin, rowSelector, titleSelector, dateSelector);
+                    var json = Config(origin, rowSelector, titleSelector, dateSelector, linkSelector);
 
                     if (!GenericTableAdapterConfig.TryRead(json, out _, out _))
                     {
@@ -161,6 +175,8 @@ internal static class TrySourceCommand
                     }
                     catch (Exception exception) when (exception is not OperationCanceledException)
                     {
+                        // An unusable selector is one of sixty thousand tried
+                        // here; it is not news.
                         continue;
                     }
 
@@ -240,32 +256,47 @@ internal static class TrySourceCommand
 
         foreach (var element in document.All)
         {
-            if (element.ClassList.Length == 0)
+            // Only names that are a css selector as written. Tailwind sites -
+            // which municipal sites are, now - carry classes like
+            // group-hover:text-forest and md:flex-1, and a colon in an unescaped
+            // selector makes the whole thing invalid. Nallıhan's twelve tenders
+            // were invisible for exactly this reason: the selector was built,
+            // matched nothing, and said nothing.
+            var safe = element.ClassList
+                .Where(name => name.Length is > 1 and < 40 && name.All(IsSelectorSafe))
+                .OrderBy(name => name, StringComparer.Ordinal)
+                .ToList();
+
+            if (safe.Count == 0)
             {
                 continue;
             }
 
-            // Sorted, because the same component is written with its classes in
-            // whatever order somebody typed them.
-            var classes = string.Join(
-                ".",
-                element.ClassList.Where(name => name.Length is > 1 and < 40).OrderBy(name => name, StringComparer.Ordinal));
+            Count(counts, element.LocalName + "." + string.Join(".", safe));
 
-            if (classes.Length == 0)
+            // And each class on its own. The combination identifies one component
+            // exactly; a single class is what a designer reuses for every row,
+            // and on a utility-class site the combination is different on every
+            // element while one class is shared.
+            foreach (var name in safe)
             {
-                continue;
+                Count(counts, element.LocalName + "." + name);
+                Count(counts, "." + name);
             }
-
-            var selector = element.LocalName + "." + classes;
-            counts[selector] = counts.GetValueOrDefault(selector) + 1;
         }
 
         return counts
             .Where(pair => pair.Value is >= 3 and <= 80)
             .OrderByDescending(pair => pair.Value)
             .Select(pair => pair.Key)
-            .Take(40);
+            .Take(60);
     }
+
+    private static void Count(Dictionary<string, int> counts, string selector)
+        => counts[selector] = counts.GetValueOrDefault(selector) + 1;
+
+    private static bool IsSelectorSafe(char character)
+        => char.IsAsciiLetterOrDigit(character) || character is '-' or '_';
 
     /// <summary>
     /// How much this arrangement looks like a list of notices rather than a
@@ -307,13 +338,18 @@ internal static class TrySourceCommand
         return Math.Min(score, 100);
     }
 
-    private static string Config(string baseUrl, string rowSelector, string titleSelector, string? dateSelector)
+    private static string Config(
+        string baseUrl,
+        string rowSelector,
+        string titleSelector,
+        string? dateSelector,
+        string? linkSelector)
         => JsonSerializer.Serialize(new Dictionary<string, object?>
         {
             ["base_url"] = baseUrl,
             ["row_selector"] = rowSelector,
             ["title_selector"] = titleSelector,
-            ["link_selector"] = "a",
+            ["link_selector"] = linkSelector,
             ["date_selector"] = dateSelector,
             ["time_selector"] = null,
             ["amount_selector"] = null,
