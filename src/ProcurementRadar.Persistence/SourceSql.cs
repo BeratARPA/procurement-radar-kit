@@ -56,6 +56,14 @@ internal static class SourceSql
         WHERE id = @SourceId
         """;
 
+    // is_active is deliberately not refreshed on conflict. The seed file
+    // introduces sources; whether one is in the rotation is runtime state, set
+    // from the interface or by the health rules, and the file has no business
+    // undoing it. Re-seeding once switched eleven sources back off minutes after
+    // they had been switched on, and said nothing.
+    //
+    // The same rule as the settings (D-16): the file is where a row comes from,
+    // the database is what runs.
     internal const string Upsert = """
         INSERT INTO source (
             authority_name, authority_type, province, district, url, adapter_key,
@@ -71,7 +79,6 @@ internal static class SourceSql
                 adapter_key           = EXCLUDED.adapter_key,
                 adapter_config        = EXCLUDED.adapter_config,
                 poll_interval_minutes = EXCLUDED.poll_interval_minutes,
-                is_active             = EXCLUDED.is_active,
                 notes                 = EXCLUDED.notes
         RETURNING (xmax = 0)
         """;
