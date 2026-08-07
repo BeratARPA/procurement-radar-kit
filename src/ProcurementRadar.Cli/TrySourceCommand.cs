@@ -53,7 +53,12 @@ internal static class TrySourceCommand
     private static readonly string[] TitleSelectors =
     [
         "h1 a", "h2 a", "h3 a", "h4 a", "h5 a", ".title a", ".baslik a",
-        "a.title", "a", "h2", "h3", "h4", ".title", "td:nth-child(2)", "td"
+        "a.title", "a", "h2", "h3", "h4", ".title",
+        // Which column holds the title is not a constant. Bursa puts the İKN
+        // first, the date second and the name third, and the list stopped at
+        // the second column - so a page with eleven tenders and a plain html
+        // table on it read as a navigation menu.
+        "td:nth-child(2)", "td:nth-child(3)", "td:nth-child(4)", "td"
     ];
 
     /// <summary>
@@ -71,8 +76,8 @@ internal static class TrySourceCommand
 
     private static readonly string[] DateSelectors =
     [
-        "time", ".date", ".tarih", "span.date", "td:nth-child(1)",
-        "td:nth-child(3)", ".meta", "small"
+        "time", ".date", ".tarih", "span.date",
+        "td:nth-child(1)", "td:nth-child(2)", "td:nth-child(3)", ".meta", "small"
     ];
 
     public static async Task<int> RunAsync(string[] args, CancellationToken cancellationToken)

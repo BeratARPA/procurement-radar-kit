@@ -1705,6 +1705,115 @@
         "document_selector": null,
         "render": true
       }
+    },
+    {
+      "authority_name": "Basın İlan Kurumu - Resmî İlan Portalı (İhale, sayfa 2)",
+      "authority_type": "provincial_directorate",
+      "province": "Türkiye",
+      "district": null,
+      "url": "https://www.ilan.gov.tr/ilan/tum-ilanlar/ihale?ats=3&currentPage=2",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 60,
+      "is_active": true,
+      "notes": "Ulusal resmî ilan portalının 2. sayfası. 7 Ağustos 2026'da sayfalama denendi ve çalışıyor: sayfa 2 birinciden tamamen farklı 12 ilan verdi (Rize İl Özel İdaresi, RTE Üniversitesi Diş Hekimliği). Her sayfa ayrı bir kaynak satırı, çünkü toplayıcı bir URL'i çeker, sayfa gezmez. Beş sayfa saatte 60 ilanlık bir pencere demek; tek sayfa 12 ile sınırlıydı ve ülke genelinde bundan fazlası yayımlanıyor.",
+      "adapter_config": {
+        "base_url": "https://www.ilan.gov.tr",
+        "row_selector": "ng-component.ng-star-inserted",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "a",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "render": true
+      }
+    },
+    {
+      "authority_name": "Basın İlan Kurumu - Resmî İlan Portalı (İhale, sayfa 3)",
+      "authority_type": "provincial_directorate",
+      "province": "Türkiye",
+      "district": null,
+      "url": "https://www.ilan.gov.tr/ilan/tum-ilanlar/ihale?ats=3&currentPage=3",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 60,
+      "is_active": true,
+      "notes": "Ulusal resmî ilan portalının 3. sayfası. 7 Ağustos 2026'da sayfalama denendi ve çalışıyor: sayfa 2 birinciden tamamen farklı 12 ilan verdi (Rize İl Özel İdaresi, RTE Üniversitesi Diş Hekimliği). Her sayfa ayrı bir kaynak satırı, çünkü toplayıcı bir URL'i çeker, sayfa gezmez. Beş sayfa saatte 60 ilanlık bir pencere demek; tek sayfa 12 ile sınırlıydı ve ülke genelinde bundan fazlası yayımlanıyor.",
+      "adapter_config": {
+        "base_url": "https://www.ilan.gov.tr",
+        "row_selector": "ng-component.ng-star-inserted",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "a",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "render": true
+      }
+    },
+    {
+      "authority_name": "Basın İlan Kurumu - Resmî İlan Portalı (İhale, sayfa 4)",
+      "authority_type": "provincial_directorate",
+      "province": "Türkiye",
+      "district": null,
+      "url": "https://www.ilan.gov.tr/ilan/tum-ilanlar/ihale?ats=3&currentPage=4",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 60,
+      "is_active": true,
+      "notes": "Ulusal resmî ilan portalının 4. sayfası. 7 Ağustos 2026'da sayfalama denendi ve çalışıyor: sayfa 2 birinciden tamamen farklı 12 ilan verdi (Rize İl Özel İdaresi, RTE Üniversitesi Diş Hekimliği). Her sayfa ayrı bir kaynak satırı, çünkü toplayıcı bir URL'i çeker, sayfa gezmez. Beş sayfa saatte 60 ilanlık bir pencere demek; tek sayfa 12 ile sınırlıydı ve ülke genelinde bundan fazlası yayımlanıyor.",
+      "adapter_config": {
+        "base_url": "https://www.ilan.gov.tr",
+        "row_selector": "ng-component.ng-star-inserted",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "a",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "render": true
+      }
+    },
+    {
+      "authority_name": "Basın İlan Kurumu - Resmî İlan Portalı (İhale, sayfa 5)",
+      "authority_type": "provincial_directorate",
+      "province": "Türkiye",
+      "district": null,
+      "url": "https://www.ilan.gov.tr/ilan/tum-ilanlar/ihale?ats=3&currentPage=5",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 60,
+      "is_active": true,
+      "notes": "Ulusal resmî ilan portalının 5. sayfası. 7 Ağustos 2026'da sayfalama denendi ve çalışıyor: sayfa 2 birinciden tamamen farklı 12 ilan verdi (Rize İl Özel İdaresi, RTE Üniversitesi Diş Hekimliği). Her sayfa ayrı bir kaynak satırı, çünkü toplayıcı bir URL'i çeker, sayfa gezmez. Beş sayfa saatte 60 ilanlık bir pencere demek; tek sayfa 12 ile sınırlıydı ve ülke genelinde bundan fazlası yayımlanıyor.",
+      "adapter_config": {
+        "base_url": "https://www.ilan.gov.tr",
+        "row_selector": "ng-component.ng-star-inserted",
+        "title_selector": "a",
+        "link_selector": "a",
+        "date_selector": "a",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": null,
+        "render": true
+      }
+    },
+    {
+      "authority_name": "Bursa Büyükşehir Belediyesi",
+      "authority_type": "municipality",
+      "province": "Bursa",
+      "district": null,
+      "url": "https://www.bursa.bel.tr/ihale",
+      "adapter_key": "generic_table",
+      "poll_interval_minutes": 15,
+      "is_active": true,
+      "notes": "7 Ağustos 2026: düz bir html tablosu — İKN, ihale tarihi, ihale adı, şartname linki. Üç turda bulunamamasının sebebi araçtaydı, sayfada değil: başlık üçüncü sütunda ve aday listesi ikinci sütunda duruyordu, o yüzden on bir ihalelik bir tablo menü gibi okunuyordu. Ölçüldü: 11 satır, on birinde de son teklif tarihi. /dogrudantemin ve /ilanlar ise liste içermeyen menü sayfaları — orada aramak boşuna, ihaleler burada.",
+      "adapter_config": {
+        "base_url": "https://www.bursa.bel.tr",
+        "row_selector": "table#datatable tbody tr",
+        "title_selector": "td:nth-child(3)",
+        "link_selector": "a",
+        "date_selector": "td:nth-child(2)",
+        "time_selector": null,
+        "amount_selector": null,
+        "document_selector": "a"
+      }
     }
   ]
 }
