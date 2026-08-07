@@ -28,8 +28,10 @@ $publish = Join-Path $repo 'publish'
 
 if ($Uninstall) {
     # Stop first: an unregister while it is mid-poll leaves the process orphaned.
-    Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
-    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+    foreach ($name in $TaskName, ($TaskName + 'Api')) {
+        Stop-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
+        Unregister-ScheduledTask -TaskName $name -Confirm:$false -ErrorAction SilentlyContinue
+    }
     Get-Process ProcurementRadar.Worker -ErrorAction SilentlyContinue | Stop-Process -Force
     Write-Host "Kaldirildi: '$TaskName'. Geri kurmak icin ayni betigi parametresiz calistirin."
     return
@@ -63,6 +65,13 @@ if ($Rebuild -or -not (Test-Path $worker)) {
     Write-Host 'Yayinlaniyor...'
     & dotnet publish (Join-Path $repo 'src\ProcurementRadar.Worker') -c Release -o $publish --nologo -v q
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
+
+    # The api goes to the same folder and shares the config and .env the worker
+    # reads. Two processes, one deployment: an api pointing at a different copy
+    # of the settings would be an interface that shows something the collector
+    # is not doing.
+    & dotnet publish (Join-Path $repo 'src\ProcurementRadar.Api') -c Release -o $publish --nologo -v q
+    if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed for the api.' }
 
     # The worker reads config/*.json at run time and finds it by walking up from
     # its own directory, so a copy has to sit beside the published files.
@@ -129,6 +138,19 @@ Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
     -Settings $settings -Description 'Procurement Radar worker' -Force | Out-Null
 
 Write-Host "Registered '$TaskName' to start at logon."
+
+# The api is a second process and needs its own task. Without one it only ran
+# while somebody had a terminal open, which is how /swagger was unreachable the
+# first time it was opened.
+$apiTaskName = "$TaskName" + 'Api'
+$apiAction = New-ScheduledTaskAction `
+    -Execute (Join-Path $publish 'ProcurementRadar.Api.exe') `
+    -WorkingDirectory $publish
+
+Register-ScheduledTask -TaskName $apiTaskName -Action $apiAction -Trigger $trigger `
+    -Settings $settings -Description 'Procurement Radar api (swagger, interface)' -Force | Out-Null
+
+Write-Host "Registered '$apiTaskName' to start at logon (http://localhost:5080/swagger)." 
 
 # --- what would still stop it -------------------------------------------------
 Write-Host ''
