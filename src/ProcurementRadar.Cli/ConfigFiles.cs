@@ -13,7 +13,8 @@ internal sealed record ConfigFiles(
     TurkishDatePatterns DatePatterns,
     NormalizationRules Normalization,
     PersonalDataRules PersonalData,
-    KeywordRules Keywords)
+    KeywordRules Keywords,
+    AwardLabels AwardLabels)
 {
     public static ConfigFiles LoadFrom(string? directory)
     {
@@ -27,7 +28,8 @@ internal sealed record ConfigFiles(
             TurkishDatePatterns.Load(Read(directory, "tr-date-patterns.json")),
             NormalizationRules.Load(Read(directory, "tr-normalization.json")),
             PersonalDataRules.Load(Read(directory, "tr-personal-data.json")),
-            KeywordRules.Load(Read(directory, "keywords.json")));
+            KeywordRules.Load(Read(directory, "keywords.json")),
+            AwardLabels.Load(Read(directory, "tr-award-labels.json")));
 
     private static string Read(string directory, string fileName)
         => ConfigDirectory.Read(directory, fileName);

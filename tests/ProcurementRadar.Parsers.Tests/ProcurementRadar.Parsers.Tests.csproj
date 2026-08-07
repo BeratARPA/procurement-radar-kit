@@ -20,6 +20,11 @@
     <None Include="..\..\config\tr-date-patterns.json"
           Link="config\tr-date-patterns.json"
           CopyToOutputDirectory="PreserveNewest" />
+
+    <!-- Same reason: the award labels the worker reads, not a copy of them. -->
+    <None Include="..\..\config\tr-award-labels.json"
+          Link="config\tr-award-labels.json"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

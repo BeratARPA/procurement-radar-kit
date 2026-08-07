@@ -29,6 +29,10 @@ internal static class EkapProbeCommand
         // config/ekap-ui.json beside the selector it goes with.
         var buttonName = ReadOption(args, "--button") ?? EkapUi.AnnouncementButtonName(null);
 
+        // Where to keep the whole response. The log truncates, and the thing you
+        // usually need is the part past the truncation.
+        var dumpPath = ReadOption(args, "--dump");
+
         using var playwright = await Playwright.CreateAsync().ConfigureAwait(false);
 
         await using var browser = await playwright.Chromium
@@ -85,6 +89,12 @@ internal static class EkapProbeCommand
             try
             {
                 var body = await response.TextAsync();
+
+                if (dumpPath is { Length: > 0 })
+                {
+                    await File.WriteAllTextAsync(dumpPath, body, cancellationToken);
+                }
+
                 apiBodies.Add($"{response.Url} -> {body[..Math.Min(body.Length, 1400)]}");
             }
             catch (Exception)

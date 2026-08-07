@@ -48,6 +48,7 @@ try
         "telegram-check" => await TelegramCheckCommand.RunAsync(args[1..], shutdown.Token),
         "ekap-probe" => await EkapProbeCommand.RunAsync(args[1..], shutdown.Token),
         "ekap-ilan" => await EkapAnnouncementCommand.RunAsync(args[1..], shutdown.Token),
+        "award-probe" => await AwardProbeCommand.RunAsync(args[1..], shutdown.Token),
         null => Usage("no command given"),
         var unknown => Usage($"unknown command '{unknown}'")
     };
@@ -74,7 +75,7 @@ static int Usage(string problem)
         + "seed [--file <path>] | reparse [--source-id <id>] [--batch-size <n>] [--config-dir <path>] | "
         + "check-source --html <path> --config <path> [--url <url>] [--charset <name>] | "
         + "telegram-check [--send] | ekap-probe [--url <u>] [--search <s>] [--button <name>] | "
-        + "ekap-ilan [--limit <n>]",
+        + "ekap-ilan [--limit <n>] | award-probe --ikn <ikn>",
         problem);
 
     return 1;

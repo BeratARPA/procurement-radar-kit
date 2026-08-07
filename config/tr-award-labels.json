@@ -1,0 +1,19 @@
+{
+  "_comment": "Labels used by the SONUC ILANI (result announcement) published on EKAP once a tender is concluded. Data, not code (CLAUDE.md rule 5) - the parser is English, the words it looks for are Turkish because the source page is.",
+
+  "result_marker": "SONUÇ İLANI",
+
+  "_contract_section": "The announcement repeats the same label in more than one section: '1- İhalenin a) Tarihi' is the tender date, '4- Sözleşmenin a) Tarihi' is the contract date. Everything below is read from the contract section onwards, so the two never get confused.",
+  "contract_section": "Sözleşmenin",
+
+  "winner_label": "Yüklenici",
+  "amount_label": "Bedeli",
+  "date_label": "Tarihi",
+
+  "_bid_count": "Sits above the contract section, under '3- Teklifler', so it is read from the whole text.",
+  "bid_count_label": "Toplam Teklif Sayısı",
+  "valid_bid_count_label": "Toplam Geçerli Teklif Sayısı",
+
+  "_item_letters": "The announcement is a lettered list flattened into one line: 'a) Tarihi : 16.07.2026 b) Bedeli : ...'. A value ends where the next letter starts. Kept here because a regex character class with ç, ğ, ı, ö, ş, ü in it would be a Turkish string inside a .cs file.",
+  "item_letters": "abcçdefgğhıijklmnoöprsştuüvyz"
+}

@@ -71,7 +71,7 @@
     "today_header": "🆕 Son 24 saatte görülenler",
     "nothing_today": "🆕 Son 24 saatte yeni ilan görülmedi.",
     "status": "📡 {active} aktif kaynak, {failing} tanesi hatalı\n📊 {notices} ilan ({today} son 24 saatte)\n📨 {announced} bildirim gönderildi\n🕘 Son tarama: {lastFetch}",
-    "help": "/liste — açık ilanlar\n/yaklasan — 48 saat içinde kapananlar\n/bugun — son 24 saat\n/ara <kelime> — arşivde ara\n/detay <İKN> — ilanın tam metni\n/durum — sistem durumu\n/kaynaklar — sorunlu kaynaklar\n/rapor — kararlarınız ve puanlar\n/kelimeler — filtre listesi",
+    "help": "/liste — açık ilanlar\n/yaklasan — 48 saat içinde kapananlar\n/bugun — son 24 saat\n/ara <kelime> — arşivde ara\n/detay <İKN> — ilanın tam metni\n/durum — sistem durumu\n/kaynaklar — sorunlu kaynaklar\n/rapor — kararlarınız ve puanlar\n/kelimeler — filtre listesi\n/sonuclar — sonuçlanan ihaleler, kazanan ve bedeli",
     "search_command": "/ara",
     "detail_command": "/detay",
     "sources_command": "/kaynaklar",
@@ -95,6 +95,12 @@
     "closing_header": "⏳ 48 saat içinde kapanacaklar",
     "closing_empty": "⏳ Önümüzdeki 48 saatte kapanacak açık ilan yok.",
     "keywords_header": "🔤 Eşik: {threshold} puan\n\nAranan terimler (ağırlık):",
-    "keywords_excluded": "\nElenen terimler:"
+    "keywords_excluded": "\nElenen terimler:",
+    "awards_command": "/sonuclar",
+    "awards_header": "🏁 Sonuçlanan ihaleler",
+    "awards_line": "• {title}\n  🏢 {winner} — {amount}{estimate} · {bids} teklif · {date}",
+    "awards_empty": "🏁 Henüz sonucu okunmuş ihale yok.\n\nSonuç ilanı, sözleşme imzalandıktan sonra yayımlanıyor: son teklif tarihinin üzerinden en az iki hafta geçmiş ilanlar altı saatte bir sorgulanıyor.",
+    "awards_estimate": " (tahmin {estimate})",
+    "awards_unknown": "?"
   }
 }

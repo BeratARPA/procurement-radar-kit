@@ -22,6 +22,11 @@ kodlama çözümü → ayrıştırma → tekilleştirme → maskeleme → skorla
   korunuyor
 - 342 test
 
+Sonuç takibi de artık çalışıyor (D-15): son teklif tarihinin üzerinden iki hafta
+geçmiş, İKN'si olan ilanlar altı saatte bir EKAP'a soruluyor ve Sonuç İlanı
+yayımlandıysa kazanan, sözleşme bedeli ve teklif sayısı `award` tablosuna yazılıyor.
+Telegram'dan `/sonuclar` ile okunuyor.
+
 **Yapılmayan iki şey var ve ikisi de kod değil:**
 
 1. **Telegram token** — `.env` içindeki `PR_TELEGRAM_BOT_TOKEN` ve

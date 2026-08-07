@@ -14,8 +14,13 @@ internal sealed class MigrationSchema
         @"CREATE\s+TABLE\s+(?<table>[a-z_][a-z0-9_]*)\s*\((?<body>.*?)\r?\n\);",
         RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
+    // IF NOT EXISTS is optional in the pattern because it is optional in the
+    // scripts. Without it here the column reads as "if" and the real one is
+    // never recorded, so a repository naming it is reported as naming a column
+    // that does not exist - a failure that says nothing about the SQL it fails.
     private static readonly Regex AddColumnPattern = new(
-        @"ALTER\s+TABLE\s+(?<table>[a-z_][a-z0-9_]*)\s+ADD\s+COLUMN\s+(?<column>[a-z_][a-z0-9_]*)",
+        @"ALTER\s+TABLE\s+(?<table>[a-z_][a-z0-9_]*)\s+ADD\s+COLUMN\s+"
+        + @"(?:IF\s+NOT\s+EXISTS\s+)?(?<column>[a-z_][a-z0-9_]*)",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private static readonly string[] ConstraintKeywords =

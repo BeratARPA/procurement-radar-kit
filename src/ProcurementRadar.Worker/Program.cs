@@ -56,6 +56,7 @@ var normalization = NormalizationRules.Load(ReadConfig("tr-normalization.json"))
 var personalData = PersonalDataRules.Load(ReadConfig("tr-personal-data.json"));
 var keywords = KeywordRules.Load(ReadConfig("keywords.json"));
 var messages = MessageTemplates.Load(ReadConfig("tr-messages.json"));
+var awardLabels = AwardLabels.Load(ReadConfig("tr-award-labels.json"));
 
 PersistenceSetup.RegisterTypeHandlers();
 
@@ -84,6 +85,7 @@ builder.Services.AddSingleton<INoticeScoreRepository, NoticeScoreRepository>();
 builder.Services.AddSingleton<INoticeDocumentRepository, NoticeDocumentRepository>();
 builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 builder.Services.AddSingleton<IHealthRepository, HealthRepository>();
+builder.Services.AddSingleton<IAwardRepository, AwardRepository>();
 
 builder.Services.AddSingleton(datePatterns);
 builder.Services.AddSingleton<ITurkishDateParser, TurkishDateParser>();
@@ -118,6 +120,13 @@ builder.Services.AddSingleton<DocumentDownloader>();
 builder.Services.AddHostedService<CollectionWorker>();
 builder.Services.AddHostedService<ParseWorker>();
 builder.Services.AddHostedService<DocumentWorker>();
+
+// What the tenders we watched ended up as. Runs on its own slow clock, behind
+// the same browser and the same politeness gate as the EKAP search.
+builder.Services.AddSingleton(awardLabels);
+builder.Services.AddSingleton<AwardParser>();
+builder.Services.AddSingleton<AwardSweeper>();
+builder.Services.AddHostedService<AwardWorker>();
 
 // Telegram is optional at startup. Without a token the rest of the system still
 // collects, archives, parses and scores; it just stays quiet. Refusing to start

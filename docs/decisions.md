@@ -333,3 +333,52 @@ ağırlıklar düşürülürse test düşer.
 **Gürültü ne olacak:** `exclude` listesi 25 terimle donanımı zaten eliyor.
 Fazla gürültü gelirse çare eşiği yükseltmek değil, `exclude`'a terim eklemek —
 `spec.md` Bölüm 9'un dediği gibi filtre kalitesi kapsamdan önemli.
+
+---
+
+## D-15 — Sonuç takibi: aynı tarayıcı, ayrı ve yavaş saat
+
+**Karar:** `award` tablosu, ihale sonuçlandıktan sonra EKAP'ın yayımladığı
+**Sonuç İlanı**'ndan doldurulur. Ayrı bir kaynak, ayrı bir adapter veya ayrı bir
+site yok; T-16'daki tarayıcı istemcisi ve `İlan Gör` düğmesi aynen kullanılır.
+
+**Bulgu.** `POST /b_ihalearama/api/Ilan/GetList` bir İKN için ilanları döndürüyor
+ve `ilanTip` alanı hangisi olduğunu söylüyor: `1` ihale ilanı, `4` sonuç ilanı.
+Sonuçlanmış bir ihalede `sozlesmeId` de doluyor. `veriHtml` içinde ihtiyacımız
+olan her şey var — 2026/1166872 için ölçüldü:
+
+| Alan | Değer |
+|---|---|
+| Yaklaşık maliyet | 3.405.000,00 TRY |
+| Sözleşme bedeli | 3.300.000,00 TRY |
+| Toplam geçerli teklif | 1 |
+| Yüklenici | PROMETUS BİLGİSAYAR ... LİMİTED ŞİRKETİ |
+| Sözleşme tarihi | 16.07.2026 |
+
+**Gerekçe.** Bu tablo altı ay sonra elinizde kalacak olan şey (`spec.md` Bölüm 16).
+İlan "ne isteniyor" der; sonuç "kaça kapandı, kaç kişi girdi" der. Teklif fiyatını
+belirleyen ikincisi. Bir ilan yakalamak bir fırsat, yüz sonuç okumak bir fiyat
+politikası.
+
+**Neden yavaş çalışıyor.** Altı saatte bir, beş İKN. Sonuç ilanının aciliyeti yok
+— bugün yayımlanan sonuç haftaya da aynı bilgi. Buna karşılık her sorgu, EKAP
+aramasının kullandığı nezaket kapısından geçen bir tarayıcı turu; son teklif saati
+bu akşam olan bir ilanın o kapıda önceliği var.
+
+**Neden 14 gün.** Sonuç ilanı son teklif tarihinden değil, **sözleşme
+imzalandıktan** sonra yayımlanıyor. Ertesi gün sorulursa ihale ilanı geliyor ve
+tur boşa gidiyor.
+
+**Neden altı deneme.** Her ihale sonuçlanmıyor; iptal edilen bir süreç hiç sonuç
+ilanı üretmiyor. Deneme sayacı olmasa böyle bir İKN arşiv yaşadığı sürece haftada
+bir sorulurdu. `winner_name` boş bir `award` satırı "baktık, henüz yok" demektir;
+altı denemeden sonra sıradan düşer.
+
+**Yüklenici adı maskelenmiyor.** `CLAUDE.md` iletişim adı ve telefonu yasaklıyor;
+yüklenici ise devletin kendi ilanında yayımladığı sözleşme karşı tarafı. Kim
+olduğu bilinmeyen bir sonuç kaydının hiçbir değeri yok. Bu yoldan yalnızca dört
+alan yazılıyor — ilanın görevli adı ve santral numarası taşıyan gerisi saklanmıyor.
+
+**Uygulama:** `AwardParser` (saf, fixture'ı `ekap_award/2026-1166872-sonuc.json`),
+`AwardSweeper` + `AwardWorker`, `008_award_sweep.sql` (`checked_at`, `attempts`),
+Telegram'da `/sonuclar`.

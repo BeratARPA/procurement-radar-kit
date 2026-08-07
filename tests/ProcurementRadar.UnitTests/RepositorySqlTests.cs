@@ -27,7 +27,10 @@ public sealed class RepositorySqlTests
         (typeof(NotificationSql),
             ["notification", "procurement_notice", "notice_score", "notice_document"]),
         (typeof(HealthSql),
-            ["health_alert", "source", "raw_fetch", "procurement_notice", "notification"])
+            ["health_alert", "source", "raw_fetch", "procurement_notice", "notification"]),
+        // The sweep asks which concluded notices have no result yet, so it reads
+        // the notice it is about as well as the award it is looking for.
+        (typeof(AwardSql), ["award", "procurement_notice"])
     ];
 
     // Words that follow FROM/INTO/UPDATE/JOIN without being a table name.

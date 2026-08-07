@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 using ProcurementRadar.Domain.Notifications;
+using ProcurementRadar.Domain.Repositories;
 
 namespace ProcurementRadar.Notifier;
 
@@ -25,6 +26,7 @@ public sealed class CommandResponder
     private readonly MessageTemplates _messages;
     private readonly NotificationOptions _options;
     private readonly Scoring.KeywordRules _keywords;
+    private readonly IAwardRepository _awards;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<CommandResponder> _logger;
 
@@ -34,11 +36,13 @@ public sealed class CommandResponder
         MessageTemplates messages,
         NotificationOptions options,
         Scoring.KeywordRules keywords,
+        IAwardRepository awards,
         TimeProvider timeProvider,
         ILogger<CommandResponder> logger)
     {
         _telegram = telegram;
         _queries = queries;
+        _awards = awards;
         _messages = messages;
         _options = options;
         _keywords = keywords;
@@ -63,6 +67,7 @@ public sealed class CommandResponder
             _ when Matches(command, templates.SourcesCommand) => await SourcesAsync(cancellationToken).ConfigureAwait(false),
             _ when Matches(command, templates.ReportCommand) => await ReportAsync(cancellationToken).ConfigureAwait(false),
             _ when Matches(command, templates.KeywordsCommand) => Keywords(),
+            _ when Matches(command, templates.AwardsCommand) => await AwardsAsync(cancellationToken).ConfigureAwait(false),
             _ when Matches(command, templates.HelpCommand) => templates.Help,
             _ => null
         };
@@ -255,6 +260,56 @@ public sealed class CommandResponder
             + "\n" + _messages.Commands.KeywordsExcluded + "\n"
             + string.Join(", ", _keywords.Exclude);
     }
+
+    /// <summary>
+    /// What the tenders we watched ended up as.
+    /// </summary>
+    /// <remarks>
+    /// The estimate is printed beside the contract amount on purpose. One line
+    /// saying a 3.405.000 estimate was signed at 3.300.000 against a single bid
+    /// tells you more about how to price the next one than the notification for
+    /// that tender ever did.
+    /// </remarks>
+    private async Task<string> AwardsAsync(CancellationToken cancellationToken)
+    {
+        var awards = await _awards.ListRecentAsync(10, cancellationToken).ConfigureAwait(false);
+
+        if (awards.Count == 0)
+        {
+            return _messages.Commands.AwardsEmpty;
+        }
+
+        var lines = awards.Select(award => _messages.Commands.AwardsLine
+            .Replace("{title}", Shorten(award.Title), StringComparison.Ordinal)
+            .Replace("{winner}", award.WinnerName ?? _messages.Commands.AwardsUnknown, StringComparison.Ordinal)
+            .Replace("{amount}", Money(award.ContractAmount), StringComparison.Ordinal)
+            .Replace(
+                "{estimate}",
+                award.EstimatedCost is { } estimate
+                    ? _messages.Commands.AwardsEstimate.Replace(
+                        "{estimate}",
+                        Money(estimate),
+                        StringComparison.Ordinal)
+                    : string.Empty,
+                StringComparison.Ordinal)
+            .Replace(
+                "{bids}",
+                award.BidCount?.ToString(CultureInfo.InvariantCulture) ?? _messages.Commands.AwardsUnknown,
+                StringComparison.Ordinal)
+            .Replace(
+                "{date}",
+                award.AwardedAt is { } at
+                    ? at.ToOffset(TimeSpan.FromHours(3)).ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)
+                    : _messages.Commands.AwardsUnknown,
+                StringComparison.Ordinal));
+
+        return _messages.Commands.AwardsHeader + "\n\n" + string.Join("\n", lines);
+    }
+
+    private string Money(decimal? amount)
+        => amount is { } value
+            ? value.ToString("N0", CultureInfo.GetCultureInfo("tr-TR")) + " TL"
+            : _messages.Commands.AwardsUnknown;
 
     private static string Moment(DateTimeOffset? at)
         => at is { } value

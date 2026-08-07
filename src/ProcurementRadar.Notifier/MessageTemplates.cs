@@ -141,6 +141,12 @@ public sealed class MessageTemplates
         [JsonPropertyName("closing_empty")] public string ClosingEmpty { get; init; } = string.Empty;
         [JsonPropertyName("keywords_header")] public string KeywordsHeader { get; init; } = string.Empty;
         [JsonPropertyName("keywords_excluded")] public string KeywordsExcluded { get; init; } = string.Empty;
+        [JsonPropertyName("awards_command")] public string AwardsCommand { get; init; } = string.Empty;
+        [JsonPropertyName("awards_header")] public string AwardsHeader { get; init; } = string.Empty;
+        [JsonPropertyName("awards_line")] public string AwardsLine { get; init; } = string.Empty;
+        [JsonPropertyName("awards_empty")] public string AwardsEmpty { get; init; } = string.Empty;
+        [JsonPropertyName("awards_estimate")] public string AwardsEstimate { get; init; } = string.Empty;
+        [JsonPropertyName("awards_unknown")] public string AwardsUnknown { get; init; } = string.Empty;
     }
 
     public sealed record ButtonLabels
