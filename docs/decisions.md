@@ -392,6 +392,27 @@ Android), aynı makinede çalışan bir ASP.NET Core minimal API üzerinden konu
 Ayarlar `config/*.json` dosyalarından `setting` tablosuna taşınır; dosyalar
 ilk değer (seed) olarak kalır.
 
+**Güncelleme — 7 Ağustos 2026:** ~~minimal API~~ Controller tabanlı ASP.NET Core
+Web API. Kararın özü değişmedi (aynı solution, aynı Dapper repository'leri, yeni
+SQL yok); değişen, uçların nasıl yazıldığı.
+
+Sebep minimal API'nin yetersizliği değil — verdiği hiçbir şey kaybolmadı. Sebep
+eksik olanlardı: **OpenAPI dokümanı yoktu**, dolayısıyla uçları görmenin veya
+denemenin bir yolu yoktu; on iki uç tek bir `Program.cs`'te kurulumla iç içeydi;
+repository kayıtları olduğu gibi dışarı veriliyordu, yani iç şema dışarı
+sızıyordu; hata biçimi tutarsızdı.
+
+Şimdi: konu başına bir controller, `Contracts/` altında istek ve yanıt tipleri,
+her uçta `[ProducesResponseType]`, hatalar RFC 7807 `ProblemDetails`, token
+kontrolü middleware yerine bir filtre (böylece dokümanda görünüyor ve Swagger'da
+"Authorize" düğmesi oluyor). Swashbuckle ile `/swagger` arayüzü ve
+`/swagger/v1/swagger.json`.
+
+Somut karşılığı Flutter'da: **Dart istemcisi bu dokümandan üretilecek**, model
+sınıfları elle yazılmayacak, uç değişince istemci de değişecek. Controller'ların
+XML yorumları dokümanın kendisi — ikinci bir kopya yok, dolayısıyla eskiyecek bir
+kopya da yok.
+
 **Neden API var.** Flutter veritabanına doğrudan bağlanamaz: tarayıcıda ham TCP
 soketi yok, mobilde de bağlantı dizesini uygulamanın içine gömmek demek.
 `ProcurementRadar.Api` aynı solution'da, aynı Dapper repository'lerini kullanır,
