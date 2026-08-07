@@ -807,7 +807,7 @@
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "IhaleDuyurulari sayfası JavaScript ile doluyor; statik gövdede satır yok."
+      "notes": "7 Ağustos 2026, araştırıldı ve kapandı — 'bakılmadı' değil. Arama motoru v2.yenimahalle.bel.tr/yb/ihale-duyurulari/ adresini gösteriyor ve içinde gerçek ihale başlıkları var ('Tekstil Atığı İhalesi'), ama o alan adı ÖLÜ: HTTP 000, sıfır bayt, sunucu yanıt vermiyor. İndekste kalmış eski bir kopya. Canlı liste ana sitedeki JavaScript uygulamasında ve render onu açmıyor. Sıradaki adım Bursa'da değil EKAP'ta işe yarayan yol: sayfanın kendi ağ isteklerini izleyip listeyi getiren çağrıyı bulmak."
     },
     {
       "authority_name": "Çankaya Belediyesi",
@@ -1029,11 +1029,11 @@
       "authority_type": "soe_subsidiary",
       "province": "Ankara",
       "district": null,
-      "url": "https://baskentdogalgaz.com.tr/Ihale-Duyurulari/TR/346/346.aspx",
+      "url": "https://www.baskentdogalgaz.com.tr/tr/page/Ihale-Duyurulari/127",
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
       "is_active": false,
-      "notes": "İhale duyuruları sayfası JavaScript ile kuruluyor; statik gövdede satır yok."
+      "notes": "7 Ağustos 2026, araştırıldı ve kapandı. Kayıtlı adres eski bir .aspx'ti; yeni adres bu ve robots.txt her şeye izin veriyor (Disallow: boş). Düz istekte 847 bayt geliyor — bir SPA kabuğu, yani render doğru yol ve önceki 'render de açmıyor' tespitim yanlış adrese yapılmıştı. Ama render edilince de ihale listesi yok: 7 satır, 48 puan, ve bulunanlar yan menü ('Güvenli Gaz Kullanımı', 'Perakende Satış Tarifeleri'). Liste bir tık daha derinde ya da ayrı bir uçtan geliyor; ağ isteklerini izlemek gerekiyor."
     },
     {
       "authority_name": "EKAP - Doğrudan Temin Arama",
