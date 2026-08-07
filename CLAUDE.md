@@ -85,8 +85,35 @@ be gained — a 15-minute interval is already far more than enough.
 - Do not add any paid dependency, cloud SDK, or metered API. If you think one is
   needed, stop and ask.
 
+## The tests do not live where the worker lives
+
+Every production breakage in this project so far has come from one gap: **what a
+test sees is not what the worker gets.** Not one of them was a logic error.
+
+| The test sees | The worker gets | What it cost |
+|---|---|---|
+| a fake repository behind an interface | Npgsql and Dapper | a record materialized fine in tests and threw at runtime, twice |
+| a config file | a row in `setting` | the deadline hour stayed 23:59 for two hours; an alarm shipped with no message text |
+| a hand-written parameter list | a statement PostgreSQL parses | a missing parameter killed every parse run for two hours |
+| the repository working copy | `publish/config` | settings were seeded from a stale copy |
+
+So, before saying a change works:
+
+1. **Anything that touches SQL runs against the real database once.** A green
+   unit test with a fake behind it proves the code, not the driver. `dotnet run
+   --project src/ProcurementRadar.Cli -- preflight` does this in ten seconds.
+2. **Anything that changes `config/*.json` is pushed to the `setting` table.**
+   The file is only the seed (D-16); editing it changes nothing on a machine
+   that has already run. Push it through the api, do not edit the row by hand -
+   the api validates it and keeps the previous value.
+3. **Read the log after deploying, not before.** Every fault above was already
+   in it, saying exactly what was wrong, for hours.
+
+`dotnet test` passing is necessary and has never once been sufficient.
+
 ## Definition of done
 
-A ticket is done when: it builds, `dotnet test` passes, new parsers have
-fixtures, no secret is committed, and the ticket's acceptance criteria in
-`docs/tickets.md` are all checked off.
+A ticket is done when: it builds, `dotnet test` passes, **`preflight` passes
+against the real database**, new parsers have fixtures, changed `config/*.json`
+has been pushed to the `setting` table, no secret is committed, and the ticket's
+acceptance criteria in `docs/tickets.md` are all checked off.

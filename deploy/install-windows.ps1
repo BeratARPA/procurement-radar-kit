@@ -180,6 +180,28 @@ if ($sleep -match 'Current AC Power Setting Index:\s*0x00000000') {
     Write-Host '  Closing the lid also sleeps it unless you change that in Control Panel.'
 }
 
+# --- ucus oncesi kontrol (D-17) ---------------------------------------------
+# Birim testler dort kez yesil kalirken canliyi kirdi: arayuzun arkasina sahte
+# konmus bir test kodu dogrular, surucuyu degil. Bu on saniye gercek
+# veritabanina ve gercek setting tablosuna karsi kosuyor. Gecmezse deploy burada
+# durur, iki saat sonra logda degil.
+Write-Host ''
+Write-Host '--- ucus oncesi kontrol ---'
+Push-Location $repo
+try {
+    & dotnet run --project src/ProcurementRadar.Cli -c Release --no-launch-profile -- preflight 2>&1 |
+        Select-String 'Preflight|differs|Problem' |
+        ForEach-Object { Write-Host ('  ' + $_.Line.Substring(0, [Math]::Min(160, $_.Line.Length))) }
+    $preflight = $LASTEXITCODE
+}
+finally { Pop-Location }
+
+if ($preflight -ne 0) {
+    Write-Host ''
+    Write-Host '  KONTROL BASARISIZ. Worker baslatilmadi. Yukaridaki hatalari duzeltin.' -ForegroundColor Red
+    exit 1
+}
+
 Write-Host ''
 Write-Host '--- gunluk kullanim ---'
 Write-Host "  Baslat  : Start-ScheduledTask -TaskName $TaskName"

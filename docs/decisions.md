@@ -431,3 +431,34 @@ değiştirmesine karşı.
 
 **iOS yok.** Derlemesi Mac istiyor, ekipte Mac yok. Safari'den web sürümü
 açılır ve ana ekrana eklenir; bu bir eksiklik, gizlenmiyor.
+
+---
+
+## D-17 — D-09 gözden geçirildi: gerçek veritabanına karşı bir uçuş öncesi kontrol
+
+**Karar:** D-09'un "entegrasyon testi yok" maddesi duruyor — ama yanına
+`preflight` komutu ekleniyor: her deploy'da, gerçek veritabanına ve gerçek
+`setting` tablosuna karşı çalışan on saniyelik bir kontrol.
+
+**Gerekçe — ölçüldü, tartışılmadı.** D-09 "maliyeti faydasından fazla" derken
+haklıydı; bir yıl sonra veri şu:
+
+| Kırılma | Birim testler | Nerede yakalandı |
+|---|---|---|
+| Pozisyonel record + Dapper (2 kez) | geçti | canlıda |
+| `ExecuteScalarAsync<DateTimeOffset?>` | geçti | 33 hata sonra logda |
+| Eksik `@` parametresi | geçti | 2 saat sonra logda |
+| Ayar tablosu ile dosyanın ayrışması | geçti | kullanıcı sorunca |
+
+Dördü de aynı boşluktan geçti: **arayüzün arkasına sahte konmuş bir test kodu
+doğrular, sürücüyü değil.** Bunların hiçbiri mantık hatası değildi.
+
+**Neden hâlâ entegrasyon testi değil.** xUnit içinde veritabanı isteyen testler
+`dotnet test`'i bir kuruluma bağımlı kılar ve CI'sı olmayan bir projede
+çalıştırılmayan teste dönüşür. `preflight` ayrı bir komut: kurulum betiği
+çağırır, başarısız olursa deploy durur, ve makinesi olmayan biri `dotnet test`
+çalıştırmaya devam eder.
+
+**Kapsam:** her repository'nin okuma yolu, `procurement_notice` upsert'ü
+(transaction içinde, geri alınarak), her ayarın tablodan kendi yükleyicisiyle
+okunması, ve tablo ile `config/*.json` arasındaki ayrışma.
