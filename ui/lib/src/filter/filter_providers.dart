@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../api/export.dart';
 import '../data/providers.dart';
 import 'keyword_draft.dart';
+import 'politeness_draft.dart';
 
 /// The keyword setting as the table holds it right now.
 ///
@@ -150,6 +151,41 @@ class FilterPreviewNotifier
 /// CLAUDE.md is specific about this: push it through the api, do not edit the
 /// row by hand, because the api validates it with the loader that will read it
 /// and keeps the previous value in `setting_history` if it does not load.
+final storedPolitenessProvider = FutureProvider.autoDispose<Setting>(
+  (Ref ref) => ref.watch(radarApiProvider).settings.getSetting(key: 'politeness'),
+  retry: (int count, Object error) => null,
+);
+
+final NotifierProvider<PolitenessDraftNotifier, PolitenessDraft?>
+    politenessDraftProvider =
+    NotifierProvider<PolitenessDraftNotifier, PolitenessDraft?>(
+  PolitenessDraftNotifier.new,
+);
+
+class PolitenessDraftNotifier extends Notifier<PolitenessDraft?> {
+  @override
+  PolitenessDraft? build() => null;
+
+  void load(String json) => state = PolitenessDraft.parse(json);
+
+  void reset() => state = null;
+
+  void set(String key, Object? value) {
+    final PolitenessDraft? draft = state;
+
+    if (draft != null) state = draft.withValue(key, value);
+  }
+}
+
+Future<void> savePoliteness(WidgetRef ref, PolitenessDraft draft) async {
+  await ref.read(radarApiProvider).settings.saveSetting(
+        key: 'politeness',
+        body: SettingChangeRequest(value: draft.toJson(), updatedBy: 'ui'),
+      );
+
+  ref.invalidate(storedPolitenessProvider);
+}
+
 Future<void> saveKeywords(WidgetRef ref, KeywordDraft draft) async {
   await ref.read(radarApiProvider).settings.saveSetting(
         key: 'keywords',

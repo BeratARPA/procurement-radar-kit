@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/providers.dart';
 import '../strings.dart';
 import 'connection_form.dart';
+import 'politeness_section.dart';
 
 /// Connection and appearance.
 ///
@@ -56,6 +57,16 @@ class SettingsScreen extends ConsumerWidget {
                     selected: <ThemeMode>{mode},
                     onSelectionChanged: (Set<ThemeMode> selection) =>
                         ref.read(themeModeProvider.notifier).select(selection.first),
+                  ),
+                  const Divider(height: 40),
+                  const PolitenessSection(),
+                  const Divider(height: 40),
+                  Text(Strings.notOnThisScreen, style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 6),
+                  Text(
+                    Strings.notOnThisScreenHelp,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),

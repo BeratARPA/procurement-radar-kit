@@ -389,9 +389,28 @@ iki ölü eşik olduğu gibi taşınıyor. Bunu doğrulayan test gerçek
 `config/keywords.json` üzerinde çalışıyor — aksi halde biri eşiği kaydırdığında
 okas yapılandırması sessizce silinirdi ve hiçbir şey bozuk görünmezdi.
 
-**Yapılmayan:** aralıklar, Telegram, süpürme ve nezaket ayarları için ekran.
-Nezaket alt sınırları api tarafında zaten zorlanıyor (D-16); eksik olan yalnızca
-onları düzenleyecek yüz.
+**Nezaket ayarları da bitti.** Ayarlar ekranında: host aralığı, jitter, zaman
+aşımı, deneme sayısı, gece penceresi ve `robots.txt`. Alt sınırlar hem görünür
+hem gerekçeli — gerekçeleri uydurulmadı, `config/politeness.json` içindeki
+Türkçe notlardan okunuyor, yani ayarı ayarlayan kişinin kendi cümlesi.
+
+`robots.txt` anahtarı kilitli bir switch olarak duruyor: gizlemek kuralı
+görünmez yapardı, çalışan bir switch ise yalan olurdu.
+
+Sunucunun da tuttuğu doğrulandı — ekran değil, asıl kilit orada:
+
+| Denenen | Sonuç |
+|---|---|
+| `minimum_host_interval_seconds = 4` | 400, *"cannot be below 5 (CLAUDE.md)"* |
+| `respect_robots = false` | 400, *"robots.txt is obeyed"* |
+| `night_interval_multiplier = 0` | 400, *"cannot be below 1"* |
+| meşru bir değişiklik | 204 |
+
+**Yapılmayan ve sebebi:** Telegram anahtarı `.env`'de ve bilerek ekranda değil —
+bir parolayı ekrana koymak onu tarayıcının deposuna koymak demek. Tarama
+aralıkları ve süpürme henüz ayar değil, kodda sabit; T-17 bir `schedule`
+anahtarı planlamıştı ama açılmadı, ve olmayan bir ayarı düzenleyen ekran
+yapılmadı. Ayarlar ekranı bu ikisini de yazıyor.
 
 ---
 

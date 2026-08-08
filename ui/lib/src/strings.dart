@@ -161,6 +161,27 @@ abstract final class Strings {
   static String previewSummary(int considered, int wouldNotify) =>
       '$considered ilandan $wouldNotify tanesi bildirilirdi';
 
+  // --- politeness ---
+  static const String politeness = 'Nezaket';
+  static const String politenessHeader =
+      'Alt sınırlar sunucuda zorlanıyor: bu ekrandan da, elle de aşılamaz. '
+      'Kazanılacak hız yok, kaybedilecek IP var.';
+  static const String hostInterval = 'Aynı host\'a istekler arası (saniye)';
+  static const String jitter = 'Rastgele ek gecikme (saniye)';
+  static const String requestTimeout = 'İstek zaman aşımı (saniye)';
+  static const String maximumAttempts = 'Deneme sayısı';
+  static const String nightWindow = 'Gece penceresi';
+  static const String nightStart = 'Başlangıç';
+  static const String nightEnd = 'Bitiş';
+  static const String nightMultiplier = 'Katsayı';
+  static const String respectRobots = 'robots.txt\'ye uy';
+  static const String notOnThisScreen = 'Bu ekranda olmayanlar';
+  static const String notOnThisScreenHelp =
+      'Telegram anahtarı .env dosyasında ve bilerek burada değil — bir parolayı '
+      'ekrana koymak onu tarayıcının deposuna koymak demek. Tarama aralıkları '
+      've süpürme henüz ayar değil, kodda sabit (T-17 bir schedule anahtarı '
+      'planlamıştı, açılmadı).';
+
   // --- failures ---
   static const String unauthorized =
       'Anahtar kabul edilmedi. Ayarlardan kontrol edin.';
