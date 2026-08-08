@@ -20,13 +20,13 @@ public sealed class SettingsController : ControllerBase
     }
 
     /// <summary>Every setting, with when it last changed and by whom.</summary>
-    [HttpGet]
+    [HttpGet(Name = "listSettings")]
     [ProducesResponseType(typeof(IReadOnlyList<Setting>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<Setting>>> List(CancellationToken cancellationToken)
         => Ok(await _settings.ListAsync(cancellationToken).ConfigureAwait(false));
 
     /// <param name="key">keywords, messages, date_patterns, normalization, personal_data, award_labels, ekap_ui or politeness.</param>
-    [HttpGet("{key}")]
+    [HttpGet("{key}", Name = "getSetting")]
     [ProducesResponseType(typeof(Setting), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Setting>> Get(string key, CancellationToken cancellationToken)
@@ -48,7 +48,7 @@ public sealed class SettingsController : ControllerBase
     /// The worker would survive a bad value - it keeps the previous one and logs
     /// an error - but the person who pressed save would never hear about it.
     /// </remarks>
-    [HttpPut("{key}")]
+    [HttpPut("{key}", Name = "saveSetting")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Save(
@@ -76,7 +76,7 @@ public sealed class SettingsController : ControllerBase
     /// system looks broken while it happens. A settings screen that cannot be
     /// undone is worse than no settings screen.
     /// </remarks>
-    [HttpGet("{key}/history")]
+    [HttpGet("{key}/history", Name = "getSettingHistory")]
     [ProducesResponseType(typeof(IReadOnlyList<Setting>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<Setting>>> History(
         string key,

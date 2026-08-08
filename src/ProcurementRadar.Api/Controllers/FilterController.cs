@@ -34,7 +34,7 @@ public sealed class FilterController : ControllerBase
     /// away, so a preview cannot change what the worker is doing - which would be
     /// the opposite of a preview.
     /// </remarks>
-    [HttpPost("preview")]
+    [HttpPost("preview", Name = "previewFilter")]
     [ProducesResponseType(typeof(FilterPreviewResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<FilterPreviewResponse>> Preview(

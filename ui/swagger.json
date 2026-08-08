@@ -1,0 +1,1112 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Procurement Radar",
+    "description": "The local api behind the interface (D-16). Runs on the machine that collects, reachable on the home network, and every request wants the X-Api-Token header.",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/awards": {
+      "get": {
+        "tags": [
+          "Awards"
+        ],
+        "summary": "Concluded tenders, newest first, with the estimate beside the contract.",
+        "description": "The pair is the point: 3.405.000 estimated, 3.300.000 signed, one bid.\r\nA notice says what is wanted; only this says what it goes for.",
+        "operationId": "listAwards",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AwardSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/filter/preview": {
+      "post": {
+        "tags": [
+          "Filter"
+        ],
+        "summary": "What this keyword list and threshold would have announced.",
+        "description": "D-14 moved the threshold from 60 to 30 by reading a sample by hand. The\r\nsame question is a second's work here and exact: against the archive as it\r\nstands, 60 announces 2 notices, 30 announces 14, 25 announces 19.\r\n            \r\nNothing is written. The scorer is built from the submitted list and thrown\r\naway, so a preview cannot change what the worker is doing - which would be\r\nthe opposite of a preview.",
+        "operationId": "previewFilter",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FilterPreviewRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FilterPreviewRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/FilterPreviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Active sources, failing sources, notice counts and the last fetch.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices": {
+      "get": {
+        "tags": [
+          "Notices"
+        ],
+        "summary": "Open notices, or the whole archive when a term is given.",
+        "operationId": "listNotices",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Searches title and authority. Without it the answer is what is still open.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minScore",
+            "in": "query",
+            "description": "Only used for the open list.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Capped at 200.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommandNotice"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/closing": {
+      "get": {
+        "tags": [
+          "Notices"
+        ],
+        "summary": "Notices closing within the window, soonest first.",
+        "operationId": "listClosingNotices",
+        "parameters": [
+          {
+            "name": "withinHours",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommandNotice"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/by-id/{id}": {
+      "get": {
+        "tags": [
+          "Notices"
+        ],
+        "summary": "One notice by its own id, announcement text included.",
+        "description": "This is the one a list links to. Only EKAP issues an IKN, so most of the\r\narchive has none - 814 of the first 924 notices - and a screen keyed on the\r\nIKN could open about one notice in eight.",
+        "operationId": "getNotice",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id every list row carries.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/{ikn}": {
+      "get": {
+        "tags": [
+          "Notices"
+        ],
+        "summary": "One notice by its tender registration number, announcement text included.",
+        "operationId": "getNoticeByIkn",
+        "parameters": [
+          {
+            "name": "ikn",
+            "in": "path",
+            "description": "For example 2026/1166872.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/{id}/status": {
+      "post": {
+        "tags": [
+          "Notices"
+        ],
+        "summary": "Records the team's verdict on a notice.",
+        "description": "These verdicts are what makes the threshold measurable later (spec section\r\n10): if what was dismissed and what was pursued score the same, the filter\r\nis not discriminating.",
+        "operationId": "changeNoticeStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusChangeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusChangeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusChangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Every setting, with when it last changed and by whom.",
+        "operationId": "listSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Setting"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings/{key}": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "operationId": "getSetting",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "keywords, messages, date_patterns, normalization, personal_data, award_labels, ekap_ui or politeness.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Setting"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Replaces a setting, filing the previous value in the history.",
+        "description": "Validated by the loader that will read it, not by a second description of\r\nwhat valid looks like: two validators drift, one cannot. The politeness\r\nsetting is refused below five seconds between requests to a host, and with\r\nrobots.txt turned off, whoever is asking (D-16).\r\n            \r\nThe worker would survive a bad value - it keeps the previous one and logs\r\nan error - but the person who pressed save would never hear about it.",
+        "operationId": "saveSetting",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingChangeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingChangeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingChangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings/{key}/history": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Previous values, newest first.",
+        "description": "One mistyped keyword silences the notifications and nothing about the\r\nsystem looks broken while it happens. A settings screen that cannot be\r\nundone is worse than no settings screen.",
+        "operationId": "getSettingHistory",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Setting"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sources": {
+      "get": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "Sources currently in the rotation.",
+        "operationId": "listActiveSources",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Source"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sources/all": {
+      "get": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "Every source, switched-off ones included.",
+        "description": "The collector only ever wants the active ones; a person wants all of them.\r\nTwenty-five are registered and off, each with its reason in its notes, and\r\none was switched off automatically after ten consecutive failures with no\r\nway to see it afterwards.",
+        "operationId": "listAllSources",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Source"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sources/troubled": {
+      "get": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "Sources that are failing or have gone quiet.",
+        "operationId": "listTroubledSources",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourceHealth"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sources/{id}": {
+      "get": {
+        "tags": [
+          "Sources"
+        ],
+        "operationId": "getSource",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Source"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sources/{id}/active": {
+      "post": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "Puts a source in or out of the rotation.",
+        "description": "Activating clears the failure count as well. Leaving it at ten would take\r\nthe source straight back out on its next stumble, and the reason it failed\r\nten times is usually the thing that was just fixed.",
+        "operationId": "setSourceActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveChangeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveChangeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveChangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActiveChangeRequest": {
+        "required": [
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean",
+            "description": "True puts the source back in the rotation and clears its failure count."
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuthorityType": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "AwardSummary": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "authorityName": {
+            "type": "string"
+          },
+          "winnerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contractAmount": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "estimatedCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "bidCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "awardedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CommandNotice": {
+        "type": "object",
+        "properties": {
+          "noticeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "authorityName": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bidDeadlineAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FilterPreviewRequest": {
+        "required": [
+          "keywords"
+        ],
+        "type": "object",
+        "properties": {
+          "keywords": {
+            "type": "string",
+            "description": "A keyword list in the shape of config/keywords.json."
+          },
+          "threshold": {
+            "type": "integer",
+            "description": "Overrides the list's own notify_threshold when given.",
+            "format": "int32",
+            "nullable": true
+          },
+          "limit": {
+            "type": "integer",
+            "description": "How much of the archive to score. Everything, by default.",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FilterPreviewResponse": {
+        "required": [
+          "caught",
+          "considered",
+          "missed",
+          "threshold",
+          "wouldNotify"
+        ],
+        "type": "object",
+        "properties": {
+          "considered": {
+            "type": "integer",
+            "description": "How many archived notices were scored.",
+            "format": "int32"
+          },
+          "wouldNotify": {
+            "type": "integer",
+            "description": "How many of them would have produced a notification.",
+            "format": "int32"
+          },
+          "threshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "caught": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoredNotice"
+            },
+            "description": "The highest scoring of those that pass."
+          },
+          "missed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoredNotice"
+            },
+            "description": "Those that scored something and still fell short."
+          }
+        },
+        "additionalProperties": false,
+        "description": "What a keyword list and a threshold would have done to the notices already\r\ncollected."
+      },
+      "NoticeDetail": {
+        "type": "object",
+        "properties": {
+          "noticeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "authorityName": {
+            "type": "string"
+          },
+          "ikn": {
+            "type": "string",
+            "nullable": true
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rationale": {
+            "type": "string",
+            "nullable": true
+          },
+          "bidDeadlineAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "announcementText": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceUrl": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": {}
+      },
+      "ScoredNotice": {
+        "required": [
+          "authorityName",
+          "noticeId",
+          "score",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "noticeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "authorityName": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "One notice as a proposed filter would have scored it."
+      },
+      "Setting": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SettingChangeRequest": {
+        "required": [
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "The setting as json text, validated with the loader that will read it."
+          },
+          "updatedBy": {
+            "type": "string",
+            "description": "Who changed it. Recorded in the history beside the value.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Source": {
+        "required": [
+          "adapterKey",
+          "authorityName",
+          "authorityType",
+          "province",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "authorityName": {
+            "type": "string"
+          },
+          "authorityType": {
+            "$ref": "#/components/schemas/AuthorityType"
+          },
+          "province": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string"
+          },
+          "adapterKey": {
+            "type": "string"
+          },
+          "adapterConfig": {
+            "type": "string",
+            "nullable": true
+          },
+          "pollIntervalMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "robotsCheckedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastFetchAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastSuccessAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastNewNoticeAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "consecutiveFailures": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SourceHealth": {
+        "type": "object",
+        "properties": {
+          "authorityName": {
+            "type": "string"
+          },
+          "consecutiveFailures": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastSuccessAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastNewNoticeAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StatusChangeRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "reviewed, bid_submitted, missed or not_relevant.",
+            "example": "not_relevant"
+          }
+        },
+        "additionalProperties": false,
+        "description": "The bodies the interface sends."
+      },
+      "SystemStatus": {
+        "type": "object",
+        "properties": {
+          "activeSources": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failingSources": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notices": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noticesToday": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "announced": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastFetchAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "X-Api-Token": {
+        "type": "apiKey",
+        "description": "The value of PR_API_TOKEN. One token for one team, not a login.",
+        "name": "X-Api-Token",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "X-Api-Token": []
+    }
+  ]
+}

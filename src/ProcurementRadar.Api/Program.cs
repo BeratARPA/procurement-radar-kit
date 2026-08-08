@@ -41,6 +41,12 @@ builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    // Off by default, and the default is a lie. Without this every string in the
+    // document is nullable - including a title the C# declares non-nullable and
+    // the database stores NOT NULL - and the Dart client generated from that
+    // document (D-16) makes every screen unpack an Optional that cannot be empty.
+    options.SupportNonNullableReferenceTypes();
+
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Procurement Radar",

@@ -27,7 +27,7 @@ public sealed class SourcesController : ControllerBase
     }
 
     /// <summary>Sources currently in the rotation.</summary>
-    [HttpGet]
+    [HttpGet(Name = "listActiveSources")]
     [ProducesResponseType(typeof(IReadOnlyList<Source>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<Source>>> ListActive(CancellationToken cancellationToken)
         => Ok(await _sources.ListActiveAsync(cancellationToken).ConfigureAwait(false));
@@ -41,18 +41,18 @@ public sealed class SourcesController : ControllerBase
     /// one was switched off automatically after ten consecutive failures with no
     /// way to see it afterwards.
     /// </remarks>
-    [HttpGet("all")]
+    [HttpGet("all", Name = "listAllSources")]
     [ProducesResponseType(typeof(IReadOnlyList<Source>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<Source>>> ListAll(CancellationToken cancellationToken)
         => Ok(await _sources.ListAllAsync(cancellationToken).ConfigureAwait(false));
 
     /// <summary>Sources that are failing or have gone quiet.</summary>
-    [HttpGet("troubled")]
+    [HttpGet("troubled", Name = "listTroubledSources")]
     [ProducesResponseType(typeof(IReadOnlyList<SourceHealth>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<SourceHealth>>> Troubled(CancellationToken cancellationToken)
         => Ok(await _queries.ListTroubledSourcesAsync(30, cancellationToken).ConfigureAwait(false));
 
-    [HttpGet("{id:long}")]
+    [HttpGet("{id:long}", Name = "getSource")]
     [ProducesResponseType(typeof(Source), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Source>> Get(long id, CancellationToken cancellationToken)
@@ -70,7 +70,7 @@ public sealed class SourcesController : ControllerBase
     /// the source straight back out on its next stumble, and the reason it failed
     /// ten times is usually the thing that was just fixed.
     /// </remarks>
-    [HttpPost("{id:long}/active")]
+    [HttpPost("{id:long}/active", Name = "setSourceActive")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> SetActive(
         long id,

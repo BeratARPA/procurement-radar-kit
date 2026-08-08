@@ -1,0 +1,44 @@
+# How lib/api/ is produced. Nothing under lib/api/ is written by hand (D-16).
+#
+# Regenerate after any change to the api:
+#   dotnet run --project ../src/ProcurementRadar.Api          # then, in another shell:
+#   curl http://localhost:5080/swagger/v1/swagger.json -o swagger.json
+#   dart run swagger_parser
+#   dart run build_runner build
+#
+# Both steps, in that order. After the first alone the tree does not compile,
+# because the part files the generated classes name do not exist yet.
+# (No --delete-conflicting-outputs: build_runner 2.15 removed the flag and
+# ignores it with a warning that is easy to miss.)
+#
+# swagger.json is committed on purpose. It is the input this directory is built
+# from, so a change to the api shows up in review as a change to the schema and
+# a change to the generated client, side by side.
+swagger_parser:
+  schema_path: swagger.json
+  output_directory: lib/api
+
+  json_serializer: json_serializable
+
+  # One client class per controller: NoticesClient, SourcesClient, and so on.
+  # The tags come from the controller names, so the Dart side is named after the
+  # C# side without anybody maintaining the mapping.
+  client_postfix: Client
+  put_clients_in_folder: true
+
+  root_client: true
+  root_client_name: RadarApi
+
+  # Swashbuckle only emits an operationId when the route is named, and these
+  # routes are named (see the Name = on each attribute). Left at false so the
+  # name in the C# attribute is the name in Dart; if a route ever loses its name
+  # the generator falls back to the path and the method name changes visibly in
+  # the diff rather than silently.
+  path_method_name: false
+
+  # ASP.NET describes what may be null but not what is required, so without this
+  # every field arrives in Dart as an Optional - including a title the database
+  # stores NOT NULL. The api sets SupportNonNullableReferenceTypes, which makes
+  # "not marked nullable" mean exactly "the C# says this is never null", and this
+  # is the half that carries it into the Dart types.
+  infer_required_from_nullable: true

@@ -17,7 +17,7 @@ public sealed class HealthController : ControllerBase
     }
 
     /// <summary>Active sources, failing sources, notice counts and the last fetch.</summary>
-    [HttpGet]
+    [HttpGet(Name = "getHealth")]
     [ProducesResponseType(typeof(SystemStatus), StatusCodes.Status200OK)]
     public async Task<ActionResult<SystemStatus>> Get(CancellationToken cancellationToken)
         => Ok(await _queries.GetStatusAsync(cancellationToken).ConfigureAwait(false));

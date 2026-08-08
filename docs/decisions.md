@@ -483,3 +483,64 @@ doğrular, sürücüyü değil.** Bunların hiçbiri mantık hatası değildi.
 **Kapsam:** her repository'nin okuma yolu, `procurement_notice` upsert'ü
 (transaction içinde, geri alınarak), her ayarın tablodan kendi yükleyicisiyle
 okunması, ve tablo ile `config/*.json` arasındaki ayrışma.
+
+---
+
+## D-18 — Kontrol paneli: aynı uygulama, ayrı yol, işletim sistemine doğrudan
+
+**Karar:** Sistemi yönetme ekranı (Docker, worker, api, CLI, log) ayrı bir
+uygulama değil, `ui/` kod tabanının **Windows masaüstü derlemesinde** görünen
+bir bölüm. Web derlemesinde hiç yok.
+
+**Neden ayrı uygulama değil.** Tema, yönlendirme ve üretilmiş api istemcisi
+zaten burada; ikinci bir kod tabanı bunların ikinci bir kopyasını yaşatmak
+demekti. T-22 zaten Windows derlemesini istiyordu, bu onu öne çekti. Ve tek
+uygulama olması gerçek kullanımla örtüşüyor: sabah açıp hem ne ilan geldiğine
+hem her şeyin ayakta olduğuna aynı yerden bakılıyor.
+
+**Neden web'de yok.** Tarayıcı süreç başlatamaz, Docker'a dokunamaz, zamanlanmış
+görev okuyamaz, dosya sistemine bakamaz. Bu bir eksiklik değil, tarayıcının
+güvenlik sınırı. `dart:io` koşullu import'un (`dart.library.io`) arkasında; web
+derlemesi `system_control_stub.dart`'ı alır ve `isSupported` false döner, ekran
+da hiç görünmez. Aynı sınır token'ın neden elle girildiğini de açıklıyor —
+masaüstü sürümü `.env`'i okuyabildiği için orada bir "`.env`'den al" düğmesi var.
+
+**Panel api'den geçmez.** Kontrol paneline en çok ihtiyaç duyulan an api'nin
+cevap vermediği andır; api'ye soran bir panel tam o anda kararır. Bu yüzden
+doğrudan `docker`, PowerShell ve log dosyaları okunur.
+
+**Yerel dil tuzağı.** `schtasks /query` durumu görüntü dilinde basıyor — bu
+makinede "Çalışıyor", "Running" değil. Görev durumu bu yüzden
+`(Get-ScheduledTask).State` enum'undan okunuyor; enum adı her dilde aynı.
+
+**`Process.run` yerine `Process.start`.** `Process.run(...).timeout(...)` doğru
+okunuyor ve yanlış şeyi yapıyor: zaman aşımı future'ı tamamlar, çocuk süreç
+yaşamaya devam eder. Panel 12 saniyede bir yenilendiği için, Docker Desktop
+açılırken takılan bir `docker` her turda üç öksüz süreç bırakırdı.
+
+**Kabuk komutu çalıştırdığının farkındayız.** Argümanlar liste olarak geçiyor,
+`runInShell` kapalı, ve komutlar sabit listeden geliyor. Yazma yapan CLI
+komutları (`seed`) önce onay soruyor. Tek kullanıcılı kendi makinemizde bu kabul
+edilebilir; bu uygulama ağdan erişilebilir hale gelirse karar yeniden bakılmalı.
+
+---
+
+## D-19 — İki exe bir klasörde: `appsettings.json` tek bir projeye ait olamaz
+
+**Karar:** Worker'ın ayarları `appsettings.worker.json` adında. `Program.cs` onu
+açıkça, en son kaynak olarak ekliyor.
+
+**Bulgu — ölçüldü.** `deploy/install-windows.ps1` worker'ı ve api'yi bilerek aynı
+`publish/` klasörüne yayınlıyor, çünkü `config/` ve `.env` paylaşılıyor. Ama iki
+proje `appsettings.json` adını paylaşamaz: ikinci yayın birincisinin üstüne
+yazıyordu. Worker bu yüzden api'nin ayarlarıyla çalışıyordu — kendi log yolunu,
+`Application` adını ve saklama süresinin üçte ikisini (30 gün → 14) kaybetmiş
+durumdaydı.
+
+Asıl bedeli o değil: **ikisi de aynı dosyaya yazmaya çalışıyordu.** Serilog
+dosyayı kilitli bulunca yanına `_001`, `_002` açıyor. 8 Ağustos'ta bir güne ait
+yedi log dosyası vardı ve hiçbiri bunu söylemiyordu.
+
+**Sonuç:** `publish/` içinde artık `appsettings.json` (api'nin) ve
+`appsettings.worker.json` (worker'ın) yan yana duruyor, iki ayrı log dosyası
+yazılıyor, numaralı kopya yok.

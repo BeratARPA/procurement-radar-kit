@@ -14,6 +14,18 @@ public sealed record CommandNotice
 
     public string Title { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Who is buying.
+    /// </summary>
+    /// <remarks>
+    /// A command reply can leave this out because the reader asked for a short
+    /// list and is about to open one of them. A screen showing fifty rows cannot:
+    /// two authorities buy the same thing under nearly the same title, and
+    /// spec Bolum 10 puts the authority on the second line of every message for
+    /// the same reason.
+    /// </remarks>
+    public string AuthorityName { get; init; } = string.Empty;
+
     public int Score { get; init; }
 
     public DateTimeOffset? BidDeadlineAt { get; init; }
@@ -70,6 +82,19 @@ public interface ICommandQueries
     /// <summary>One notice in full, announcement text included.</summary>
     Task<NoticeDetail?> GetDetailAsync(string ikn, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The same notice, found by its own id.
+    /// </summary>
+    /// <remarks>
+    /// The IKN is what a person types into Telegram, and for that it is the right
+    /// key. It is the wrong key for a list: of the 924 notices collected so far,
+    /// 814 have no IKN at all - only EKAP issues them, and the authorities' own
+    /// pages are most of the archive. A screen that lists a notice and cannot then
+    /// open it is not a screen, so the id every row already carries is the key
+    /// used here.
+    /// </remarks>
+    Task<NoticeDetail?> GetDetailByIdAsync(long noticeId, CancellationToken cancellationToken);
+
     /// <summary>Sources that are failing or have gone quiet.</summary>
     Task<IReadOnlyList<SourceHealth>> ListTroubledSourcesAsync(int silentDays, CancellationToken cancellationToken);
 
@@ -113,6 +138,16 @@ public sealed record NoticeDetail
     public DateTimeOffset? BidDeadlineAt { get; init; }
 
     public string? AnnouncementText { get; init; }
+
+    /// <summary>Where the notice was read from, so a reader can go and see it.</summary>
+    public string SourceUrl { get; init; } = string.Empty;
+
+    /// <summary>new, reviewed, bid_submitted, missed or not_relevant.</summary>
+    /// <remarks>
+    /// Three buttons that do not know which one is already pressed are three ways
+    /// to record the same verdict twice.
+    /// </remarks>
+    public string Status { get; init; } = string.Empty;
 }
 
 public sealed record SourceHealth

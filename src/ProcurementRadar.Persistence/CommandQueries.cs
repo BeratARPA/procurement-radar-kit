@@ -17,8 +17,8 @@ public sealed class CommandQueries : ICommandQueries
     // passed is not open however high it scored, and showing it would waste the
     // one screen somebody is looking at.
     private const string ListOpen = """
-        SELECT n.id AS "NoticeId", n.title AS "Title", s.rule_score AS "Score",
-               n.bid_deadline_at AS "BidDeadlineAt"
+        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
+               s.rule_score AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
         FROM procurement_notice n
         JOIN notice_score s ON s.notice_id = n.id
         WHERE n.status = 'new'
@@ -29,7 +29,7 @@ public sealed class CommandQueries : ICommandQueries
         """;
 
     private const string ListSeenSince = """
-        SELECT n.id AS "NoticeId", n.title AS "Title",
+        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
                coalesce(s.rule_score, 0) AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
         FROM procurement_notice n
         LEFT JOIN notice_score s ON s.notice_id = n.id
@@ -78,7 +78,7 @@ public sealed class CommandQueries : ICommandQueries
     // thousand a year, where a sequential scan costs nothing and an index would
     // want a Turkish configuration PostgreS"""L does not ship.
     private const string Search = """
-        SELECT n.id AS "NoticeId", n.title AS "Title",
+        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
                coalesce(s.rule_score, 0) AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
         FROM procurement_notice n
         LEFT JOIN notice_score s ON s.notice_id = n.id
@@ -87,16 +87,30 @@ public sealed class CommandQueries : ICommandQueries
         LIMIT @Limit
         """;
 
-    private const string Detail = """
+    // One select, two keys. Written apart, the id copy would answer a slightly
+    // different question within a release - the Telegram reply and the screen
+    // would disagree about the same notice and neither would look wrong.
+    private const string DetailSelect = """
         SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
                n.ikn AS "Ikn", coalesce(s.rule_score, 0) AS "Score", s.rationale AS "Rationale",
-               n.bid_deadline_at AS "BidDeadlineAt",
+               n.bid_deadline_at AS "BidDeadlineAt", n.source_url AS "SourceUrl",
+               n.status AS "Status",
                (SELECT d.extracted_text FROM notice_document d
                  WHERE d.notice_id = n.id AND d.extracted_text IS NOT NULL
                  ORDER BY length(d.extracted_text) DESC LIMIT 1) AS "AnnouncementText"
         FROM procurement_notice n
         LEFT JOIN notice_score s ON s.notice_id = n.id
+        """;
+
+    private const string Detail = $"""
+        {DetailSelect}
         WHERE n.ikn = @Ikn
+        LIMIT 1
+        """;
+
+    private const string DetailById = $"""
+        {DetailSelect}
+        WHERE n.id = @NoticeId
         LIMIT 1
         """;
 
@@ -126,8 +140,8 @@ public sealed class CommandQueries : ICommandQueries
         """;
 
     private const string ClosingSoon = """
-        SELECT n.id AS "NoticeId", n.title AS "Title", s.rule_score AS "Score",
-               n.bid_deadline_at AS "BidDeadlineAt"
+        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
+               s.rule_score AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
         FROM procurement_notice n
         JOIN notice_score s ON s.notice_id = n.id
         WHERE n.status = 'new'
@@ -151,6 +165,17 @@ public sealed class CommandQueries : ICommandQueries
 
         return await connection.QuerySingleOrDefaultAsync<NoticeDetail>(
             new CommandDefinition(Detail, new { Ikn = ikn }, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
+    public async Task<NoticeDetail?> GetDetailByIdAsync(long noticeId, CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return await connection.QuerySingleOrDefaultAsync<NoticeDetail>(
+            new CommandDefinition(DetailById, new { NoticeId = noticeId }, cancellationToken: cancellationToken))
             .ConfigureAwait(false);
     }
 

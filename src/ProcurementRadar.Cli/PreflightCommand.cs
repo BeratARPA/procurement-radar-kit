@@ -54,9 +54,23 @@ internal static class PreflightCommand
         {
             var queries = new CommandQueries(connectionFactory);
 
-            await queries.ListOpenAsync(0, 1, cancellationToken).ConfigureAwait(false);
+            var open = await queries.ListOpenAsync(0, 1, cancellationToken).ConfigureAwait(false);
             await queries.GetStatusAsync(cancellationToken).ConfigureAwait(false);
             await queries.ListForPreviewAsync(1, cancellationToken).ConfigureAwait(false);
+
+            // The reads the interface added (T-19). Search and closing were
+            // already written and had never run outside Telegram; the detail by
+            // id is new SQL, and new SQL that only a screen calls is exactly the
+            // kind that is found broken by a person looking at it.
+            await queries.SearchAsync("a", 1, cancellationToken).ConfigureAwait(false);
+            await queries.ListClosingSoonAsync(48, 1, cancellationToken).ConfigureAwait(false);
+
+            // Against a row that exists where there is one. Asking for id 0 would
+            // return nothing and prove only that the statement parses - the
+            // materialisation is the half that has broken here before.
+            await queries
+                .GetDetailByIdAsync(open.Count > 0 ? open[0].NoticeId : 0, cancellationToken)
+                .ConfigureAwait(false);
 
             return true;
         });

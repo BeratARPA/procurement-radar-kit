@@ -334,6 +334,30 @@ ağı üzerinden de açılıyor ve iki yerleşim de kullanılabilir.
 
 **Bağımlılık:** T-18
 
+**Durum:** Bitti. `ui/` altında tek kod tabanı, `lib/api/` tamamen
+`swagger.json`'dan üretiliyor (bkz. `ui/README.md`). Ekranlar: ilan listesi,
+ilan detayı + durum butonları, sistem durumu, ayarlar. Dar ekranda alt gezinme,
+geniş ekranda yan ray. 18 test, sürüm derlemesi gerçek tarayıcıda gerçek api'ye
+karşı doğrulandı.
+
+**Api tarafında üç değişiklik gerekti** — üçü de bu ekranlar olmadan
+görülemezdi:
+
+1. `GET /api/notices/by-id/{id}` eklendi. Detay ucu yalnızca İKN ile
+   çalışıyordu, ama İKN'yi yalnızca EKAP veriyor: 924 ilanın **814'ünde İKN
+   yok**. Liste zaten İKN döndürmüyordu, yani listeden detaya geçmek mümkün
+   değildi. Telegram için doğru olan anahtar bir liste için yanlış anahtardı.
+2. `CommandNotice`'a `authorityName`, `NoticeDetail`'e `sourceUrl` ve `status`
+   eklendi. Elli satırlık bir listede idare adı olmadan iki ilan ayırt
+   edilmiyor; durumu bilmeyen durum butonları hangisinin basılı olduğunu
+   gösteremiyor.
+3. `SupportNonNullableReferenceTypes` açıldı ve rotalara `Name` verildi.
+   İkisi de yalnızca üretilmiş istemcinin kalitesini belirliyor: birincisi
+   olmadan C#'ta null olamayan `title` bile Dart'a `String?` geliyor,
+   ikincisi olmadan metot adı `apiNoticesByIdIdGet` oluyor.
+
+Kelime listesi, eşik ve kaynak ekranları hâlâ yok — T-20 ve T-21.
+
 ---
 
 ## T-20 — Filtre ve ayar ekranları
@@ -369,3 +393,24 @@ Aynı koddan Windows masaüstü ve Android derlemesi, kurulum notları.
 **Kabul:** Üç platformda da aynı ekranlar çalışıyor.
 
 **Bağımlılık:** T-20, T-21
+
+**Durum: Windows kısmı erken indi.** Sıra bozulmadı, sebebi ayrı bir talep:
+sistemi (Docker, worker, api, CLI, otomatik başlatma) yönetecek bir masaüstü
+uygulaması istendi ve bu tarayıcıda mümkün değil — süreç başlatmak, `docker`'a
+dokunmak ve zamanlanmış görev okumak tarayıcı sınırının dışında.
+
+Ayrı bir uygulama yerine aynı kod tabanına Windows hedefi eklendi ve yalnızca
+masaüstünde görünen bir **Sistem** ekranı yazıldı (D-18). Web derlemesi
+etkilenmedi; `dart:io` koşullu import'un arkasında.
+
+Bu ekranın yazılması iki şeyi ortaya çıkardı, ikisi de düzeltildi:
+
+1. **`publish/` kaynaktan eskiydi ve bunu söyleyen hiçbir şey yoktu.** Portta
+   cevap veren api `ProcurementRadarApi` görevinin başlattığı eski kopyaydı,
+   `authorityName` alanı onda yoktu, arayüz "api'ye ulaşılamadı" diyordu — oysa
+   api ayakta ve 200 dönüyordu. Panel artık bunu bir uyarı olarak gösteriyor,
+   arayüz de sürüm uyuşmazlığını ağ hatasından ayırıyor.
+2. **İki exe bir `appsettings.json`'ı paylaşamaz** (D-19). Worker api'nin
+   ayarlarıyla çalışıyor, ikisi aynı log dosyasına yazmaya çalışıyordu.
+
+Geriye kalan: sonuç ekranı ve Android derlemesi.

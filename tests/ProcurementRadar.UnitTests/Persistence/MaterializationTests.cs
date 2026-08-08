@@ -33,16 +33,50 @@ public sealed class MaterializationTests
         var table = Table(
             ("NoticeId", typeof(long)),
             ("Title", typeof(string)),
+            ("AuthorityName", typeof(string)),
             ("Score", typeof(int)),
             ("BidDeadlineAt", typeof(DateTime)));
 
-        table.Rows.Add(1L, "Yazılım Bakım Hizmeti", 70, DateTime.UtcNow);
+        table.Rows.Add(1L, "Yazılım Bakım Hizmeti", "Çankaya Belediyesi", 70, DateTime.UtcNow);
 
         var notice = Assert.Single(await ReadAsync<CommandNotice>(table));
 
         Assert.Equal("Yazılım Bakım Hizmeti", notice.Title);
+        Assert.Equal("Çankaya Belediyesi", notice.AuthorityName);
         Assert.Equal(70, notice.Score);
         Assert.NotNull(notice.BidDeadlineAt);
+    }
+
+    [Fact]
+    public async Task A_notice_detail_materialises()
+    {
+        // What the detail screen and /ilan both read. Two of its columns are
+        // nullable in the schema and null in most rows: no EKAP notice carries a
+        // rationale until it has been scored, and 814 of the first 924 notices
+        // have no IKN at all.
+        var table = Table(
+            ("NoticeId", typeof(long)),
+            ("Title", typeof(string)),
+            ("AuthorityName", typeof(string)),
+            ("Ikn", typeof(string)),
+            ("Score", typeof(int)),
+            ("Rationale", typeof(string)),
+            ("BidDeadlineAt", typeof(DateTime)),
+            ("SourceUrl", typeof(string)),
+            ("Status", typeof(string)),
+            ("AnnouncementText", typeof(string)));
+
+        table.Rows.Add(
+            7L, "Yazılım Bakım Hizmeti", "Çankaya Belediyesi", DBNull.Value, 40,
+            DBNull.Value, DateTime.UtcNow, "https://example.gov.tr/ilan/7", "new", DBNull.Value);
+
+        var detail = Assert.Single(await ReadAsync<NoticeDetail>(table));
+
+        Assert.Null(detail.Ikn);
+        Assert.Null(detail.Rationale);
+        Assert.Equal("new", detail.Status);
+        Assert.Equal("https://example.gov.tr/ilan/7", detail.SourceUrl);
+        Assert.Equal(TimeSpan.Zero, detail.BidDeadlineAt!.Value.Offset);
     }
 
     [Fact]

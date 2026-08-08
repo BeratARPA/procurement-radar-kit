@@ -23,7 +23,7 @@ public sealed class AwardsController : ControllerBase
     /// The pair is the point: 3.405.000 estimated, 3.300.000 signed, one bid.
     /// A notice says what is wanted; only this says what it goes for.
     /// </remarks>
-    [HttpGet]
+    [HttpGet(Name = "listAwards")]
     [ProducesResponseType(typeof(IReadOnlyList<AwardSummary>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AwardSummary>>> List(
         [FromQuery] int? limit,
