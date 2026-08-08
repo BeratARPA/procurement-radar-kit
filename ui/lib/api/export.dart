@@ -12,6 +12,7 @@ export 'clients/sources_client.dart';
 // Data classes
 export 'models/active_change_request.dart';
 export 'models/authority_type.dart';
+export 'models/award_candidate.dart';
 export 'models/award_summary.dart';
 export 'models/checked_notice.dart';
 export 'models/command_notice.dart';

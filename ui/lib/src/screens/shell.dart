@@ -17,11 +17,25 @@ abstract final class Breakpoints {
 }
 
 class _Destination {
-  const _Destination(this.label, this.icon, this.selectedIcon, this.branch);
+  const _Destination(
+    this.label,
+    this.icon,
+    this.selectedIcon,
+    this.branch, {
+    this.wideOnly = false,
+  });
 
   final String label;
   final IconData icon;
   final IconData selectedIcon;
+
+  /// Kept out of the bottom bar.
+  ///
+  /// Material allows at most five destinations there and there are seven. The
+  /// two that go are the two nobody does on a phone: editing a keyword list and
+  /// writing CSS selectors both want a keyboard and a wide screen. The routes
+  /// still exist, so a link to one still opens.
+  final bool wideOnly;
 
   /// Which shell branch this destination drives.
   ///
@@ -34,11 +48,13 @@ class _Destination {
 
 const List<_Destination> _allDestinations = <_Destination>[
   _Destination(Strings.notices, Icons.list_alt_outlined, Icons.list_alt, 0),
-  _Destination(Strings.filter, Icons.tune_outlined, Icons.tune, 1),
-  _Destination(Strings.sources, Icons.travel_explore_outlined, Icons.travel_explore, 2),
-  _Destination(Strings.status, Icons.monitor_heart_outlined, Icons.monitor_heart, 3),
-  _Destination(Strings.system, Icons.terminal_outlined, Icons.terminal, 4),
-  _Destination(Strings.settings, Icons.settings_outlined, Icons.settings, 5),
+  _Destination(Strings.filter, Icons.tune_outlined, Icons.tune, 1, wideOnly: true),
+  _Destination(Strings.sources, Icons.travel_explore_outlined, Icons.travel_explore, 2,
+      wideOnly: true),
+  _Destination(Strings.awards, Icons.gavel_outlined, Icons.gavel, 3),
+  _Destination(Strings.status, Icons.monitor_heart_outlined, Icons.monitor_heart, 4),
+  _Destination(Strings.system, Icons.terminal_outlined, Icons.terminal, 5),
+  _Destination(Strings.settings, Icons.settings_outlined, Icons.settings, 6),
 ];
 
 /// One shell, two arrangements of the same destinations.
@@ -63,24 +79,31 @@ class AppShell extends ConsumerWidget {
     // destination is dropped and its branch simply becomes unreachable by tap.
     final bool showSystem = ref.watch(systemSupportedProvider);
 
-    final List<_Destination> destinations = <_Destination>[
+    final List<_Destination> available = <_Destination>[
       for (final _Destination destination in _allDestinations)
         if (showSystem || destination.label != Strings.system) destination,
     ];
 
-    final int selected = destinations
-        .indexWhere((_Destination d) => d.branch == navigationShell.currentIndex);
-
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
+        final bool narrow = constraints.maxWidth < Breakpoints.medium;
+
+        final List<_Destination> destinations = <_Destination>[
+          for (final _Destination destination in available)
+            if (!narrow || !destination.wideOnly) destination,
+        ];
+
         void onSelected(int index) => _go(destinations[index].branch);
 
-        // -1 when the current branch has no destination, which is what a
-        // bookmarked /system on the web produces. Highlighting nothing would be
-        // truthful but both widgets assert on a negative index.
+        final int selected = destinations.indexWhere(
+            (_Destination d) => d.branch == navigationShell.currentIndex);
+
+        // -1 when the branch on screen has no destination in this layout - a
+        // bookmarked /system on the web, or /filter on a phone. Highlighting
+        // nothing would be truthful and both widgets assert on a negative index.
         final int highlighted = selected < 0 ? 0 : selected;
 
-        if (constraints.maxWidth < Breakpoints.medium) {
+        if (narrow) {
           return Scaffold(
             body: navigationShell,
             bottomNavigationBar: NavigationBar(

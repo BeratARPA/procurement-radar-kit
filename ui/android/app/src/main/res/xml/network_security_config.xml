@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Plain http is allowed, and it has to be.
+
+  Android has blocked cleartext by default since 9, and the api this app talks
+  to is http://<machine-ip>:5080 on a home network with no certificate (D-16).
+  Without this the phone build installs, opens, and fails every request with an
+  error that says nothing about why.
+
+  It is a whole-app allowance rather than a list of hosts because the address is
+  typed in by the reader - it is whichever machine is doing the collecting, and
+  that is a different ip on a different network.
+
+  This stops being the right answer when D-16's Tailscale or Cloudflare Tunnel
+  lands, or when the api gets a certificate. At that point the base config
+  becomes false and the tunnel host gets an exception, not the other way round.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true"/>
+</network-security-config>

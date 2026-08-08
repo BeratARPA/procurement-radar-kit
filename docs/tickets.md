@@ -469,7 +469,38 @@ Aynı koddan Windows masaüstü ve Android derlemesi, kurulum notları.
 
 **Bağımlılık:** T-20, T-21
 
-**Durum: Windows kısmı erken indi.** Sıra bozulmadı, sebebi ayrı bir talep:
+**Durum:** Bitti. Sonuç ekranı ve Android derlemesi eklendi; üç platform da aynı
+koddan derleniyor (web, Windows, Android APK).
+
+**Sonuç ekranı boş ve bunu söylüyor.** `award` tablosunda 1 satır, 0 kazanan var.
+Sebep bozukluk değil, olgunluk: 152 ilanın İKN'si var ama yalnızca 109'u gerçek
+ihale numarası biçiminde (`yyyy/nnnnn`) — geri kalanlar `26DT5002043` gibi
+**doğrudan temin** numaraları ve onların sonuç ilanı olmuyor. O 109'un da
+**hiçbiri** henüz 14 günlük olgunluk penceresini geçmemiş. Ekran bu cümleyi
+yazıyor; boş ve sebepsiz bir ekran bozuk görünürdü. Bunun için
+`GET /api/awards/pending` eklendi.
+
+**Gezinme yeniden bölündü.** Yedi hedef oldu ve Material alt çubuğa en fazla beş
+alıyor. Telefonda düşenler Filtre ve Kaynaklar: kelime listesi düzenlemek ve CSS
+selector yazmak klavye ve geniş ekran isteyen işler. Rotalar duruyor, bağlantı
+hâlâ açılıyor.
+
+**Android'de iki tuzak vardı, ikisi de yalnızca yayın derlemesinde ortaya
+çıkardı:**
+
+1. Flutter şablonu `INTERNET` iznini yalnızca debug ve profile manifest'ine
+   koyuyor. Yayın APK'sı **tek bir istek yapamazdı** — ve debug'da çalıştığı için
+   ancak telefonda görülürdü.
+2. Android 9'dan beri düz http varsayılan olarak engelli, api ise
+   `http://<makine-ip>:5080`. `network_security_config.xml` eklendi; gerekçesi
+   dosyanın içinde ve D-16'nın tüneli gelince nasıl geri alınacağı da yazılı.
+
+Paket adı `com.example.*` gelmişti (Google'ın ayırdığı ad alanı);
+`com.procurementradar.radar` yapıldı. Sonradan değiştirmek uygulamayı silip
+yeniden kurmayı gerektirirdi. APK doğrulandı: `aapt2 dump badging` doğru paketi,
+`INTERNET` iznini ve "Procurement Radar" adını gösteriyor.
+
+**Bir önceki durum: Windows kısmı erken inmişti.** Sıra bozulmadı, sebebi ayrı bir talep:
 sistemi (Docker, worker, api, CLI, otomatik başlatma) yönetecek bir masaüstü
 uygulaması istendi ve bu tarayıcıda mümkün değil — süreç başlatmak, `docker`'a
 dokunmak ve zamanlanmış görev okumak tarayıcı sınırının dışında.

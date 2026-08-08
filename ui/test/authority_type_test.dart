@@ -57,8 +57,10 @@ void main() {
         'pollIntervalMinutes': 15,
       });
 
+      // Not nullable any more, which is the enum change showing through: a
+      // string enum with a required entry is a field the document promises.
       expect(source.authorityType, AuthorityType.municipality);
-      expect(source.authorityType?.json, 'municipality');
+      expect(source.authorityType.json, 'municipality');
     });
   });
 }

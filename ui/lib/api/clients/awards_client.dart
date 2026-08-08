@@ -5,6 +5,7 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../models/award_candidate.dart';
 import '../models/award_summary.dart';
 
 part 'awards_client.g.dart';
@@ -21,4 +22,15 @@ abstract class AwardsClient {
   Future<List<AwardSummary>> listAwards({
     @Query('limit') int? limit,
   });
+
+  /// Tenders that have closed and whose result has not been read yet.
+  ///
+  /// So that an empty results screen can say why it is empty. This table fills.  ///
+  /// slowly on purpose - D-15 asks EKAP about five tenders every six hours,.  ///
+  /// and only for notices with an IKN whose deadline passed a fortnight ago,.  ///
+  /// because the result announcement goes up after the contract is signed.  ///
+  /// Without this number, a screen with nothing on it looks broken rather than.  ///
+  /// early.
+  @GET('/api/awards/pending')
+  Future<List<AwardCandidate>> listPendingAwards();
 }

@@ -66,11 +66,42 @@ bir alan Dart'ta da null olamaz. O satır olmadan `title` bile `String?` gelir.
 | Durum | Kaç kaynak, kaç ilan, son tarama ne zaman |
 | Filtre | Kelime listeleri, eşik, ve yanında canlı önizleme |
 | Kaynaklar | Kaynak ekle/düzenle, selector'ları kayıtlı sayfaya karşı dene, aç/kapa |
+| Sonuçlar | Kim kazandı, kaça, kaç teklifle — ve idare bazlı geçmiş |
 | Sistem | **Yalnızca masaüstü.** Docker/worker/api durumu, başlat-durdur, açılışta başlatma, CLI komutları, log |
 | Ayarlar | Api adresi, anahtar, açık/koyu tema |
 
 Dar ekranda gezinme altta (`NavigationBar`), geniş ekranda yanda
 (`NavigationRail`); sınır Material 3'ün 600 px'i.
+
+Alt çubuk en fazla beş hedef alır ve yedi hedef var. Telefonda **Filtre** ve
+**Kaynaklar** çubukta görünmez — kelime listesi düzenlemek ve CSS selector
+yazmak klavye ve geniş ekran isteyen işler. Rotaları duruyor, bağlantı açılır.
+
+## Android (T-22)
+
+```bash
+flutter build apk --release
+```
+
+Çıktı `build/app/outputs/flutter-apk/app-release.apk`, telefona yan yüklenir.
+Play Store'a çıkmıyor: tek takımın iç aracı.
+
+**İki şey elle düzeltildi ve ikisi de yalnızca yayın derlemesinde patlardı:**
+
+1. Flutter şablonu `INTERNET` iznini **yalnızca debug ve profile** manifest'ine
+   koyuyor. Yayın APK'sı hiçbir istek yapamazdı — ve debug'da çalıştığı için
+   ancak telefonda görülürdü. İzin artık `main` manifest'te.
+2. Android 9'dan beri düz http engelli; api ise `http://<makine-ip>:5080`.
+   `android/app/src/main/res/xml/network_security_config.xml` buna izin veriyor.
+   Gerekçesi dosyanın içinde, ve tünel/TLS gelince nasıl geri alınacağı da.
+
+Bir şey değiştirdikten sonra APK'yı doğrulamak için:
+
+```bash
+aapt2 dump badging build/app/outputs/flutter-apk/app-release.apk
+```
+
+`INTERNET` iznini ve `com.procurementradar.radar` paketini görmelisiniz.
 
 ## Kaynaklar ekranı (T-21)
 

@@ -161,6 +161,35 @@ abstract final class Strings {
   static String previewSummary(int considered, int wouldNotify) =>
       '$considered ilandan $wouldNotify tanesi bildirilirdi';
 
+  // --- awards ---
+  static const String awards = 'Sonuçlar';
+  static const String winner = 'Yüklenici';
+  static const String contractAmount = 'Sözleşme bedeli';
+  static const String estimatedCost = 'Yaklaşık maliyet';
+  static const String bidCount = 'Geçerli teklif';
+  static const String awardedAt = 'Sözleşme tarihi';
+  static const String byAuthority = 'İdare bazlı';
+  static const String concluded = 'sonuçlanan';
+  static const String averageRatio = 'Ortalama sözleşme/tahmin';
+  static const String averageBidCount = 'Ortalama teklif';
+  static const String noAwardsYet = 'Henüz sonuçlanmış ihale yok.';
+
+  /// The empty state carries the reason. spec Bolum 16 says the archive is the
+  /// real value of this system, and it fills slowly on purpose — a screen with
+  /// nothing on it and no explanation reads as broken.
+  static const String noAwardsWhy =
+      'Sonuç ilanı, teklifler açıldıktan sonra değil, sözleşme imzalandıktan '
+      'sonra yayımlanıyor. Bu yüzden yalnızca son teklif tarihinin üzerinden '
+      'iki hafta geçmiş ve gerçek bir İKN taşıyan ihaleler soruluyor (D-15). '
+      'Doğrudan teminlerin sonuç ilanı olmuyor, onlar bu listeye hiç girmiyor.';
+
+  static String awaitingResult(int count) => count == 0
+      ? 'Şu an sonucu beklenen ihale de yok — henüz hiçbiri olgunlaşmadı.'
+      : '$count ihale sonuç bekliyor, altı saatte beşi soruluyor.';
+
+  static String ratioLabel(double ratio) =>
+      '${(ratio * 100).round()}% (tahminin)';
+
   // --- sources ---
   static const String sources = 'Kaynaklar';
   static const String addSource = 'Kaynak ekle';

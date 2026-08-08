@@ -41,6 +41,31 @@
         }
       }
     },
+    "/api/awards/pending": {
+      "get": {
+        "tags": [
+          "Awards"
+        ],
+        "summary": "Tenders that have closed and whose result has not been read yet.",
+        "description": "So that an empty results screen can say why it is empty. This table fills\r\nslowly on purpose - D-15 asks EKAP about five tenders every six hours,\r\nand only for notices with an IKN whose deadline passed a fortnight ago,\r\nbecause the result announcement goes up after the contract is signed.\r\nWithout this number, a screen with nothing on it looks broken rather than\r\nearly.",
+        "operationId": "listPendingAwards",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AwardCandidate"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/filter/preview": {
       "post": {
         "tags": [
@@ -838,6 +863,22 @@
           "ekap"
         ],
         "type": "string"
+      },
+      "AwardCandidate": {
+        "type": "object",
+        "properties": {
+          "noticeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ikn": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "AwardSummary": {
         "type": "object",

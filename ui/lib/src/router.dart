@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'data/providers.dart';
+import 'screens/awards_screen.dart';
 import 'screens/notice_detail_screen.dart';
 import 'screens/filter_screen.dart';
 import 'screens/notices_screen.dart';
@@ -17,6 +18,7 @@ abstract final class Routes {
   static const String notices = '/notices';
   static const String filter = '/filter';
   static const String sources = '/sources';
+  static const String awards = '/awards';
   static const String status = '/status';
   static const String system = '/system';
   static const String settings = '/settings';
@@ -96,6 +98,15 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
                 path: Routes.sources,
                 builder: (BuildContext context, GoRouterState state) =>
                     const SourcesScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: Routes.awards,
+                builder: (BuildContext context, GoRouterState state) =>
+                    const AwardsScreen(),
               ),
             ],
           ),
