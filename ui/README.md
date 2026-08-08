@@ -65,13 +65,31 @@ bir alan Dart'ta da null olamaz. O satır olmadan `title` bile `String?` gelir.
 | İlan detayı | İlan metni, kaynağa bağlantı ve **durum butonları** |
 | Durum | Kaç kaynak, kaç ilan, son tarama ne zaman |
 | Filtre | Kelime listeleri, eşik, ve yanında canlı önizleme |
+| Kaynaklar | Kaynak ekle/düzenle, selector'ları kayıtlı sayfaya karşı dene, aç/kapa |
 | Sistem | **Yalnızca masaüstü.** Docker/worker/api durumu, başlat-durdur, açılışta başlatma, CLI komutları, log |
 | Ayarlar | Api adresi, anahtar, açık/koyu tema |
 
 Dar ekranda gezinme altta (`NavigationBar`), geniş ekranda yanda
 (`NavigationRail`); sınır Material 3'ün 600 px'i.
 
-Kaynak yönetimi ekranı burada **yok** — o T-21.
+## Kaynaklar ekranı (T-21)
+
+Kaynak eklemek, spec Bölüm 5'e göre, başkasının markup'ına karşı CSS selector
+yazmak demek — ve doğru yazıp yazmadığınızı öğrenmenin tek yolu kaynağı açıp
+beklemekti. O da ya ilan üretir ya hiçbir şey, ve "hiçbir şey" tam olarak sessiz
+bir haftası olan sağlıklı bir kaynağa benzer.
+
+Düzenleyicideki **dene** düğmesi bunu bir saniyede cevaplıyor. **Ağa çıkmaz:**
+sayfa arşivden gelir — koleksiyoncunun gerçekten indirdiği sayfa — ya da
+yapıştırılır. Yani bir selector denemek idareye hiçbir şeye mal olmaz.
+
+Yeni kaynak **kapalı** eklenir. spec Bölüm 5 üç gün gözlemden sonra açmayı
+söylüyor; açmak ayrı ve bilerek yapılan bir hareket.
+
+Sonuçta kaç satır bulunduğu, kaçının tarihi okunduğu ve kaçının doküman bağladığı
+yazar. Tarih sayısı sıfırsa kırmızıdır: satırlar doğru gelip tek bir tarih
+okunmaması, genellikle `date_selector`'ın yanlış hücreyi göstermesidir — ve son
+teklif tarihi spec Bölüm 7'nin en önemli alanı.
 
 ## Filtre ekranı (T-20)
 

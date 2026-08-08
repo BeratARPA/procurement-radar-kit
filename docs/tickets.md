@@ -424,6 +424,40 @@ komutunun ekran hali). Sağlık, hata sayacı, pasife alma.
 
 **Bağımlılık:** T-19
 
+**Durum:** Bitti. Kaynaklar ekranı: hepsi listeleniyor (kapalılar dahil, sebebi
+notlarında), aç/kapa anahtarı satırda, ve düzenleyicide selector alanlarının
+yanında **dene** düğmesi.
+
+**Api'de üç yeni uç** — T-18 bunları bilerek buraya bırakmıştı:
+
+- `POST /api/sources` — kaydeder. Yeni kaynak **kapalı** gelir; spec Bölüm 5
+  üç gün gözlemden sonra açmayı söylüyor ve selector'ları denemeden açmak o
+  adımı atlamak olurdu.
+- `PUT /api/sources/{id}` — düzenler, url dahil. Upsert bunu yapamıyor çünkü
+  url'e göre eşleşiyor: değişmiş bir url ikinci bir kaynak yaratırdı. Rotasyona
+  ve sağlık kolonlarına dokunmuyor — bir selector düzenlemek, kaynağı geri
+  açmamalı veya hata sayacını sıfırlamamalı.
+- `POST /api/sources/check` — `check-source` komutunun ekran hali. **Ağa
+  çıkmıyor:** sayfa arşivden gelir (koleksiyoncunun gerçekten indirdiği) ya da
+  yapıştırılır. Baytlar D-11'in yoluyla çözülür, tarihler işleyişin kullandığı
+  aynı desenlerle okunur.
+
+Kabul kriteri canlıda ölçüldü: kaynak api'den eklendi (`is_active=false` geldi),
+yapıştırılan sayfaya karşı denendi, 2 satır ve 2 tarih okundu, göreli bağlantılar
+`base_url`'e göre çözüldü, `14.08.2026 saat 10:00` → `07:00 UTC`. Deneme kaydı
+sonra silindi.
+
+**İlk denemede gerçek bir şey buldu.** Kocaeli Büyükşehir'in selector'ları 30
+satır buluyor ve **tek bir tarih okumuyor**; `date_selector` hiç ayarlanmamış.
+Veritabanına bakıldığında yalnız değil: ilanı olan 40 aktif `generic_table`
+kaynağının **21'i hiç tarih okumuyor, 200 ilan**. Bazı liste sayfalarında
+gerçekten tarih olmayabilir — ama bunu şimdiye kadar hiçbir şey söylemiyordu.
+Son teklif tarihi spec Bölüm 7'nin "en önemlisi" dediği alan.
+
+**Api'ye Türkçe metin girmedi.** Kontrol sonucu kod döndürür (`no_deadline_read`
+gibi), cümle arayüzde durur — CLAUDE.md'nin dil kuralı, ve onu koruyan test bunu
+yazarken yakaladı.
+
 ---
 
 ## T-22 — Sonuçlar ve masaüstü/Android derlemeleri

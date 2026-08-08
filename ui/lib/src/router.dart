@@ -7,6 +7,7 @@ import 'screens/notice_detail_screen.dart';
 import 'screens/filter_screen.dart';
 import 'screens/notices_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/sources_screen.dart';
 import 'screens/shell.dart';
 import 'screens/status_screen.dart';
 import 'screens/system_screen.dart';
@@ -15,6 +16,7 @@ import 'screens/token_screen.dart';
 abstract final class Routes {
   static const String notices = '/notices';
   static const String filter = '/filter';
+  static const String sources = '/sources';
   static const String status = '/status';
   static const String system = '/system';
   static const String settings = '/settings';
@@ -85,6 +87,15 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
                 path: Routes.filter,
                 builder: (BuildContext context, GoRouterState state) =>
                     const FilterScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: Routes.sources,
+                builder: (BuildContext context, GoRouterState state) =>
+                    const SourcesScreen(),
               ),
             ],
           ),

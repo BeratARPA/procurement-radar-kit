@@ -161,6 +161,74 @@ abstract final class Strings {
   static String previewSummary(int considered, int wouldNotify) =>
       '$considered ilandan $wouldNotify tanesi bildirilirdi';
 
+  // --- sources ---
+  static const String sources = 'Kaynaklar';
+  static const String addSource = 'Kaynak ekle';
+  static const String editSource = 'Kaynağı düzenle';
+  static const String sourceActive = 'Taranıyor';
+  static const String sourceInactive = 'Kapalı';
+  static const String noSources = 'Kayıtlı kaynak yok.';
+  static const String authorityName = 'İdare adı';
+  static const String authorityTypeLabel = 'Tür';
+  static const String province = 'İl';
+  static const String district = 'İlçe';
+  static const String sourceUrlLabel = 'Sayfa adresi';
+  static const String adapterKeyLabel = 'Adapter';
+  static const String pollInterval = 'Tarama aralığı (dakika)';
+  static const String notes = 'Notlar';
+  static const String notesHelp =
+      'Bu kaynak neden burada, ya da neden kapalı. Kapalı kaynakların sebebi '
+      'burada duruyor.';
+  static const String selectors = 'Selector\'lar';
+  static const String rowSelector = 'Satır (row_selector)';
+  static const String titleSelector = 'Başlık (title_selector)';
+  static const String linkSelector = 'Bağlantı (link_selector)';
+  static const String dateSelector = 'Tarih (date_selector)';
+  static const String timeSelector = 'Saat (time_selector)';
+  static const String amountSelector = 'Tutar (amount_selector)';
+  static const String documentSelector = 'Doküman (document_selector)';
+  static const String baseUrlLabel = 'Kök adres (base_url)';
+  static const String testAgainstArchive = 'Kayıtlı sayfaya karşı dene';
+  static const String testResult = 'Sonuç';
+  static const String pasteHtml = 'Sayfanın HTML\'ini yapıştırın';
+  static const String pasteHtmlHelp =
+      'Hiç taranmamış bir kaynak için. Tarayıcıda sayfayı açıp kaynağını '
+      'kopyalayın — buradan ağa çıkılmıyor.';
+  static const String newSourceIsOff =
+      'Yeni kaynak kapalı olarak eklenir. spec Bölüm 5 üç gün gözlem sonrası '
+      'açmayı söylüyor; selector\'ları denemeden açmak o adımı atlamak olur.';
+  static const String lastNewNotice = 'Son yeni ilan';
+  static const String failures = 'Üst üste hata';
+  static const String openSourcePage = 'Sayfayı aç';
+  static const String rowsFound = 'satır bulundu';
+  static const String withDeadlineLabel = 'tarihi okundu';
+  static const String withDocumentsLabel = 'doküman bağlantılı';
+  static const String fromArchive = 'Arşivden';
+  static const String fromPasted = 'Yapıştırılan sayfadan';
+
+  /// The api answers with a code, not a sentence — Turkish does not live in a
+  /// .cs file. This is where the sentence is.
+  static String checkProblem(String code) => switch (code) {
+        'config_unusable' => 'Selector ayarları okunamadı.',
+        'no_archived_page' =>
+          'Bu kaynağın arşivinde sayfa yok. Sayfayı yapıştırın ya da kaynağı bir kez taratın.',
+        'nothing_to_check' => 'Denenecek bir sayfa verilmedi.',
+        _ => code,
+      };
+
+  static String checkWarning(String code) => switch (code) {
+        'no_rows' =>
+          'Hiçbir satır okunamadı. Ya selector\'lar bu sayfaya uymuyor, ya da '
+              'sayfada şu an gerçekten ilan yok. Açmadan önce sayfaya bakın.',
+        'no_deadline_read' =>
+          'Tek bir son teklif tarihi okunamadı. Bu, projenin en kritik alanı '
+              '(spec Bölüm 7). date_selector\'ı markup\'a, biçimi de '
+              'tr-date-patterns.json\'a karşı kontrol edin — ya da bu liste '
+              'sayfasında gerçekten tarih yoktur.',
+        'few_deadlines_read' => 'Satırların yarısından azında tarih okundu.',
+        _ => code,
+      };
+
   // --- politeness ---
   static const String politeness = 'Nezaket';
   static const String politenessHeader =

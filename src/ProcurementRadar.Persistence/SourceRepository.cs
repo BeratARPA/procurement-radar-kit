@@ -73,6 +73,63 @@ public sealed class SourceRepository : ISourceRepository
             .ConfigureAwait(false);
     }
 
+    public async Task<SavedSource> SaveDefinitionAsync(Source source, CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return await connection.QuerySingleAsync<SavedSource>(
+            new CommandDefinition(
+                SourceSql.UpsertReturningId,
+                Definition(source),
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
+    public async Task<bool> UpdateDefinitionAsync(
+        long sourceId,
+        Source source,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var updated = await connection.ExecuteScalarAsync<long?>(
+            new CommandDefinition(
+                SourceSql.UpdateDefinition,
+                Definition(source, sourceId),
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return updated is not null;
+    }
+
+    /// <summary>
+    /// The columns a definition owns, written once.
+    /// </summary>
+    /// <remarks>
+    /// The enum goes as text. Dapper resolves an enum to its underlying integer
+    /// before it consults a type handler, so passing AuthorityType.Municipality
+    /// straight through writes "1" into a text column - the handler does the
+    /// reading, and only the writing side needs saying out loud.
+    /// </remarks>
+    private static object Definition(Source source, long? sourceId = null) => new
+    {
+        SourceId = sourceId ?? 0,
+        source.AuthorityName,
+        AuthorityType = EnumText.ToText(source.AuthorityType),
+        source.Province,
+        source.District,
+        source.Url,
+        source.AdapterKey,
+        source.AdapterConfig,
+        source.PollIntervalMinutes,
+        source.IsActive,
+        source.Notes
+    };
+
     public Task RecordFetchSuccessAsync(long sourceId, bool foundNewNotice, CancellationToken cancellationToken)
         => ExecuteAsync(
             SourceSql.RecordFetchSuccess,

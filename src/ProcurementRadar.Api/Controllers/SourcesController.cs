@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using ProcurementRadar.Api.Contracts;
 using ProcurementRadar.Domain.Entities;
+using ProcurementRadar.Domain.Enums;
 using ProcurementRadar.Domain.Notifications;
 using ProcurementRadar.Domain.Repositories;
+using ProcurementRadar.Parsers;
 
 namespace ProcurementRadar.Api.Controllers;
 
@@ -60,6 +62,151 @@ public sealed class SourcesController : ControllerBase
         var source = await _sources.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
         return source is null ? NotFound() : Ok(source);
+    }
+
+    /// <summary>
+    /// Registers a source, or refreshes the definition of the one at that url.
+    /// </summary>
+    /// <remarks>
+    /// A new source is created **switched off**. spec Bolum 5 ends its
+    /// procedure with three days of observation before `is_active = true`, and a
+    /// screen that skipped straight to polling would skip the one step that
+    /// catches a bad selector before it burns politeness budget. Switching it on
+    /// is a separate, deliberate press.
+    /// </remarks>
+    [HttpPost(Name = "saveSource")]
+    [ProducesResponseType(typeof(SourceSavedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<SourceSavedResponse>> Save(
+        [FromBody] SourceDefinitionRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (Describe(request, out var source, out var problem) is false)
+        {
+            return Problem(detail: problem, statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var saved = await _sources
+            .SaveDefinitionAsync(source! with { IsActive = false }, cancellationToken)
+            .ConfigureAwait(false);
+
+        _logger.LogInformation(
+            "Source {SourceId} was {Action} from the interface: {Url}",
+            saved.Id,
+            saved.WasCreated ? "registered" : "redefined",
+            request.Url);
+
+        return Ok(new SourceSavedResponse { Id = saved.Id, WasCreated = saved.WasCreated });
+    }
+
+    /// <summary>
+    /// Edits a source that already exists, url included.
+    /// </summary>
+    /// <remarks>
+    /// Leaves the rotation and the health columns alone: editing a selector must
+    /// not be able to switch a source back on or clear the failure count that
+    /// took it out.
+    /// </remarks>
+    [HttpPut("{id:long}", Name = "updateSource")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Update(
+        long id,
+        [FromBody] SourceDefinitionRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (Describe(request, out var source, out var problem) is false)
+        {
+            return Problem(detail: problem, statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var updated = await _sources
+            .UpdateDefinitionAsync(id, source!, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!updated) return NotFound();
+
+        _logger.LogInformation("Source {SourceId} was edited from the interface", id);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// What a set of selectors would find on a page.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is fetched and nothing is written. The page comes from the
+    /// archive - the one the collector actually got - or from the request, so
+    /// trying a selector costs the authority nothing.
+    /// </remarks>
+    [HttpPost("check", Name = "checkSource")]
+    [ProducesResponseType(typeof(SourceCheckResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<SourceCheckResponse>> Check(
+        [FromBody] SourceCheckRequest request,
+        SourceChecker checker,
+        CancellationToken cancellationToken)
+        => Ok(await checker.CheckAsync(request, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>
+    /// Turns a request into a source, or says why it cannot.
+    /// </summary>
+    /// <remarks>
+    /// The adapter config is checked here rather than left to fail at the next
+    /// poll. A source stored with selectors nothing can read is a source that
+    /// fetches politely, parses to nothing, and looks healthy while doing it.
+    /// </remarks>
+    private static bool Describe(
+        SourceDefinitionRequest request,
+        out Source? source,
+        out string? problem)
+    {
+        source = null;
+        problem = null;
+
+        if (!Enum.TryParse<AuthorityType>(
+                request.AuthorityType.Replace("_", string.Empty, StringComparison.Ordinal),
+                ignoreCase: true,
+                out var authorityType))
+        {
+            problem = $"'{request.AuthorityType}' is not an authority type.";
+            return false;
+        }
+
+        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var url)
+            || (url.Scheme != Uri.UriSchemeHttp && url.Scheme != Uri.UriSchemeHttps))
+        {
+            problem = $"'{request.Url}' is not an http address.";
+            return false;
+        }
+
+        if (request.PollIntervalMinutes < 1)
+        {
+            problem = "poll_interval_minutes must be at least 1.";
+            return false;
+        }
+
+        if (request.AdapterKey == GenericTableAdapter.AdapterKey
+            && !GenericTableAdapterConfig.TryRead(request.AdapterConfig ?? string.Empty, out _, out var configProblem))
+        {
+            problem = configProblem;
+            return false;
+        }
+
+        source = new Source
+        {
+            AuthorityName = request.AuthorityName,
+            AuthorityType = authorityType,
+            Province = request.Province,
+            District = request.District,
+            Url = request.Url,
+            AdapterKey = request.AdapterKey,
+            AdapterConfig = request.AdapterConfig,
+            PollIntervalMinutes = request.PollIntervalMinutes,
+            Notes = request.Notes
+        };
+
+        return true;
     }
 
     /// <summary>

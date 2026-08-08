@@ -522,6 +522,55 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "Registers a source, or refreshes the definition of the one at that url.",
+        "description": "A new source is created **switched off**. spec Bolum 5 ends its\r\nprocedure with three days of observation before `is_active = true`, and a\r\nscreen that skipped straight to polling would skip the one step that\r\ncatches a bad selector before it burns politeness budget. Switching it on\r\nis a separate, deliberate press.",
+        "operationId": "saveSource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceDefinitionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceDefinitionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceDefinitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceSavedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/sources/all": {
@@ -607,6 +656,110 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "Edits a source that already exists, url included.",
+        "description": "Leaves the rotation and the health columns alone: editing a selector must\r\nnot be able to switch a source back on or clear the failure count that\r\ntook it out.",
+        "operationId": "updateSource",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceDefinitionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceDefinitionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceDefinitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sources/check": {
+      "post": {
+        "tags": [
+          "Sources"
+        ],
+        "summary": "What a set of selectors would find on a page.",
+        "description": "Nothing is fetched and nothing is written. The page comes from the\r\narchive - the one the collector actually got - or from the request, so\r\ntrying a selector costs the authority nothing.",
+        "operationId": "checkSource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCheckRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCheckRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceCheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceCheckResponse"
                 }
               }
             }
@@ -722,6 +875,34 @@
           }
         },
         "additionalProperties": false
+      },
+      "CheckedNotice": {
+        "required": [
+          "documentCount",
+          "sourceUrl",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "sourceUrl": {
+            "type": "string"
+          },
+          "bidDeadlineAt": {
+            "type": "string",
+            "description": "Null when the date could not be read from this row.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "documentCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "One row an adapter config found on the page."
       },
       "CommandNotice": {
         "type": "object",
@@ -1025,6 +1206,156 @@
         },
         "additionalProperties": false
       },
+      "SourceCheckRequest": {
+        "required": [
+          "adapterConfig"
+        ],
+        "type": "object",
+        "properties": {
+          "adapterConfig": {
+            "type": "string",
+            "description": "The selectors to try."
+          },
+          "sourceId": {
+            "type": "integer",
+            "description": "Test against this source's most recent archived page.",
+            "format": "int64",
+            "nullable": true
+          },
+          "html": {
+            "type": "string",
+            "description": "A page pasted in, for a source that has never been fetched.",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "description": "The page's own address, so relative links resolve as they would.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Asks what an adapter config would make of a page."
+      },
+      "SourceCheckResponse": {
+        "required": [
+          "byteCount",
+          "noticeCount",
+          "sample",
+          "source",
+          "warnings",
+          "withDeadline",
+          "withDocuments"
+        ],
+        "type": "object",
+        "properties": {
+          "problemCode": {
+            "type": "string",
+            "description": "Why nothing could be checked, as a code. Nothing else is set.",
+            "nullable": true
+          },
+          "problem": {
+            "type": "string",
+            "description": "The parser's own complaint about the config, verbatim.",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "description": "Where the page came from: the archive, or the request."
+          },
+          "fetchedAt": {
+            "type": "string",
+            "description": "When the archived page was fetched. Null for a pasted one.",
+            "format": "date-time",
+            "nullable": true
+          },
+          "charSet": {
+            "type": "string",
+            "description": "How the bytes were decoded (D-11).",
+            "nullable": true
+          },
+          "byteCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noticeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "withDeadline": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "withDocuments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sample": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CheckedNotice"
+            },
+            "description": "The first few, so a person can see whether they are the right rows."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What looks wrong, as codes. Empty when nothing does."
+          }
+        },
+        "additionalProperties": false,
+        "description": "What a set of selectors made of a page."
+      },
+      "SourceDefinitionRequest": {
+        "required": [
+          "adapterKey",
+          "authorityName",
+          "authorityType",
+          "province",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "authorityName": {
+            "type": "string"
+          },
+          "authorityType": {
+            "type": "string",
+            "description": "university, municipality, provincial_directorate, hospital, soe_subsidiary or ekap."
+          },
+          "province": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string"
+          },
+          "adapterKey": {
+            "type": "string",
+            "description": "generic_table, json_list, ekap_tender, ekap_direct_procurement."
+          },
+          "adapterConfig": {
+            "type": "string",
+            "description": "The selectors, as json. Checked before it is stored.",
+            "nullable": true
+          },
+          "pollIntervalMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Why this source is here, or why it is switched off.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A source definition as the interface sends it."
+      },
       "SourceHealth": {
         "type": "object",
         "properties": {
@@ -1047,6 +1378,24 @@
           }
         },
         "additionalProperties": false
+      },
+      "SourceSavedResponse": {
+        "required": [
+          "id",
+          "wasCreated"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "wasCreated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Whether a definition created a source or refreshed one."
       },
       "StatusChangeRequest": {
         "required": [

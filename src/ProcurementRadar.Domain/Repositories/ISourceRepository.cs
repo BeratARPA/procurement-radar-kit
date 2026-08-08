@@ -40,6 +40,29 @@ public interface ISourceRepository
     Task<bool> UpsertAsync(Source source, CancellationToken cancellationToken);
 
     /// <summary>
+    /// The same registration, saying which row it landed in.
+    /// </summary>
+    /// <remarks>
+    /// The seed only needs to know whether it created something. A screen has to
+    /// be able to open what it just saved, and for that it needs the id.
+    /// </remarks>
+    Task<SavedSource> SaveDefinitionAsync(Source source, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Edits the definition of a source that already exists, url included.
+    /// </summary>
+    /// <remarks>
+    /// Separate from the upsert because the upsert matches on the url: changing
+    /// one there would register a second source rather than move this one, which
+    /// is what happens when an authority moves its listing page.
+    ///
+    /// Leaves <c>is_active</c> and every health column untouched. Editing a
+    /// selector must not be able to put a source back in the rotation or reset
+    /// the counter that took it out.
+    /// </remarks>
+    Task<bool> UpdateDefinitionAsync(long sourceId, Source source, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Records a fetch that reached the page. Clears the failure counter and
     /// moves <c>last_new_notice_at</c> only when the fetch actually produced a
     /// notice we had not seen before, because the silent-source alarm in T-15
@@ -60,3 +83,6 @@ public interface ISourceRepository
     /// </summary>
     Task DeactivateAsync(long sourceId, CancellationToken cancellationToken);
 }
+
+/// <summary>Which row a definition landed in, and whether it was new.</summary>
+public readonly record struct SavedSource(long Id, bool WasCreated);

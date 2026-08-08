@@ -83,6 +83,51 @@ internal static class SourceSql
         RETURNING (xmax = 0)
         """;
 
+    // The same insert, saying which row it was. The seed only wants to know
+    // whether it created something; a screen has to be able to open what it just
+    // saved, which needs the id.
+    internal const string UpsertReturningId = """
+        INSERT INTO source (
+            authority_name, authority_type, province, district, url, adapter_key,
+            adapter_config, poll_interval_minutes, is_active, notes)
+        VALUES (
+            @AuthorityName, @AuthorityType, @Province, @District, @Url, @AdapterKey,
+            @AdapterConfig::jsonb, @PollIntervalMinutes, @IsActive, @Notes)
+        ON CONFLICT (url) DO UPDATE
+            SET authority_name        = EXCLUDED.authority_name,
+                authority_type        = EXCLUDED.authority_type,
+                province              = EXCLUDED.province,
+                district              = EXCLUDED.district,
+                adapter_key           = EXCLUDED.adapter_key,
+                adapter_config        = EXCLUDED.adapter_config,
+                poll_interval_minutes = EXCLUDED.poll_interval_minutes,
+                notes                 = EXCLUDED.notes
+        RETURNING id AS "Id", (xmax = 0) AS "WasCreated"
+        """;
+
+    // Edits the definition of a row that already exists, url included - which
+    // the upsert above cannot do, because the url is what it matches on and a
+    // changed one would insert a second source rather than move this one.
+    //
+    // is_active and every health column are left alone on purpose. Editing a
+    // selector must not be able to put a source back in the rotation, clear a
+    // failure counter, or move last_new_notice_at - the column the silent-source
+    // alarm reads.
+    internal const string UpdateDefinition = """
+        UPDATE source
+        SET authority_name        = @AuthorityName,
+            authority_type        = @AuthorityType,
+            province              = @Province,
+            district              = @District,
+            url                   = @Url,
+            adapter_key           = @AdapterKey,
+            adapter_config        = @AdapterConfig::jsonb,
+            poll_interval_minutes = @PollIntervalMinutes,
+            notes                 = @Notes
+        WHERE id = @SourceId
+        RETURNING id
+        """;
+
     // Deliberately not filtered by is_active: reprocessing the archive has to
     // work for a source that has since been switched off.
     internal const string GetById = $"""

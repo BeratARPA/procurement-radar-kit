@@ -98,6 +98,15 @@ builder.Services.AddSingleton<INoticeRepository, NoticeRepository>();
 builder.Services.AddSingleton<IAwardRepository, AwardRepository>();
 builder.Services.AddSingleton<ISettingRepository, SettingRepository>();
 builder.Services.AddSingleton<ICommandQueries, CommandQueries>();
+builder.Services.AddSingleton<IRawFetchRepository, RawFetchRepository>();
+
+// Trying a selector reads the page the collector already got (D-04) rather than
+// fetching it again, so the source screen costs the authority nothing.
+builder.Services.AddSingleton(new StoragePathBuilder(
+    builder.Configuration[StoragePathBuilder.DataDirectoryVariable]
+    ?? StoragePathBuilder.DefaultDataDirectory));
+builder.Services.AddSingleton<IRawArchive, FileSystemRawArchive>();
+builder.Services.AddSingleton<SourceChecker>();
 
 // The filter preview scores notices itself, so it needs the same normalizer the
 // worker scores with. Read from the setting table, because that is where it

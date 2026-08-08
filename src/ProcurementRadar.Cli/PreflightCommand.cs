@@ -75,6 +75,30 @@ internal static class PreflightCommand
             return true;
         });
 
+        // The source screen's two writes (T-21), rolled back. A statement only a
+        // screen calls is exactly the kind that is found broken by a person
+        // looking at it - and these two carry the rule that editing a selector
+        // must not touch the health columns.
+        await CheckAsync(problems, "source.definition", async () =>
+        {
+            var sources = new SourceRepository(connectionFactory, TimeProvider.System);
+            var existing = await sources.ListAllAsync(cancellationToken).ConfigureAwait(false);
+
+            if (existing.Count == 0) return true;
+
+            var sample = existing[0];
+
+            // Written back exactly as it is: the statement runs, nothing moves.
+            var updated = await sources
+                .UpdateDefinitionAsync(sample.Id, sample, cancellationToken)
+                .ConfigureAwait(false);
+
+            return updated
+                ? true
+                : throw new InvalidOperationException(
+                    $"UpdateDefinitionAsync did not find source {sample.Id}.");
+        });
+
         await CheckAsync(problems, "award.list", async () =>
             await new AwardRepository(connectionFactory, TimeProvider.System)
                 .ListRecentAsync(1, cancellationToken).ConfigureAwait(false));

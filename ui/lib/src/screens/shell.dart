@@ -35,9 +35,10 @@ class _Destination {
 const List<_Destination> _allDestinations = <_Destination>[
   _Destination(Strings.notices, Icons.list_alt_outlined, Icons.list_alt, 0),
   _Destination(Strings.filter, Icons.tune_outlined, Icons.tune, 1),
-  _Destination(Strings.status, Icons.monitor_heart_outlined, Icons.monitor_heart, 2),
-  _Destination(Strings.system, Icons.terminal_outlined, Icons.terminal, 3),
-  _Destination(Strings.settings, Icons.settings_outlined, Icons.settings, 4),
+  _Destination(Strings.sources, Icons.travel_explore_outlined, Icons.travel_explore, 2),
+  _Destination(Strings.status, Icons.monitor_heart_outlined, Icons.monitor_heart, 3),
+  _Destination(Strings.system, Icons.terminal_outlined, Icons.terminal, 4),
+  _Destination(Strings.settings, Icons.settings_outlined, Icons.settings, 5),
 ];
 
 /// One shell, two arrangements of the same destinations.

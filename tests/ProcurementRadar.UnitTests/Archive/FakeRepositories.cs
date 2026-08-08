@@ -81,6 +81,35 @@ internal sealed class FakeSourceRepository : ISourceRepository
         return Task.FromResult(true);
     }
 
+    public Task<SavedSource> SaveDefinitionAsync(Source source, CancellationToken cancellationToken)
+    {
+        Sources.Add(source);
+
+        return Task.FromResult(new SavedSource(source.Id, WasCreated: true));
+    }
+
+    public Task<bool> UpdateDefinitionAsync(
+        long sourceId,
+        Source source,
+        CancellationToken cancellationToken)
+    {
+        var index = Sources.FindIndex(stored => stored.Id == sourceId);
+
+        if (index < 0) return Task.FromResult(false);
+
+        // The health columns and the rotation are kept, which is the behaviour
+        // the real statement has and the reason it is a separate one.
+        Sources[index] = source with
+        {
+            Id = sourceId,
+            IsActive = Sources[index].IsActive,
+            ConsecutiveFailures = Sources[index].ConsecutiveFailures,
+            LastNewNoticeAt = Sources[index].LastNewNoticeAt
+        };
+
+        return Task.FromResult(true);
+    }
+
     public Task RecordFetchSuccessAsync(long sourceId, bool foundNewNotice, CancellationToken cancellationToken)
     {
         SuccessCount++;
