@@ -696,8 +696,8 @@
       "url": "https://ihale.ankara.edu.tr/Home/BidActiveList",
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
-      "is_active": true,
-      "notes": "7 Ağustos 2026: kuruma özel, tamamen JavaScript olan bir ihale uygulaması — render:true ile okunuyor. Şu an tek aktif ihalesi var ve o gerçek: '1 ADET UZUN MANUEL TRANSPALET (FORKLİFT)'. Tek satır olduğu için puan 50'de kalıyor, bu sayfanın bozuk olduğunu değil o gün bir ihalesi olduğunu gösteriyor.",
+      "is_active": false,
+      "notes": "8 Ağustos 2026 gecesi kapatıldı. 7 Ağustos akşamı 50 puanlık bir ölçümle açmıştım ve bu kendi koyduğum eşiğin tam sınırıydı — Mamak'ta 49 puanı reddederken burada 50'yi kabul etmek tutarsızdı. Config de tutarsız: satır .card, başlık td:nth-child(3), yani kart yapısında tablo hücresi aranıyor. Tek satır bulmuştu ve o gerçek bir ihaleydi ('1 ADET UZUN MANUEL TRANSPALET'), ama tek örnek üzerine kurulu bir config sayfa değişince sessizce sıfıra düşer — nitekim düştü ve 'parser bozuk' alarmı ateşledi. Doğru yol: watch-requests ile bu uygulamanın veri ucunu bulmak, Yenimahalle'de olduğu gibi.",
       "adapter_config": {
         "base_url": "https://ihale.ankara.edu.tr",
         "row_selector": ".card",
