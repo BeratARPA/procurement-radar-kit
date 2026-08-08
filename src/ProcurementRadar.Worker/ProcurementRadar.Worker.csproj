@@ -12,6 +12,18 @@
     <ProjectReference Include="..\ProcurementRadar.Notifier\ProcurementRadar.Notifier.csproj" />
   </ItemGroup>
 
+  <!-- Not appsettings.json, and the name is the whole point. The installer
+       publishes the worker and the api into one folder so they share config/
+       and .env, and two projects cannot both own a file called
+       appsettings.json: the second publish overwrites the first. The worker
+       lost its log path, its Application name and two thirds of its retention
+       that way, and both processes then tried to write the same file - which is
+       why one day had seven of them, Serilog opening _001, _002 and so on each
+       time it found the last one locked. -->
+  <ItemGroup>
+    <Content Update="appsettings.worker.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />

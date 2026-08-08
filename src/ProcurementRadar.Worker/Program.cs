@@ -33,10 +33,15 @@ var envFile = DotEnv.Load();
 
 var builder = Host.CreateApplicationBuilder(args);
 
+// The worker's own settings, under a name the api's publish cannot take.
+// Added last so it wins over the appsettings.json sitting beside it, which in a
+// deployed folder belongs to the api (see the csproj for what that cost).
+builder.Configuration.AddJsonFile("appsettings.worker.json", optional: false, reloadOnChange: false);
+
 // D-07: compact JSON on the console, daily rolling file on disk. Sinks and
-// levels live in appsettings.json so they can be changed without a rebuild.
-// The default providers are cleared first, otherwise every line is written
-// twice: once by Serilog and once by the built-in console logger.
+// levels live in appsettings.worker.json so they can be changed without a
+// rebuild. The default providers are cleared first, otherwise every line is
+// written twice: once by Serilog and once by the built-in console logger.
 builder.Logging.ClearProviders();
 builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
     .ReadFrom.Configuration(builder.Configuration)
