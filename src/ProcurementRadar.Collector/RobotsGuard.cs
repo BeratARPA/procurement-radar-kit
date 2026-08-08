@@ -103,7 +103,9 @@ public sealed class RobotsGuard
                 (int)response.StatusCode,
                 _options.RobotsRetryDuration);
 
-            return (RobotsRules.DenyAll, _options.RobotsRetryDuration);
+            // A 5xx is the server failing, not the site refusing. Same caution,
+            // different meaning, and the difference is what the log now says.
+            return (RobotsRules.Unreadable, _options.RobotsRetryDuration);
         }
         catch (HttpRequestException exception)
         {
@@ -115,9 +117,21 @@ public sealed class RobotsGuard
                 origin,
                 _options.RobotsRetryDuration);
 
-            return (RobotsRules.DenyAll, _options.RobotsRetryDuration);
+            return (RobotsRules.Unreadable, _options.RobotsRetryDuration);
         }
     }
+
+    /// <summary>
+    /// Whether a refusal for this uri is the site's own rule rather than our
+    /// caution over a robots.txt we could not read.
+    /// </summary>
+    /// <remarks>
+    /// Only ever asked after <see cref="IsAllowedAsync"/> has said no, and only
+    /// so the log can tell the two apart. It reads the cache the previous call
+    /// filled, so it costs no request.
+    /// </remarks>
+    public async Task<bool> IsRefusedByPolicyAsync(Uri uri, CancellationToken cancellationToken)
+        => (await RulesForAsync(uri, cancellationToken).ConfigureAwait(false)).IsRefusalByPolicy;
 
     private bool TryGetFresh(string origin, out RobotsRules rules)
     {

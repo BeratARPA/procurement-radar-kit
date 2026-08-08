@@ -21,7 +21,28 @@ public sealed class RobotsRules
 
     public static RobotsRules AllowAll { get; } = new([]);
 
+    /// <summary>The host said no, in writing.</summary>
     public static RobotsRules DenyAll { get; } = new([new Rule(false, "/", ToRegex("/"))]);
+
+    /// <summary>
+    /// We could not read robots.txt, so nothing is fetched until we can.
+    /// </summary>
+    /// <remarks>
+    /// Behaves exactly like <see cref="DenyAll"/> and is deliberately a separate
+    /// value, because the two mean opposite things about the future. A site that
+    /// forbids crawling forbids it tomorrow as well and the source belongs off
+    /// the list (spec.md Bölüm 12). A site whose server was down for ten minutes
+    /// is a site we poll again in ten minutes.
+    ///
+    /// They were reported with the same sentence until 08.08.2026, and the cost
+    /// was a real one: ODTÜ's page was unreachable for part of a day, the log
+    /// said robots.txt disallowed it, and the conclusion drawn from that was that
+    /// the university had closed its doors to us. It had not.
+    /// </remarks>
+    public static RobotsRules Unreadable { get; } = new([new Rule(false, "/", ToRegex("/"))]);
+
+    /// <summary>Whether this refusal is the host's decision or our own caution.</summary>
+    public bool IsRefusalByPolicy => !ReferenceEquals(this, Unreadable);
 
     public static RobotsRules Parse(string content, string userAgentToken)
     {

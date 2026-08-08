@@ -52,7 +52,19 @@ public sealed class HttpFetcher : IHttpFetcher, IDisposable
 
         if (!await _robots.IsAllowedAsync(uri, cancellationToken).ConfigureAwait(false))
         {
-            _logger.LogWarning("robots.txt disallows {Url}; skipping this source", uri);
+            // Which of the two refusals this is decides what a person should do
+            // about it: retire the source, or wait for a server to come back.
+            if (await _robots.IsRefusedByPolicyAsync(uri, cancellationToken).ConfigureAwait(false))
+            {
+                _logger.LogWarning("robots.txt disallows {Url}; skipping this source", uri);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Could not read robots.txt for {Url}, so it is not being fetched; this is our caution, not their rule",
+                    uri);
+            }
+
             return FetchResult.SkippedByRobots();
         }
 

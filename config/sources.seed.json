@@ -452,7 +452,7 @@
       "url": "https://anfa.com.tr/tum-ihaleler/",
       "adapter_key": "generic_table",
       "poll_interval_minutes": 15,
-      "is_active": true,
+      "is_active": false,
       "adapter_config": {
         "row_selector": ".uc_ac_box",
         "title_selector": ".ue_post_title",
@@ -462,7 +462,7 @@
         "document_selector": null,
         "base_url": "https://anfa.com.tr"
       },
-      "notes": "Tablo değil, Elementor akordeon listesi; 50 kayıt tek sayfada, sayfalama linki yok. Akordeon gövdeleri kapalı öğelerde de HTML içinde geliyor, JS gerekmiyor — 50/50 satırda başlık ve link dolu. date_selector DOĞRULAMA SONUCU null'a ÇEKİLDİ: .uc_date değeri 50 kaydın 50'sinde kaydın kendi WordPress kalıcı bağlantısındaki tarihe birebir eşit, yani bu alan yayın tarihidir, ihale veya son teklif tarihi ile ilgisi yoktur; ayrıca ay adları İNGİLİZCE basılıyor (July, June, May, April, March, February, January) ve TurkishDateParser hepsinde null döner. Yanlış alanı bid_deadline_at'e yazmaktansa boş bırakmak doğrudur — spec Bölüm 7 gereği kayıt yine yazılır ve bildirimde 'son teklif tarihi okunamadı' uyarısı basılır. Gerçek tarih yalnızca detay sayfasından çıkarılabilir; ileride bir ANFA özel adapteri yazılırsa oradan alınmalı. Aynı başlık hem <em class=\"ue_heading_title\"> hem <div class=\"ue_post_title\"> içinde tekrarlanıyor, yalnızca birini seçin (ue_heading_title sonunda fazladan boşluk var, bu yüzden ue_post_title tercih edildi). .ue_post_text alanı ilanın kırpılmış özetidir, description için kullanılabilir. Detay linkleri mutlak adres olarak geliyor, birleştirme gerekmiyor. Fixture: anfa.html."
+      "notes": "Tablo değil, Elementor akordeon listesi; 50 kayıt tek sayfada, sayfalama linki yok. Akordeon gövdeleri kapalı öğelerde de HTML içinde geliyor, JS gerekmiyor — 50/50 satırda başlık ve link dolu. date_selector DOĞRULAMA SONUCU null'a ÇEKİLDİ: .uc_date değeri 50 kaydın 50'sinde kaydın kendi WordPress kalıcı bağlantısındaki tarihe birebir eşit, yani bu alan yayın tarihidir, ihale veya son teklif tarihi ile ilgisi yoktur; ayrıca ay adları İNGİLİZCE basılıyor (July, June, May, April, March, February, January) ve TurkishDateParser hepsinde null döner. Yanlış alanı bid_deadline_at'e yazmaktansa boş bırakmak doğrudur — spec Bölüm 7 gereği kayıt yine yazılır ve bildirimde 'son teklif tarihi okunamadı' uyarısı basılır. Gerçek tarih yalnızca detay sayfasından çıkarılabilir; ileride bir ANFA özel adapteri yazılırsa oradan alınmalı. Aynı başlık hem <em class=\"ue_heading_title\"> hem <div class=\"ue_post_title\"> içinde tekrarlanıyor, yalnızca birini seçin (ue_heading_title sonunda fazladan boşluk var, bu yüzden ue_post_title tercih edildi). .ue_post_text alanı ilanın kırpılmış özetidir, description için kullanılabilir. Detay linkleri mutlak adres olarak geliyor, birleştirme gerekmiyor. Fixture: anfa.html. 08.08.2026 KAPATILDI: site askıya alınmış. https://anfa.com.tr/tum-ihaleler/ artık 302 ile https://anfa.com.tr/cgi-sys/suspendedpage.cgi adresine gidiyor ve dönen 7,6 KB o sayfadır; ihale listesi ortada yok. Telegram 08.08 09:59'da 'parser bozuk' dedi ve haklıydı — selector'lar değil, barındırma hesabı kapanmış. Ölçüldü: --render ile de aynı 7,6 KB, yani JS ile gelen bir liste de yok. Site geri açıldığında yapılacak iş yalnızca is_active = true; kaydedilmiş fixture (anfa.html) ve selector'lar duruyor."
     },
     {
       "authority_name": "ASKİ Genel Müdürlüğü",
