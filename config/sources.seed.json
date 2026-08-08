@@ -554,7 +554,9 @@
         "search_text": "yazılım",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1091,7 +1093,9 @@
         "search_text": "bilgi sistemi",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1124,7 +1128,9 @@
         "search_text": "yazılım bakım",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1157,7 +1163,9 @@
         "search_text": "web sitesi",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1190,7 +1198,9 @@
         "search_text": "mobil uygulama",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1223,7 +1233,9 @@
         "search_text": "yazılım destek",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1256,7 +1268,9 @@
         "search_text": "yazılım geliştirme",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1289,7 +1303,9 @@
         "search_text": "web tasarım",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1322,7 +1338,9 @@
         "search_text": "internet sitesi",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1355,7 +1373,9 @@
         "search_text": "bilgi yönetim sistemi",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1388,7 +1408,9 @@
         "search_text": "e-imza entegrasyonu",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1421,7 +1443,9 @@
         "search_text": "randevu sistemi",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1454,7 +1478,9 @@
         "search_text": "otomasyon",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1487,7 +1513,9 @@
         "search_text": "entegrasyon",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1520,7 +1548,9 @@
         "search_text": "takip sistemi",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1553,7 +1583,9 @@
         "search_text": "kbs entegrasyon",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1586,7 +1618,9 @@
         "search_text": "portal",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1619,7 +1653,9 @@
         "search_text": "veri tabanı",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1652,7 +1688,9 @@
         "search_text": "veritabanı",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1685,7 +1723,9 @@
         "search_text": "lisans yenileme",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {
@@ -1718,7 +1758,9 @@
         "search_text": "dijital dönüşüm",
         "statuses": [
           "İhale İlanı Yayımlanmış"
-        ]
+        ],
+        "filter_label": "Bugünden İtibaren",
+        "page_size": 50
       }
     },
     {

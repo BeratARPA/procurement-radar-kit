@@ -65,7 +65,13 @@ public sealed class EkapDirectProcurementAdapter : ISourceAdapter
         }
 
         return _search.SearchAsync(
-            new EkapSearchRequest(source.Url, config.SearchText, ApiUrlFragment, config.PrepareClickSelector),
+            new EkapSearchRequest(
+                source.Url,
+                config.SearchText,
+                ApiUrlFragment,
+                config.PrepareClickSelector,
+                config.FilterLabel,
+                config.PageSize),
             cancellationToken);
     }
 

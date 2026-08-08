@@ -18,6 +18,9 @@ public sealed record EkapAdapterConfig
 {
     private const string Placeholder = "TODO";
 
+    /// <summary>What EKAP's page-size box actually contains. Measured, not assumed.</summary>
+    private static readonly int[] OfferedPageSizes = [10, 20, 50];
+
     /// <summary>What to type into EKAP's search box.</summary>
     public required string SearchText { get; init; }
 
@@ -57,6 +60,39 @@ public sealed record EkapAdapterConfig
     /// same reason the CSS selectors of every other source are in this column.
     /// </remarks>
     public string? PrepareClickSelector { get; init; }
+
+    /// <summary>
+    /// A filter on EKAP's own panel to switch on before searching, by its visible
+    /// label. Null searches everything, as before.
+    /// </summary>
+    /// <remarks>
+    /// This is the difference between a radar and a museum. Measured on
+    /// 08.08.2026: "otomasyon" matches 9425 tenders, EKAP returns ten of them,
+    /// and it returns them sorted by tender date with the furthest future first -
+    /// so the ten we saw were all dated 02.09 to 07.09, a month out. A tender
+    /// closing next Tuesday was not missing from the page; it was on page four
+    /// hundred of nine hundred and forty-three.
+    ///
+    /// Switching on the tender-date filter takes the same search from 9425 to 29
+    /// and from 943 pages to 3, because everything already closed drops out. That
+    /// is the set this project was built to watch.
+    ///
+    /// The label is Turkish because it is the site's own text, which makes it
+    /// data (CLAUDE.md rule 5). It will change when they redesign the panel, and
+    /// changing it must not mean a release.
+    /// </remarks>
+    public string? FilterLabel { get; init; }
+
+    /// <summary>
+    /// How many results per page to ask EKAP for. Null leaves their default of
+    /// ten.
+    /// </summary>
+    /// <remarks>
+    /// Their paginator offers 10, 20 and 50. Fifty costs one extra interaction
+    /// and saves four round trips against a host we have promised to visit no
+    /// more than once every five seconds - the arithmetic is not close.
+    /// </remarks>
+    public int? PageSize { get; init; }
 
     public static bool TryRead(string? json, out EkapAdapterConfig config, out string problem)
     {
@@ -108,7 +144,11 @@ public sealed record EkapAdapterConfig
                 .ToArray() ?? [],
             PrepareClickSelector = string.IsNullOrWhiteSpace(shape.PrepareClickSelector)
                 ? null
-                : shape.PrepareClickSelector.Trim()
+                : shape.PrepareClickSelector.Trim(),
+            FilterLabel = string.IsNullOrWhiteSpace(shape.FilterLabel) ? null : shape.FilterLabel.Trim(),
+            // A page size EKAP does not offer would be typed into their box and
+            // silently ignored, leaving us to believe we asked for fifty.
+            PageSize = shape.PageSize is { } size && OfferedPageSizes.Contains(size) ? size : null
         };
 
         problem = string.Empty;
@@ -128,5 +168,11 @@ public sealed record EkapAdapterConfig
 
         [JsonPropertyName("prepare_click_selector")]
         public string? PrepareClickSelector { get; init; }
+
+        [JsonPropertyName("filter_label")]
+        public string? FilterLabel { get; init; }
+
+        [JsonPropertyName("page_size")]
+        public int? PageSize { get; init; }
     }
 }

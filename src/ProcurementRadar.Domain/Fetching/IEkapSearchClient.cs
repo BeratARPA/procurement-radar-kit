@@ -9,7 +9,11 @@ public sealed record EkapSearchRequest(
     string SearchText,
     string ApiUrlFragment,
     /// <summary>Clicked first where the page hides its search box behind something.</summary>
-    string? PrepareClickSelector = null);
+    string? PrepareClickSelector = null,
+    /// <summary>A filter on EKAP's panel to switch on, by its visible label.</summary>
+    string? FilterLabel = null,
+    /// <summary>Results per page to ask for; null accepts EKAP's ten.</summary>
+    int? PageSize = null);
 
 /// <summary>
 /// Runs one search on EKAP and hands back the json its own api returned.

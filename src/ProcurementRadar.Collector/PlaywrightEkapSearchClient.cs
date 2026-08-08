@@ -27,6 +27,23 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
     /// <summary>The single visible search box. Verified to be unambiguous.</summary>
     private const string SearchInputSelector = "input[placeholder='Ara']:visible";
 
+    /// <summary>EKAP's rows-per-page box, inside the paginator under the results.</summary>
+    private const string PageSizeSelector = ".paginator-container .page-box";
+
+    /// <summary>
+    /// An option inside that box once it is open.
+    /// </summary>
+    /// <remarks>
+    /// The content div rather than the list item around it, and the difference is
+    /// not cosmetic. Playwright's :text-is() looks at an element's own text node;
+    /// the number lives one level in, so ".dx-list-item:text-is('50')" matches
+    /// nothing at all - measured, after it silently kept giving us ten.
+    /// </remarks>
+    private const string PageSizeOptionSelector = ".dx-list-item-content";
+
+    /// <summary>What EKAP gives when nobody asks for more.</summary>
+    private const int DefaultPageSize = 10;
+
     private const string SearchUrl = "https://ekapv2.kik.gov.tr/ekap/search";
 
     private const string EkapHost = "ekapv2.kik.gov.tr";
@@ -100,6 +117,118 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
         return await RunSearchAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>The search response for this request, whenever it arrives.</summary>
+    private Task<IResponse> WaitForSearchAsync(IPage page, EkapSearchRequest request)
+        => page.WaitForResponseAsync(
+            response => response.Url.Contains(request.ApiUrlFragment, StringComparison.Ordinal)
+                && response.Status == 200
+                && Asks(response.Request.PostData, request.SearchText),
+            new PageWaitForResponseOptions { Timeout = (float)_browserOptions.ResultTimeout.TotalMilliseconds });
+
+    /// <summary>
+    /// Switches on one of EKAP's own filters by its visible label.
+    /// </summary>
+    /// <remarks>
+    /// A filter that cannot be found is a warning and not a failure: a search of
+    /// everything is worse than a search of what is open, but it is far better
+    /// than no search at all, and the day EKAP renames this label is not the day
+    /// this project should go quiet.
+    /// </remarks>
+    private async Task ApplyFilterAsync(IPage page, string? label)
+    {
+        if (label is not { Length: > 0 })
+        {
+            return;
+        }
+
+        try
+        {
+            await page.GetByText(label, new PageGetByTextOptions { Exact = true }).First
+                .ClickAsync(new LocatorClickOptions { Timeout = (float)_browserOptions.ControlTimeout.TotalMilliseconds })
+                .ConfigureAwait(false);
+
+            _logger.LogInformation("Switched on the EKAP filter '{Filter}'", label);
+        }
+        catch (Exception exception) when (exception is TimeoutException or PlaywrightException)
+        {
+            _logger.LogWarning(
+                "No EKAP filter labelled '{Filter}'; searching without it. Their panel may have been renamed.",
+                label);
+        }
+    }
+
+    /// <summary>
+    /// Asks the same search again for more rows per page, and returns that answer
+    /// instead when it arrives.
+    /// </summary>
+    /// <remarks>
+    /// Ten rows is EKAP's default and it is not a window this project can work
+    /// with: the rows come back sorted by tender date with the furthest future
+    /// first, so ten rows means everything closing inside the next few weeks is
+    /// out of sight. Their box offers fifty.
+    ///
+    /// If anything about this goes wrong the first answer still stands. A smaller
+    /// window is a worse day; an exception here would be a lost one.
+    /// </remarks>
+    private async Task<IResponse> AtLargerPageSizeAsync(
+        IPage page,
+        EkapSearchRequest request,
+        IResponse first)
+    {
+        if (request.PageSize is not { } size)
+        {
+            return first;
+        }
+
+        try
+        {
+            var box = page.Locator(PageSizeSelector).First;
+
+            // One page of results has no rows-per-page box, because there is
+            // nothing underneath to reach. Asking anyway spends twelve seconds
+            // and files a warning about a failure that is really an answer.
+            if (!await box.IsVisibleAsync().ConfigureAwait(false))
+            {
+                _logger.LogInformation("EKAP returned a single page; not asking for {PageSize}", size);
+
+                return first;
+            }
+
+            await box.ClickAsync(new LocatorClickOptions
+            {
+                Timeout = (float)_browserOptions.ControlTimeout.TotalMilliseconds
+            }).ConfigureAwait(false);
+
+            var waitingForMore = WaitForSearchAsync(page, request);
+
+            // The dropdown is a DevExtreme list rather than a <select>, so the
+            // option is a list item carrying the number as its text.
+            await page
+                .Locator($"{PageSizeOptionSelector}:text-is('{size}')")
+                .First
+                .ClickAsync(new LocatorClickOptions
+                {
+                    Timeout = (float)_browserOptions.ControlTimeout.TotalMilliseconds
+                })
+                .ConfigureAwait(false);
+
+            var larger = await waitingForMore.ConfigureAwait(false);
+
+            _logger.LogInformation("Asked EKAP for {PageSize} rows a page", size);
+
+            return larger;
+        }
+        catch (Exception exception) when (exception is TimeoutException or PlaywrightException)
+        {
+            _logger.LogWarning(
+                "Could not ask EKAP for {PageSize} rows a page; keeping the first {Default} it gave",
+                size,
+                DefaultPageSize);
+
+            return first;
+        }
+    }
+
     private async Task<FetchResult> RunSearchAsync(
         EkapSearchRequest request,
         CancellationToken cancellationToken)
@@ -130,36 +259,64 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
 
             var input = page.Locator(SearchInputSelector).First;
 
-            if (request.PrepareClickSelector is { Length: > 0 } prepare
-                && !await input.IsVisibleAsync().ConfigureAwait(false))
-            {
-                // The doğrudan temin page opens on a notice about the pilot and
-                // keeps its search box behind a button. Only clicked when the box
-                // is not already there, so the day EKAP drops the notice this
-                // costs nothing and nothing breaks.
-                _logger.LogInformation("No search box yet; clicking {Selector} first", prepare);
+            // Which of its two shapes did the page boot into? The doğrudan temin
+            // page keeps its search box behind a notice about the pilot; the
+            // tender page shows the box straight away.
+            //
+            // This used to ask "is the box visible?" the instant DOMContentLoaded
+            // fired, which asks an Angular application a question it cannot yet
+            // answer: the answer was always no, so the button was always clicked -
+            // and on the page that has no such button, that was a sixty-second
+            // wait for an element that was never coming. Sixty-four of those in
+            // one day, each holding the browser gate for its whole minute while
+            // every other EKAP search queued behind it.
+            //
+            // So both are waited for at once and whichever arrives first decides.
+            // There is a third outcome and it is real: EKAP answers with an error
+            // page carrying neither, and that now costs BootTimeout instead of
+            // PageTimeout.
+            var prepare = request.PrepareClickSelector is { Length: > 0 } selector
+                ? page.Locator(selector).First
+                : null;
 
-                await page.Locator(prepare).First
+            await (prepare is null ? input : input.Or(prepare))
+                .First
+                .WaitForAsync(new LocatorWaitForOptions
+                {
+                    State = WaitForSelectorState.Visible,
+                    Timeout = (float)_browserOptions.BootTimeout.TotalMilliseconds
+                })
+                .ConfigureAwait(false);
+
+            if (prepare is not null && !await input.IsVisibleAsync().ConfigureAwait(false))
+            {
+                _logger.LogInformation(
+                    "No search box yet; clicking {Selector} first",
+                    request.PrepareClickSelector);
+
+                await prepare
                     .ClickAsync(new LocatorClickOptions
                     {
-                        Timeout = (float)_browserOptions.PageTimeout.TotalMilliseconds
+                        Timeout = (float)_browserOptions.BootTimeout.TotalMilliseconds
                     })
                     .ConfigureAwait(false);
+
+                await input.WaitForAsync(new LocatorWaitForOptions
+                {
+                    State = WaitForSelectorState.Visible,
+                    Timeout = (float)_browserOptions.BootTimeout.TotalMilliseconds
+                }).ConfigureAwait(false);
             }
 
-            await input.WaitForAsync(new LocatorWaitForOptions
-            {
-                State = WaitForSelectorState.Visible,
-                Timeout = (float)_browserOptions.PageTimeout.TotalMilliseconds
-            }).ConfigureAwait(false);
+            // Switched on before searching, so it reaches the api rather than
+            // only the screen. Measured on 08.08.2026: with EKAP's tender-date
+            // filter on, "otomasyon" goes from 9425 matches over 943 pages to 29
+            // over 3 - the same search, minus everything that already closed.
+            await ApplyFilterAsync(page, request.FilterLabel).ConfigureAwait(false);
 
             // Armed before the search is triggered, or the response can arrive
             // while we are still setting up the wait.
-            var waitingForResults = page.WaitForResponseAsync(
-                response => response.Url.Contains(request.ApiUrlFragment, StringComparison.Ordinal)
-                    && response.Status == 200
-                    && Asks(response.Request.PostData, request.SearchText),
-                new PageWaitForResponseOptions { Timeout = (float)_browserOptions.ResultTimeout.TotalMilliseconds });
+            var waitingForResults = WaitForSearchAsync(page, request);
 
             await input.FillAsync(request.SearchText).ConfigureAwait(false);
 
@@ -169,6 +326,12 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
             await input.PressAsync("Enter").ConfigureAwait(false);
 
             var result = await waitingForResults.ConfigureAwait(false);
+
+            // The paginator only exists once there are results to page, so the
+            // page size cannot be set before the first search - it is asked for
+            // again, larger.
+            result = await AtLargerPageSizeAsync(page, request, result).ConfigureAwait(false);
+
             var body = await result.BodyAsync().ConfigureAwait(false);
 
             _logger.LogInformation(
@@ -446,6 +609,29 @@ public sealed record EkapBrowserOptions
 
     /// <summary>How long the application may take to boot before giving up.</summary>
     public TimeSpan PageTimeout { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// How long to wait for the page to show either its search box or the button
+    /// that reveals it.
+    /// </summary>
+    /// <remarks>
+    /// Shorter than <see cref="PageTimeout"/> on purpose. A page that has neither
+    /// after this long is not slow, it is EKAP's error page, and waiting a full
+    /// minute for it only means the searches behind it wait too. Measured: when
+    /// the site is well, the search box is there in under ten seconds.
+    /// </remarks>
+    public TimeSpan BootTimeout { get; init; } = TimeSpan.FromSeconds(25);
+
+    /// <summary>
+    /// How long a single control on an already-loaded page may take to answer.
+    /// </summary>
+    /// <remarks>
+    /// A filter switch and a dropdown are local work on a page that has already
+    /// proved it is alive. When one of them does not respond, the answer is that
+    /// EKAP has changed its panel, and finding that out should not cost a minute
+    /// of a gate that every other source is queueing behind.
+    /// </remarks>
+    public TimeSpan ControlTimeout { get; init; } = TimeSpan.FromSeconds(12);
 
     /// <summary>How long the search itself may take to answer.</summary>
     public TimeSpan ResultTimeout { get; init; } = TimeSpan.FromSeconds(45);
