@@ -64,13 +64,32 @@ bir alan Dart'ta da null olamaz. O satır olmadan `title` bile `String?` gelir.
 | İlanlar | Açık ilanlar, son teklif tarihine göre. Arama tüm arşivi tarar. |
 | İlan detayı | İlan metni, kaynağa bağlantı ve **durum butonları** |
 | Durum | Kaç kaynak, kaç ilan, son tarama ne zaman |
+| Filtre | Kelime listeleri, eşik, ve yanında canlı önizleme |
 | Sistem | **Yalnızca masaüstü.** Docker/worker/api durumu, başlat-durdur, açılışta başlatma, CLI komutları, log |
 | Ayarlar | Api adresi, anahtar, açık/koyu tema |
 
 Dar ekranda gezinme altta (`NavigationBar`), geniş ekranda yanda
 (`NavigationRail`); sınır Material 3'ün 600 px'i.
 
-Filtre ve kaynak yönetimi ekranları burada **yok** — onlar T-20 ve T-21.
+Kaynak yönetimi ekranı burada **yok** — o T-21.
+
+## Filtre ekranı (T-20)
+
+Kelime listesini ve eşiği düzenler, her değişiklikten yarım saniye sonra
+arşivin tamamına sorar: *bu ayarla 966 ilanın kaçı bildirilirdi, hangileri.*
+Yakalananların yanında **kıl payı kaçanlar** da listelenir — eşiğin doğru yeri
+oraya bakılarak bulunur, api'nin kendi yorumunun dediği gibi.
+
+Yazma `PUT /api/settings/keywords` üzerinden. Satırı elle düzenlemeyin: api onu
+okuyacak yükleyiciyle doğrular ve önceki değeri `setting_history`'de tutar.
+Kaydettikten sonra worker en geç 30 saniyede yeni ayarla çalışır, yeniden
+başlatmak gerekmez (T-17).
+
+**Ekran `keywords` belgesinin üç anahtarını düzenler** — `include`, `exclude`,
+`notify_threshold`. Geri kalanı (`okas` listeleri, notlar, T-13'ten kalan iki
+ölü eşik) olduğu gibi taşınır. Bu bir incelik değil: yalnızca bilinen alanları
+yazan bir ekran, biri eşiği ilk kaydırdığında okas yapılandırmasını silerdi ve
+dosya hâlâ geçerli json olurdu.
 
 ## Masaüstü sürümü (D-18)
 

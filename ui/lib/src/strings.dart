@@ -15,6 +15,7 @@ abstract final class Strings {
 
   // --- navigation ---
   static const String notices = 'İlanlar';
+  static const String filter = 'Filtre';
   static const String status = 'Durum';
   static const String system = 'Sistem';
   static const String settings = 'Ayarlar';
@@ -127,6 +128,38 @@ abstract final class Strings {
   static const String addressEmpty = 'Adres boş olamaz.';
   static const String addressNotAbsolute =
       'Adres http:// veya https:// ile başlamalı.';
+
+  // --- filter ---
+  static const String threshold = 'Bildirim eşiği';
+  static const String thresholdHelp =
+      'Bu puanın altındakiler veritabanına yazılır ama bildirim üretmez. '
+      'En ağır tek terim 40, çoğu 30 — eşik 60 olsaydı bir ilanın duyurulması '
+      'için iki ayrı terim tutması gerekirdi (D-14).';
+  static const String includeTerms = 'Aranan terimler';
+  static const String excludeTerms = 'Elenen terimler';
+  static const String excludeHelp =
+      'Eşleşen ilan, kaç tane aranan terim tutarsa tutsun elenir. Bu liste '
+      'olmadan bildirimlerin çoğu donanım alımı olur.';
+  static const String addTerm = 'Terim ekle';
+  static const String weight = 'Ağırlık';
+  static const String preview = 'Önizleme';
+  static const String previewCaught = 'Bildirilecekler';
+  static const String previewMissed = 'Kıl payı kaçanlar';
+  static const String previewMissedHelp =
+      'Puan almış ama eşiği geçememiş ilanlar. Eşiğin doğru yeri buraya '
+      'bakılarak bulunur.';
+  static const String previewNothing = 'Bu ayarla hiçbir ilan bildirilmezdi.';
+  static const String previewIdle = 'Önizleme için bir şey değiştirin.';
+  static const String unsavedChanges = 'Kaydedilmemiş değişiklik var';
+  static const String revert = 'Geri al';
+  static const String savedAndLive =
+      'Kaydedildi. Worker en geç 30 saniye içinde yeni ayarla çalışır.';
+  static const String untouchedKeysNote =
+      'Bu ekranın göstermediği ayarlar (okas listeleri, notlar) olduğu gibi '
+      'korunur.';
+
+  static String previewSummary(int considered, int wouldNotify) =>
+      '$considered ilandan $wouldNotify tanesi bildirilirdi';
 
   // --- failures ---
   static const String unauthorized =

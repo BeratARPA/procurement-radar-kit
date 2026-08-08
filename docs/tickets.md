@@ -371,6 +371,28 @@ etkili oluyor. Önizleme gerçek arşiv üzerinden sayı veriyor.
 
 **Bağımlılık:** T-19
 
+**Durum:** Filtre ekranı bitti. Kelime ekle/sil/ağırlıkla, eşiği kaydır, ve
+yanında canlı önizleme: geniş ekranda sebep solda, sonuç sağda.
+
+İki kabul kriteri de canlı sistemde ölçüldü:
+
+- **Önizleme gerçek arşivden sayı veriyor.** 966 ilan üzerinde aynı kelime
+  listesiyle: eşik 25 → 55 bildirim, eşik 30 → 39, eşik 60 → **3**. D-14'ün
+  "eşik 60 iken bir tesadüf bekleniyordu" gerekçesi burada rakamla görünüyor.
+- **Worker yeniden başlatılmadan etkileniyor.** Eşik api üzerinden 31 yapıldı,
+  worker'ın PID'i değişmeden logda `Settings refreshed: 6 of 6 reloaded` çıktı,
+  sonra 30'a geri alındı. `setting_history` her iki adımı da tuttu.
+
+**Ekranın göstermediği ayarlar korunuyor.** `keywords` tek bir json belgesi ve
+bu ekran onun üç anahtarını biliyor; `okas` listeleri, notlar ve T-13'ten kalan
+iki ölü eşik olduğu gibi taşınıyor. Bunu doğrulayan test gerçek
+`config/keywords.json` üzerinde çalışıyor — aksi halde biri eşiği kaydırdığında
+okas yapılandırması sessizce silinirdi ve hiçbir şey bozuk görünmezdi.
+
+**Yapılmayan:** aralıklar, Telegram, süpürme ve nezaket ayarları için ekran.
+Nezaket alt sınırları api tarafında zaten zorlanıyor (D-16); eksik olan yalnızca
+onları düzenleyecek yüz.
+
 ---
 
 ## T-21 — Kaynak yönetimi ekranı

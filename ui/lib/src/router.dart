@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'data/providers.dart';
 import 'screens/notice_detail_screen.dart';
+import 'screens/filter_screen.dart';
 import 'screens/notices_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/shell.dart';
@@ -13,6 +14,7 @@ import 'screens/token_screen.dart';
 
 abstract final class Routes {
   static const String notices = '/notices';
+  static const String filter = '/filter';
   static const String status = '/status';
   static const String system = '/system';
   static const String settings = '/settings';
@@ -74,6 +76,15 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
                     },
                   ),
                 ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: Routes.filter,
+                builder: (BuildContext context, GoRouterState state) =>
+                    const FilterScreen(),
               ),
             ],
           ),
