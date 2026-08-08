@@ -18,13 +18,23 @@ Future<void> openSourceEditor(
 
   await showDialog<void>(
     context: context,
-    builder: (BuildContext context) => Dialog(
-      insetPadding: const EdgeInsets.all(24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 980, maxHeight: 760),
-        child: SourceEditor(source: source),
-      ),
-    ),
+    builder: (BuildContext context) {
+      final Size screen = MediaQuery.sizeOf(context);
+
+      return Dialog(
+        insetPadding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          // Sized to the window rather than to a guess. A fixed 760 is taller
+          // than a laptop window once the title bar and the taskbar are gone,
+          // and the form ends up cut off at the bottom edge.
+          constraints: BoxConstraints(
+            maxWidth: screen.width - 48,
+            maxHeight: screen.height - 48,
+          ),
+          child: SourceEditor(source: source),
+        ),
+      );
+    },
   );
 }
 
@@ -51,7 +61,13 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
   late final Map<String, TextEditingController> _selectors;
   final TextEditingController _html = TextEditingController();
 
-  late String _authorityType;
+  /// The enum, not a string.
+  ///
+  /// It used to be a string matched against a hand-written list, and it showed
+  /// an empty box on every source: the api described this field as an integer
+  /// 0-5, so the generated enum was value0..value5 and nothing matched. The api
+  /// now sends the name and this is the generated type.
+  late AuthorityType _authorityType;
   late String _adapterKey;
   bool _saving = false;
   String? _error;
@@ -89,7 +105,11 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
         key: TextEditingController(text: '${config[key] ?? ''}'),
     };
 
-    _authorityType = _toSnake(source?.authorityType.name ?? 'municipality');
+    final AuthorityType? stored = source?.authorityType;
+
+    _authorityType = stored == null || stored == AuthorityType.$unknown
+        ? AuthorityType.municipality
+        : stored;
     _adapterKey = source?.adapterKey ?? 'generic_table';
   }
 
@@ -117,12 +137,6 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
     }
   }
 
-  /// The api spells authority types the way the schema stores them.
-  static String _toSnake(String pascalOrCamel) => pascalOrCamel
-      .replaceAllMapped(RegExp('([a-z0-9])([A-Z])'),
-          (Match m) => '${m[1]}_${m[2]}')
-      .toLowerCase();
-
   String _configJson() {
     final Map<String, Object?> config = <String, Object?>{};
 
@@ -139,7 +153,7 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
 
   SourceDefinitionRequest _definition() => SourceDefinitionRequest(
         authorityName: _fields['authorityName']!.text.trim(),
-        authorityType: _authorityType,
+        authorityType: _authorityType.json ?? 'municipality',
         province: _fields['province']!.text.trim(),
         district: _fields['district']!.text.trim().isEmpty
             ? null
@@ -212,16 +226,18 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
         ),
         const Divider(height: 1),
         Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                flex: 3,
-                child: Form(
-                  key: _form,
-                  child: ListView(
-                    padding: const EdgeInsets.all(20),
-                    children: <Widget>[
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              // Side by side only where both halves fit. Below that the form is
+              // squeezed into a column too narrow for a label and the check
+              // panel sits mostly empty beside it.
+              final bool sideBySide = constraints.maxWidth >= 820;
+
+              final Widget form = Form(
+                key: _form,
+                child: ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: <Widget>[
                       if (_isNew)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -233,26 +249,30 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
                         ),
                       _text('authorityName', Strings.authorityName, required: true),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Expanded(child: _text('province', Strings.province, required: true)),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                           Expanded(child: _text('district', Strings.district)),
                         ],
                       ),
                       _text('url', Strings.sourceUrlLabel,
                           required: true, validator: _url),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Expanded(child: _authorityTypeField()),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                           Expanded(child: _adapterField()),
                         ],
                       ),
+                      const SizedBox(height: 18),
                       _text('pollIntervalMinutes', Strings.pollInterval),
-                      _text('notes', Strings.notes, lines: 3, help: Strings.notesHelp),
+                      _text('notes', Strings.notes, lines: 4, help: Strings.notesHelp),
+                      const SizedBox(height: 8),
                       const Divider(height: 32),
                       Text(Strings.selectors, style: theme.textTheme.titleSmall),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       _selector('row_selector', Strings.rowSelector),
                       _selector('title_selector', Strings.titleSelector),
                       _selector('link_selector', Strings.linkSelector),
@@ -274,13 +294,31 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
                           ),
                         ),
                       ],
-                    ],
-                  ),
+                  ],
                 ),
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(flex: 2, child: _CheckPanel(onCheck: _check)),
-            ],
+              );
+
+              if (!sideBySide) {
+                // Stacked: the panel goes under the form, inside one scroll.
+                return ListView(
+                  padding: EdgeInsets.zero,
+                  children: <Widget>[
+                    SizedBox(height: constraints.maxHeight * 0.62, child: form),
+                    const Divider(height: 1),
+                    _CheckPanel(onCheck: _check),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(flex: 3, child: form),
+                  const VerticalDivider(width: 1),
+                  Expanded(flex: 2, child: _CheckPanel(onCheck: _check)),
+                ],
+              );
+            },
           ),
         ),
         const Divider(height: 1),
@@ -322,6 +360,11 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
     );
   }
 
+  /// One field.
+  ///
+  /// `isDense` is deliberately not set. It shortens the box without shortening
+  /// the floating label, which on a long one - "Tarama aralığı (dakika)" - runs
+  /// the label into the border and the value into the label.
   Widget _text(
     String key,
     String label, {
@@ -331,7 +374,7 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
     String? Function(String?)? validator,
   }) =>
       Padding(
-        padding: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(bottom: 18),
         child: TextFormField(
           controller: _fields[key],
           maxLines: lines,
@@ -339,7 +382,6 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
             labelText: label,
             helperText: help,
             helperMaxLines: 3,
-            isDense: true,
             border: const OutlineInputBorder(),
           ),
           validator: validator ??
@@ -359,42 +401,41 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
   }
 
   Widget _selector(String key, String label) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: 14),
         child: TextFormField(
           controller: _selectors[key],
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
           decoration: InputDecoration(
             labelText: label,
-            isDense: true,
             border: const OutlineInputBorder(),
           ),
         ),
       );
 
-  Widget _authorityTypeField() => DropdownButtonFormField<String>(
+  /// Built from the generated enum, so the list cannot drift from the api.
+  Widget _authorityTypeField() => DropdownButtonFormField<AuthorityType>(
         initialValue: _authorityType,
+        isExpanded: true,
         decoration: const InputDecoration(
           labelText: Strings.authorityTypeLabel,
-          isDense: true,
           border: OutlineInputBorder(),
         ),
-        items: const <DropdownMenuItem<String>>[
-          DropdownMenuItem<String>(value: 'university', child: Text('university')),
-          DropdownMenuItem<String>(value: 'municipality', child: Text('municipality')),
-          DropdownMenuItem<String>(
-              value: 'provincial_directorate', child: Text('provincial_directorate')),
-          DropdownMenuItem<String>(value: 'hospital', child: Text('hospital')),
-          DropdownMenuItem<String>(value: 'soe_subsidiary', child: Text('soe_subsidiary')),
-          DropdownMenuItem<String>(value: 'ekap', child: Text('ekap')),
+        items: <DropdownMenuItem<AuthorityType>>[
+          for (final AuthorityType type in AuthorityType.$valuesDefined)
+            DropdownMenuItem<AuthorityType>(
+              value: type,
+              child: Text(type.json ?? '', overflow: TextOverflow.ellipsis),
+            ),
         ],
-        onChanged: (String? value) =>
+        onChanged: (AuthorityType? value) =>
             setState(() => _authorityType = value ?? _authorityType),
       );
 
   Widget _adapterField() => DropdownButtonFormField<String>(
         initialValue: _adapterKey,
+        isExpanded: true,
         decoration: const InputDecoration(
           labelText: Strings.adapterKeyLabel,
-          isDense: true,
           border: OutlineInputBorder(),
         ),
         items: const <DropdownMenuItem<String>>[
@@ -430,7 +471,7 @@ class _CheckPanel extends ConsumerWidget {
         const SizedBox(height: 16),
         if (check == null)
           Text(
-            Strings.previewIdle,
+            Strings.checkIdle,
             style: theme.textTheme.bodySmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           )

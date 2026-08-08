@@ -830,15 +830,14 @@
       },
       "AuthorityType": {
         "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5
+          "university",
+          "municipality",
+          "provincial_directorate",
+          "hospital",
+          "soe_subsidiary",
+          "ekap"
         ],
-        "type": "integer",
-        "format": "int32"
+        "type": "string"
       },
       "AwardSummary": {
         "type": "object",

@@ -1,5 +1,7 @@
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using ProcurementRadar.Api;
 using ProcurementRadar.Collector;
@@ -32,7 +34,21 @@ PersistenceSetup.RegisterTypeHandlers();
 
 // --- controllers, and the document that describes them -----------------------
 
-builder.Services.AddControllers(options => options.Filters.Add<ApiKeyFilter>());
+builder.Services
+    .AddControllers(options => options.Filters.Add<ApiKeyFilter>())
+    .AddJsonOptions(options =>
+    {
+        // An authority type is a name, not a number. Without this the document
+        // describes it as an integer 0-5, every generated client gets an enum
+        // called value0..value5, and no screen can render the word - while the
+        // database column next to it stores "provincial_directorate" as text
+        // (spec Bolum 4).
+        //
+        // Snake case because that is the spelling the schema already uses, so
+        // the wire, the column and the interface all say the same word.
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower));
+    });
 
 // ProblemDetails for what the framework rejects too, so a malformed body and a
 // refused setting come back in the same shape.

@@ -189,6 +189,9 @@ abstract final class Strings {
   static const String documentSelector = 'Doküman (document_selector)';
   static const String baseUrlLabel = 'Kök adres (base_url)';
   static const String testAgainstArchive = 'Kayıtlı sayfaya karşı dene';
+  static const String checkIdle =
+      'Selector\'ları yazın ve düğmeye basın. Ağa çıkılmaz: sayfa arşivden '
+      'okunur, yani denemek idareye hiçbir şeye mal olmaz.';
   static const String testResult = 'Sonuç';
   static const String pasteHtml = 'Sayfanın HTML\'ini yapıştırın';
   static const String pasteHtmlHelp =

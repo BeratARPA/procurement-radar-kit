@@ -8,7 +8,7 @@ part of 'source.dart';
 
 Source _$SourceFromJson(Map<String, dynamic> json) => Source(
   authorityName: json['authorityName'] as String,
-  authorityType: AuthorityType.fromJson((json['authorityType'] as num).toInt()),
+  authorityType: AuthorityType.fromJson(json['authorityType'] as String),
   province: json['province'] as String,
   url: json['url'] as String,
   adapterKey: json['adapterKey'] as String,
@@ -53,11 +53,11 @@ Map<String, dynamic> _$SourceToJson(Source instance) => <String, dynamic>{
 };
 
 const _$AuthorityTypeEnumMap = {
-  AuthorityType.value0: 0,
-  AuthorityType.value1: 1,
-  AuthorityType.value2: 2,
-  AuthorityType.value3: 3,
-  AuthorityType.value4: 4,
-  AuthorityType.value5: 5,
+  AuthorityType.university: 'university',
+  AuthorityType.municipality: 'municipality',
+  AuthorityType.provincialDirectorate: 'provincial_directorate',
+  AuthorityType.hospital: 'hospital',
+  AuthorityType.soeSubsidiary: 'soe_subsidiary',
+  AuthorityType.ekap: 'ekap',
   AuthorityType.$unknown: r'$unknown',
 };
