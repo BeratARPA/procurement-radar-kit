@@ -29,11 +29,16 @@ Telegram'dan `/sonuclar` ile okunuyor.
 
 **Yapılmayan iki şey var ve ikisi de kod değil:**
 
-1. **Telegram token** — `.env` içindeki `PR_TELEGRAM_BOT_TOKEN` ve
-   `PR_TELEGRAM_CHAT_ID` boş. Bildirim katmanı yazıldı ve test edildi ama
-   gerçek bir bota karşı tek satır mesaj gönderilmedi.
-2. **Sürekli çalışma** — bkz. `docs/deployment.md`. Sistem şu an yalnızca elle
-   başlatıldığında yaşıyor; `first_seen_at` ancak makine açıkken birikir.
+1. ~~**Telegram token** — boş, tek satır mesaj gönderilmedi.~~
+   **9 Ağustos 2026: doldurulmuş ve çalışıyor.** Token ve chat id `.env` içinde,
+   `notification` tablosunda **41 gönderilmiş bildirim** var. Bu satır bir gün
+   yanlış yönlendirdi — doküman "yapılmadı" derken sistem aylardır haber
+   veriyordu. Eskimiş bir "yapılacak" maddesi, olmayan bir işi öncelik gibi
+   gösteriyor.
+2. ~~**Sürekli çalışma** — sistem yalnızca elle başlatıldığında yaşıyor.~~
+   **Çözüldü.** İki zamanlanmış görev oturum açılışında başlıyor:
+   `ProcurementRadar` (worker) ve `ProcurementRadarApi`. Sistem ekranından
+   (D-18) durumları görülüyor ve açılıp kapatılabiliyor.
 
 ---
 

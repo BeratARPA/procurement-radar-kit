@@ -525,6 +525,56 @@ edilebilir; bu uygulama ağdan erişilebilir hale gelirse karar yeniden bakılma
 
 ---
 
+## D-20 — Son teklif tarihi için detay sayfası çekilmeyecek
+
+**Karar:** Tarihi olmayan bir ilanın kendi sayfasını ayrıca çekip tarihi oradan
+okuma fikri (T-23 diye önerilmişti) **yapılmayacak**. Ölçüldü, karşılığı yok.
+
+**Sorun gerçek.** 9 Ağustos 2026 itibarıyla 23 aktif kaynak ilan üretiyor ama
+tek bir son teklif tarihi üretmiyor; 282 ilan tarihsiz. Son teklif tarihi
+`spec.md` Bölüm 7'nin "en önemlisi" dediği alan.
+
+**Neden liste sayfasından okunamıyor.** 108 kaynağın hepsi arşivlenmiş kendi
+sayfasına karşı denendi (T-21'in `check` ucu, ağa çıkmadan). 17 sayfanın
+16'sında "son teklif" ifadesi hiçbir yerde geçmiyor — ne hücrede, ne paragrafta.
+Sayfada görünen tarih çoğunlukla **yayın tarihi**: Çubuk'ta WordPress post
+tarihi, Elmadağ'da `duyurutarihc`. Onu `bid_deadline_at`'e yazmak boş bırakmaktan
+kötü — `ListOpen` `bid_deadline_at > now()` filtreliyor, yani ilan açık listeden
+düşer ve Telegram "süresi geçti" der. Denendi ve geri alındı.
+
+**Neden detay sayfasından da okunamıyor — asıl bulgu.** Yedi kaynağın birer ilan
+sayfası nezaket kurallarıyla (robots kontrolü, doğru User-Agent, 6 sn aralık)
+çekildi ve incelendi:
+
+| Ne arandı | Sonuç |
+|---|---|
+| Tarihli "son teklif" cümlesi | 7 sayfanın 0'ında (biri 2015 tarihli eski ilan) |
+| PDF/doküman eki | 7 sayfanın 1'inde |
+| İlan gövdesi HTML'de var mı | Bala: başlık + "Modal content" + çerez politikası. Ayaş: yalnız menü |
+
+Yani bu sayfalar ilanı **taşımıyor**. Gövde ya JS ile yükleniyor, ya taranmış
+görsel (Elmadağ'da ilan bir PNG), ya da hiç yok. Bir ilan için bir istek daha
+harcayıp zaten elde olan başlığı geri almak, nezaket bütçesini boşa yakmak olur.
+
+**Bunun yerine ne var:**
+
+1. **Olduğu gibi kabul.** `spec.md` Bölüm 7 bunu zaten tarif ediyor: tarih
+   çıkarılamıyorsa kayıt yine yazılır ve bildirimde "son teklif tarihi
+   okunamadı" uyarısı basılır. Mevcut davranış bu ve dürüst olan bu.
+2. **EKAP zaten kapatıyor.** Aynı ihale çoğu zaman EKAP'ta da yayımlanıyor ve
+   orada İKN'siyle, `fiyatTeklifiSonTarihSaati` alanıyla geliyor (D-12).
+   Tekilleştirme (Bölüm 8) ikisini birleştiriyor — 38 kaynağın tarihli olmasının
+   sebebi büyük ölçüde bu.
+3. **OCR** — taranmış ilan görsellerini okumak. Sıfır maliyet kısıtına ve
+   "gereksiz karmaşıklık" ilkesine aykırı; günde birkaç ilan için kurulmaz.
+
+**Ne zaman yeniden bakılır:** Bir kurum ilan gövdesini düz HTML olarak yayımlamaya
+başlarsa, o kaynak için `date_selector` zaten yeter — nitekim ODTÜ'de öyle oldu:
+tarih özet paragrafının içinde geçiyordu (`"...13/08/2026 saat 14:00 tarihine
+kadar..."`), `date_selector: p` ile 10/10 okundu.
+
+---
+
 ## D-19 — İki exe bir klasörde: `appsettings.json` tek bir projeye ait olamaz
 
 **Karar:** Worker'ın ayarları `appsettings.worker.json` adında. `Program.cs` onu
