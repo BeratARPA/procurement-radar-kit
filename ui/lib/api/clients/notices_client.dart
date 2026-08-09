@@ -15,16 +15,24 @@ part 'notices_client.g.dart';
 abstract class NoticesClient {
   factory NoticesClient(Dio dio, {String? baseUrl}) = _NoticesClient;
 
-  /// Open notices, or the whole archive when a term is given.
+  /// Notices, still open by default and the whole archive on request.
   ///
-  /// [q] - Searches title and authority. Without it the answer is what is still open.
+  /// The open list is the right answer for a notification and a narrow one for.  ///
+  /// a screen: Telegram already applies the filter, so an interface that only.  ///
+  /// ever shows what passed it is a second funnel over the same water.  ///
+  /// `scope=all` hands over everything and lets the reader narrow it.
   ///
-  /// [minScore] - Only used for the open list.
+  /// [q] - Searches title and authority across the whole archive.
   ///
-  /// [limit] - Capped at 200.
+  /// [scope] - open (default) or all.
+  ///
+  /// [minScore] - Applies to both scopes; ignored when a term is given.
+  ///
+  /// [limit] - Capped at 5000.
   @GET('/api/notices')
   Future<List<CommandNotice>> listNotices({
     @Query('q') String? q,
+    @Query('scope') String? scope,
     @Query('minScore') int? minScore,
     @Query('limit') int? limit,
   });

@@ -151,16 +151,23 @@ void main() {
           isNot(const NoticeFilter(minScore: 30).requestKey));
       expect(const NoticeFilter().requestKey,
           isNot(const NoticeFilter(term: 'yazılım').requestKey));
+      // Scope is the api's question too: open is 632 rows, all is 988.
+      expect(const NoticeFilter().requestKey,
+          isNot(const NoticeFilter(scope: NoticeScope.all).requestKey));
     });
 
     test('does not change for filters the screen applies itself', () {
-      // Changing the sort order must not re-fetch.
+      // Changing the sort order or the deadline window must not re-fetch.
       expect(
         const NoticeFilter(sort: NoticeSort.score).requestKey,
         const NoticeFilter().requestKey,
       );
       expect(
         const NoticeFilter(withinHours: 24).requestKey,
+        const NoticeFilter().requestKey,
+      );
+      expect(
+        const NoticeFilter(hideUndated: true).requestKey,
         const NoticeFilter().requestKey,
       );
     });

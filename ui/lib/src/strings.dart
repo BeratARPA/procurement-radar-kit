@@ -64,6 +64,10 @@ abstract final class Strings {
   static const String clearSearch = 'Aramayı temizle';
 
   // --- notice list filters ---
+  static const String scopeFilter = 'Kapsam';
+  static const String scopeOpen = 'Açık olanlar';
+  static const String scopeAll = 'Tüm arşiv';
+
   static const String scoreFilter = 'Puan';
   static const String scoreAny = 'Tümü';
   static const String scoreSome = 'Puan almış';

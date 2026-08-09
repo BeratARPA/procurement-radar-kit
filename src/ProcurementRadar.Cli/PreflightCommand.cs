@@ -63,6 +63,7 @@ internal static class PreflightCommand
             // id is new SQL, and new SQL that only a screen calls is exactly the
             // kind that is found broken by a person looking at it.
             await queries.SearchAsync("a", 1, cancellationToken).ConfigureAwait(false);
+            await queries.ListAllAsync(0, 1, cancellationToken).ConfigureAwait(false);
             await queries.ListClosingSoonAsync(48, 1, cancellationToken).ConfigureAwait(false);
 
             // Against a row that exists where there is one. Asking for id 0 would

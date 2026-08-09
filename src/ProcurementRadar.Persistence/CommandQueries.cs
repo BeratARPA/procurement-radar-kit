@@ -28,6 +28,20 @@ public sealed class CommandQueries : ICommandQueries
         LIMIT @Limit
         """;
 
+    // Everything, newest first. LEFT JOIN because a notice with no score row is
+    // still a notice - the open list can use an inner join because it filters on
+    // the score anyway, and this one must not silently drop what has not been
+    // scored yet.
+    private const string ListAll = """
+        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
+               coalesce(s.rule_score, 0) AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
+        FROM procurement_notice n
+        LEFT JOIN notice_score s ON s.notice_id = n.id
+        WHERE coalesce(s.rule_score, 0) >= @MinimumScore
+        ORDER BY n.first_seen_at DESC
+        LIMIT @Limit
+        """;
+
     private const string ListSeenSince = """
         SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
                coalesce(s.rule_score, 0) AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
@@ -54,6 +68,13 @@ public sealed class CommandQueries : ICommandQueries
         int limit,
         CancellationToken cancellationToken)
         => await QueryAsync(ListOpen, new { MinimumScore = minimumScore, Limit = limit }, cancellationToken)
+            .ConfigureAwait(false);
+
+    public async Task<IReadOnlyList<CommandNotice>> ListAllAsync(
+        int minimumScore,
+        int limit,
+        CancellationToken cancellationToken)
+        => await QueryAsync(ListAll, new { MinimumScore = minimumScore, Limit = limit }, cancellationToken)
             .ConfigureAwait(false);
 
     public async Task<IReadOnlyList<CommandNotice>> ListSeenSinceAsync(

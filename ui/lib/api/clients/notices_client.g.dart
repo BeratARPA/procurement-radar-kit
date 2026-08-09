@@ -22,12 +22,14 @@ class _NoticesClient implements NoticesClient {
   @override
   Future<List<CommandNotice>> listNotices({
     String? q,
+    String? scope,
     int? minScore,
     int? limit,
   }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'q': q,
+      r'scope': scope,
       r'minScore': minScore,
       r'limit': limit,
     };

@@ -143,13 +143,22 @@
         "tags": [
           "Notices"
         ],
-        "summary": "Open notices, or the whole archive when a term is given.",
+        "summary": "Notices, still open by default and the whole archive on request.",
+        "description": "The open list is the right answer for a notification and a narrow one for\r\na screen: Telegram already applies the filter, so an interface that only\r\never shows what passed it is a second funnel over the same water.\r\n`scope=all` hands over everything and lets the reader narrow it.",
         "operationId": "listNotices",
         "parameters": [
           {
             "name": "q",
             "in": "query",
-            "description": "Searches title and authority. Without it the answer is what is still open.",
+            "description": "Searches title and authority across the whole archive.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "description": "open (default) or all.",
             "schema": {
               "type": "string"
             }
@@ -157,7 +166,7 @@
           {
             "name": "minScore",
             "in": "query",
-            "description": "Only used for the open list.",
+            "description": "Applies to both scopes; ignored when a term is given.",
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -166,7 +175,7 @@
           {
             "name": "limit",
             "in": "query",
-            "description": "Capped at 200.",
+            "description": "Capped at 5000.",
             "schema": {
               "type": "integer",
               "format": "int32"

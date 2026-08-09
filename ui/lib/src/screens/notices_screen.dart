@@ -36,7 +36,11 @@ class _NoticesScreenState extends ConsumerState<NoticesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(filter.term.isEmpty ? Strings.openNotices : Strings.notices),
+        title: Text(filter.term.isNotEmpty
+            ? Strings.notices
+            : filter.scope == NoticeScope.all
+                ? Strings.scopeAll
+                : Strings.openNotices),
         actions: <Widget>[
           IconButton(
             tooltip: Strings.refresh,
@@ -177,10 +181,25 @@ class _FilterBar extends ConsumerWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: <Widget>[
-                // Score first, because it is the one that turns nine pages of
-                // toner into the four notices worth reading. 30 is the
-                // notification threshold (D-14): at or above it, the system
-                // would have told you about this one.
+                // Scope first: it decides what set the rest narrow. Open is the
+                // default because an expired notice cannot be bid on, but the
+                // archive is what this project accumulates and Telegram already
+                // filters - so all of it has to be reachable in one tap.
+                _Group(label: Strings.scopeFilter, children: <Widget>[
+                  _Choice(
+                    label: Strings.scopeOpen,
+                    selected: filter.scope == NoticeScope.open,
+                    onSelected: () => notifier.setScope(NoticeScope.open),
+                  ),
+                  _Choice(
+                    label: Strings.scopeAll,
+                    selected: filter.scope == NoticeScope.all,
+                    onSelected: () => notifier.setScope(NoticeScope.all),
+                  ),
+                ]),
+                const SizedBox(width: 16),
+                // 30 is the notification threshold (D-14): at or above it, the
+                // system would have told you about this one.
                 _Group(label: Strings.scoreFilter, children: <Widget>[
                   _Choice(
                     label: Strings.scoreAny,

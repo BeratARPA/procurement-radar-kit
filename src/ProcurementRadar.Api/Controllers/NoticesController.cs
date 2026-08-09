@@ -21,23 +21,44 @@ public sealed class NoticesController : ControllerBase
         _notices = notices;
     }
 
-    /// <summary>Open notices, or the whole archive when a term is given.</summary>
-    /// <param name="q">Searches title and authority. Without it the answer is what is still open.</param>
-    /// <param name="minScore">Only used for the open list.</param>
-    /// <param name="limit">Capped at 200.</param>
+    /// <summary>
+    /// Notices, still open by default and the whole archive on request.
+    /// </summary>
+    /// <remarks>
+    /// The open list is the right answer for a notification and a narrow one for
+    /// a screen: Telegram already applies the filter, so an interface that only
+    /// ever shows what passed it is a second funnel over the same water.
+    /// `scope=all` hands over everything and lets the reader narrow it.
+    /// </remarks>
+    /// <param name="q">Searches title and authority across the whole archive.</param>
+    /// <param name="scope">open (default) or all.</param>
+    /// <param name="minScore">Applies to both scopes; ignored when a term is given.</param>
+    /// <param name="limit">Capped at 5000.</param>
     [HttpGet(Name = "listNotices")]
     [ProducesResponseType(typeof(IReadOnlyList<CommandNotice>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<CommandNotice>>> List(
         [FromQuery] string? q,
+        [FromQuery] string? scope,
         [FromQuery] int? minScore,
         [FromQuery] int? limit,
         CancellationToken cancellationToken)
     {
-        var take = Math.Clamp(limit ?? 50, 1, 200);
+        // 5000 rather than 200, because a screen that shows the first 200 of 988
+        // and says nothing is a screen that lies by omission. It is still a cap:
+        // at forty notices a day this holds several months, and when it stops
+        // holding the answer is paging, not a larger number.
+        var take = Math.Clamp(limit ?? 50, 1, 5000);
 
-        var notices = string.IsNullOrWhiteSpace(q)
-            ? await _queries.ListOpenAsync(minScore ?? 0, take, cancellationToken).ConfigureAwait(false)
-            : await _queries.SearchAsync(q, take, cancellationToken).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            return Ok(await _queries.SearchAsync(q, take, cancellationToken).ConfigureAwait(false));
+        }
+
+        var everything = string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase);
+
+        var notices = everything
+            ? await _queries.ListAllAsync(minScore ?? 0, take, cancellationToken).ConfigureAwait(false)
+            : await _queries.ListOpenAsync(minScore ?? 0, take, cancellationToken).ConfigureAwait(false);
 
         return Ok(notices);
     }

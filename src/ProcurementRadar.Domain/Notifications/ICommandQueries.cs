@@ -72,6 +72,21 @@ public interface ICommandQueries
 
     Task<SystemStatus> GetStatusAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Everything ever collected, newest first.
+    /// </summary>
+    /// <remarks>
+    /// The open list answers "what can I still bid on", which is the right
+    /// question for a notification and the wrong one for a screen: Telegram
+    /// already applies the filter, so an interface that applies it again is a
+    /// second funnel over the same water. This is the archive, and the screen
+    /// narrows it however the reader wants.
+    /// </remarks>
+    Task<IReadOnlyList<CommandNotice>> ListAllAsync(
+        int minimumScore,
+        int limit,
+        CancellationToken cancellationToken);
+
     /// <summary>Anything in the archive whose title or authority carries the term.</summary>
     /// <remarks>
     /// The archive is what this project is actually accumulating (spec Bolum 16),
