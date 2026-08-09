@@ -128,6 +128,19 @@ public interface ICommandQueries
     /// </remarks>
     Task<IReadOnlyList<PreviewNotice>> ListForPreviewAsync(int limit, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The same rows, with the score they are currently stored with.
+    /// </summary>
+    /// <remarks>
+    /// A separate read from the preview on purpose. A preview is asked about a
+    /// filter that does not exist yet, so the stored score is the wrong answer
+    /// by definition and that query does not fetch it. A rescore is the opposite
+    /// question - what changes - and cannot be answered without it.
+    /// </remarks>
+    Task<IReadOnlyList<ScorableNotice>> ListForRescoreAsync(
+        int limit,
+        CancellationToken cancellationToken);
+
     /// <summary>Still new, closing within the window.</summary>
     Task<IReadOnlyList<CommandNotice>> ListClosingSoonAsync(
         int withinHours,
@@ -193,6 +206,21 @@ public sealed record ScoreByStatus
     public double AverageScore { get; init; }
 
     public int MaximumScore { get; init; }
+}
+
+/// <summary>One archived notice with the verdict it currently carries.</summary>
+public sealed record ScorableNotice
+{
+    public long NoticeId { get; init; }
+
+    public string Title { get; init; } = string.Empty;
+
+    public string? Description { get; init; }
+
+    public string[]? OkasCodes { get; init; }
+
+    /// <summary>Zero when nothing has scored it yet.</summary>
+    public int CurrentScore { get; init; }
 }
 
 /// <summary>One archived notice, as a filter sees it.</summary>

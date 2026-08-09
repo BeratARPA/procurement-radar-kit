@@ -209,6 +209,44 @@ Future<void> savePoliteness(WidgetRef ref, PolitenessDraft draft) async {
   ref.invalidate(storedPolitenessProvider);
 }
 
+/// Scoring the archive again with the list as it is stored.
+///
+/// The preview answers "what would this list have caught"; this makes the answer
+/// true. A notice is scored once, when it is parsed, so a word added today only
+/// ever reaches notices that arrive tomorrow - and everything already collected
+/// keeps the verdict of a list that no longer exists. It is not hypothetical: the
+/// day 26 terms went in, the CRM tender the new terms match still read 0, and its
+/// deadline was three weeks away.
+///
+/// Null before it has been asked for, so the screen shows the button rather than
+/// a result nobody produced.
+final NotifierProvider<RescoreNotifier, AsyncValue<RescoreResponse>?>
+    rescoreProvider =
+    NotifierProvider<RescoreNotifier, AsyncValue<RescoreResponse>?>(
+  RescoreNotifier.new,
+);
+
+class RescoreNotifier extends Notifier<AsyncValue<RescoreResponse>?> {
+  @override
+  AsyncValue<RescoreResponse>? build() => null;
+
+  Future<void> run() async {
+    if (state is AsyncLoading) return;
+
+    state = const AsyncValue<RescoreResponse>.loading();
+
+    try {
+      state = AsyncValue<RescoreResponse>.data(
+        await ref.read(radarApiProvider).filter.rescoreArchive(),
+      );
+    } on Object catch (error, stack) {
+      state = AsyncValue<RescoreResponse>.error(error, stack);
+    }
+  }
+
+  void clear() => state = null;
+}
+
 Future<void> saveKeywords(WidgetRef ref, KeywordDraft draft) async {
   await ref.read(radarApiProvider).settings.saveSetting(
         key: 'keywords',

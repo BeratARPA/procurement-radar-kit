@@ -140,6 +140,33 @@ başlatmak gerekmez (T-17).
 yazan bir ekran, biri eşiği ilk kaydırdığında okas yapılandırmasını silerdi ve
 dosya hâlâ geçerli json olurdu.
 
+### Yeniden puanla (D-21)
+
+Önizlemenin altında, ayrı bir bölümde. Önizleme yalnızca hesaplar; bu düğme
+arşivin tamamını **kayıtlı** kelime listesiyle yeniden puanlar ve `notice_score`
+üzerine yazar.
+
+Gerekçe: bir ilan yalnızca toplandığı anda puanlanır, yani bugün eklenen bir
+kelime yalnızca yarın gelecek ilanlara işler. 26 terim eklendiği gün önizleme
+"45 ilan bildirilirdi" derken listede 39 vardı ve yeni terimlerin tuttuğu CRM
+ilanı 0 okuyordu.
+
+Üç davranış bilerek böyle:
+
+- **Kaydedilmemiş değişiklik varken kilitli.** Uç kayıtlı listeyle çalışır, o
+  yüzden ekrandaki taslakla çalıştırmak kimsenin seçmediği bir listenin
+  rakamlarını gösterirdi. Düğme sebebini yazıyor.
+- **Onay soruyor.** Eşiği yeni geçen ilanlar Telegram'a düşer ve `ListUnannounced`
+  son teklif tarihine bakmaz — bir kısmının süresi geçmiş olabilir.
+- **Eşiğin altına düşenler ayrı listede.** Yükselenler yükselme miktarına göre
+  sıralı, yani sesi kesilen ilan listenin sonunda kırpılırdı.
+
+Aynı iş komut satırından da yapılır; `--dry-run` hiçbir şey yazmadan söyler:
+
+```bash
+dotnet run --project src/ProcurementRadar.Cli -- rescore --dry-run
+```
+
 ## Masaüstü sürümü (D-18)
 
 ```bash

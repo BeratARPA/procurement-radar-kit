@@ -10,6 +10,7 @@ using ProcurementRadar.Domain.Notifications;
 using ProcurementRadar.Domain.Repositories;
 using ProcurementRadar.Domain.Settings;
 using ProcurementRadar.Persistence;
+using ProcurementRadar.Scoring;
 using Serilog;
 
 // Same reason as the worker: the console defaults to the system code page on
@@ -123,6 +124,8 @@ builder.Services.AddSingleton(new StoragePathBuilder(
     ?? StoragePathBuilder.DefaultDataDirectory));
 builder.Services.AddSingleton<IRawArchive, FileSystemRawArchive>();
 builder.Services.AddSingleton<SourceChecker>();
+builder.Services.AddSingleton<INoticeScoreRepository, NoticeScoreRepository>();
+builder.Services.AddSingleton<NoticeRescorer>();
 
 // The filter preview scores notices itself, so it needs the same normalizer the
 // worker scores with. Read from the setting table, because that is where it

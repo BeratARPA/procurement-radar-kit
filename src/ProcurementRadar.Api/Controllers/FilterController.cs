@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProcurementRadar.Api.Contracts;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Domain.Notifications;
+using ProcurementRadar.Domain.Repositories;
 using ProcurementRadar.Domain.Settings;
 using ProcurementRadar.Scoring;
 
@@ -15,11 +16,19 @@ public sealed class FilterController : ControllerBase
 {
     private readonly ICommandQueries _queries;
     private readonly NoticeNormalizer _normalizer;
+    private readonly ISettingRepository _settings;
+    private readonly NoticeRescorer _rescorer;
 
-    public FilterController(ICommandQueries queries, NoticeNormalizer normalizer)
+    public FilterController(
+        ICommandQueries queries,
+        NoticeNormalizer normalizer,
+        ISettingRepository settings,
+        NoticeRescorer rescorer)
     {
         _queries = queries;
         _normalizer = normalizer;
+        _settings = settings;
+        _rescorer = rescorer;
     }
 
     /// <summary>
@@ -83,5 +92,65 @@ public sealed class FilterController : ControllerBase
                 .Take(25)
                 .ToList()
         });
+    }
+
+    /// <summary>
+    /// Score the whole archive again with the keyword list as it is stored now.
+    /// </summary>
+    /// <remarks>
+    /// A notice is scored once, when it is parsed. So a word added today only
+    /// ever reaches notices that arrive tomorrow, and everything already
+    /// collected keeps the verdict of a list that no longer exists. It is not a
+    /// hypothetical: the day 26 words were added, a CRM tender and an OCR tender
+    /// the new list matches went on showing 0.
+    ///
+    /// Unlike the preview this writes. It takes no keyword list in the body on
+    /// purpose - it applies what is stored, which is what the worker is using,
+    /// so the archive and the worker cannot end up disagreeing. To try a list
+    /// first, that is what the preview is for.
+    ///
+    /// `llm_score` is left where it is (D-03 keeps it null in v1; once something
+    /// fills it, re-running the cheap filter must not wipe the expensive answer).
+    /// </remarks>
+    [HttpPost("rescore", Name = "rescoreArchive")]
+    [ProducesResponseType(typeof(RescoreResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<RescoreResponse>> Rescore(
+        [FromQuery] int? limit,
+        CancellationToken cancellationToken)
+    {
+        var stored = await _settings.GetAsync(SettingKeys.Keywords, cancellationToken).ConfigureAwait(false);
+
+        if (stored is null)
+        {
+            return Problem(
+                detail: $"Setting '{SettingKeys.Keywords}' is not in the table yet - run the seeder first.",
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        var scorer = new RuleScorer(new Fixed<KeywordRules>(KeywordRules.Load(stored.Value)), _normalizer);
+
+        var result = await _rescorer
+            .RescoreAsync(scorer, Math.Clamp(limit ?? 5000, 1, 20000), cancellationToken)
+            .ConfigureAwait(false);
+
+        return Ok(new RescoreResponse
+        {
+            Considered = result.Considered,
+            Changed = result.Changed,
+            Gained = result.Gained,
+            Lost = result.Lost,
+            Threshold = result.Threshold,
+            Notable = result.Notable.Select(Moved).ToList(),
+            Dropped = result.Dropped.Select(Moved).ToList()
+        });
+
+        static MovedNotice Moved(RescoredNotice row) => new()
+        {
+            NoticeId = row.NoticeId,
+            Title = row.Title,
+            Before = row.Before,
+            After = row.After
+        };
     }
 }

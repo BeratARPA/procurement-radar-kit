@@ -40,6 +40,7 @@ dotnet run --project src/ProcurementRadar.Migrator      # apply migrations
 dotnet run --project src/ProcurementRadar.Worker        # run the worker
 dotnet run --project src/ProcurementRadar.Cli -- seed   # load config/sources.seed.json
 dotnet run --project src/ProcurementRadar.Cli -- reparse --source-id 12
+dotnet run --project src/ProcurementRadar.Cli -- rescore --dry-run  # score the archive with the stored keyword list (D-21)
 ```
 
 ## Architecture rules

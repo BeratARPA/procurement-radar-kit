@@ -117,6 +117,48 @@
         }
       }
     },
+    "/api/filter/rescore": {
+      "post": {
+        "tags": [
+          "Filter"
+        ],
+        "summary": "Score the whole archive again with the keyword list as it is stored now.",
+        "description": "A notice is scored once, when it is parsed. So a word added today only\r\never reaches notices that arrive tomorrow, and everything already\r\ncollected keeps the verdict of a list that no longer exists. It is not a\r\nhypothetical: the day 26 words were added, a CRM tender and an OCR tender\r\nthe new list matches went on showing 0.\r\n            \r\nUnlike the preview this writes. It takes no keyword list in the body on\r\npurpose - it applies what is stored, which is what the worker is using,\r\nso the archive and the worker cannot end up disagreeing. To try a list\r\nfirst, that is what the preview is for.\r\n            \r\n`llm_score` is left where it is (D-03 keeps it null in v1; once something\r\nfills it, re-running the cheap filter must not wipe the expensive answer).",
+        "operationId": "rescoreArchive",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RescoreResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/health": {
       "get": {
         "tags": [
@@ -737,8 +779,8 @@
           "204": {
             "description": "No Content"
           },
-          "400": {
-            "description": "Bad Request",
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
@@ -747,8 +789,8 @@
               }
             }
           },
-          "404": {
-            "description": "Not Found",
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1045,6 +1087,33 @@
         "additionalProperties": false,
         "description": "What a keyword list and a threshold would have done to the notices already\r\ncollected."
       },
+      "MovedNotice": {
+        "required": [
+          "after",
+          "before",
+          "noticeId",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "noticeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "before": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "after": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "NoticeDetail": {
         "type": "object",
         "properties": {
@@ -1113,7 +1182,61 @@
             "nullable": true
           }
         },
-        "additionalProperties": {}
+        "additionalProperties": { }
+      },
+      "RescoreResponse": {
+        "required": [
+          "changed",
+          "considered",
+          "dropped",
+          "gained",
+          "lost",
+          "notable",
+          "threshold"
+        ],
+        "type": "object",
+        "properties": {
+          "considered": {
+            "type": "integer",
+            "description": "How many archived notices were scored again.",
+            "format": "int32"
+          },
+          "changed": {
+            "type": "integer",
+            "description": "How many came out with a different number than they carried.",
+            "format": "int32"
+          },
+          "gained": {
+            "type": "integer",
+            "description": "How many crossed up over the threshold - the point of the exercise.",
+            "format": "int32"
+          },
+          "lost": {
+            "type": "integer",
+            "description": "How many dropped below it.",
+            "format": "int32"
+          },
+          "threshold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "notable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MovedNotice"
+            },
+            "description": "The biggest movers, so the change can be sanity-checked by eye."
+          },
+          "dropped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MovedNotice"
+            },
+            "description": "Everything that stopped qualifying, in full."
+          }
+        },
+        "additionalProperties": false,
+        "description": "What a rescore changed."
       },
       "ScoredNotice": {
         "required": [
@@ -1504,7 +1627,7 @@
   },
   "security": [
     {
-      "X-Api-Token": []
+      "X-Api-Token": [ ]
     }
   ]
 }

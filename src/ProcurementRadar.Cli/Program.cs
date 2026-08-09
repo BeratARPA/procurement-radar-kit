@@ -44,6 +44,7 @@ try
     {
         "seed" => await SeedCommand.RunAsync(args[1..], shutdown.Token),
         "reparse" => await ReparseCommand.RunAsync(args[1..], shutdown.Token),
+        "rescore" => await RescoreCommand.RunAsync(args[1..], shutdown.Token),
         "check-source" => await CheckSourceCommand.RunAsync(args[1..], shutdown.Token),
         "telegram-check" => await TelegramCheckCommand.RunAsync(args[1..], shutdown.Token),
         "ekap-probe" => await EkapProbeCommand.RunAsync(args[1..], shutdown.Token),
@@ -76,6 +77,7 @@ static int Usage(string problem)
     Log.Error(
         "{Problem}. Usage: dotnet run --project src/ProcurementRadar.Cli -- "
         + "seed [--file <path>] | reparse [--source-id <id>] [--batch-size <n>] [--config-dir <path>] | "
+        + "rescore [--dry-run] | "
         + "check-source --html <path> --config <path> [--url <url>] [--charset <name>] | "
         + "telegram-check [--send] | ekap-probe [--url <u>] [--search <s>] [--button <name>] | "
         + "ekap-ilan [--limit <n>] | award-probe --ikn <ikn> | preflight | try-source --url <url> | watch-requests --url <url>",

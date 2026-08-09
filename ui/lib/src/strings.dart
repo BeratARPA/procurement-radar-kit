@@ -199,6 +199,32 @@ abstract final class Strings {
   static String previewSummary(int considered, int wouldNotify) =>
       '$considered ilandan $wouldNotify tanesi bildirilirdi';
 
+  // --- rescore ---
+  static const String rescore = 'Yeniden puanla';
+  static const String rescoreHelp =
+      'Önizleme yalnızca hesaplar. Bir ilan yalnızca toplandığı anda '
+      'puanlanır, yani bugün eklenen bir kelime yalnızca yarın gelecek '
+      'ilanlara işler; arşivdekiler artık var olmayan bir listenin puanını '
+      'taşımaya devam eder. Bu düğme arşivin tamamını kayıtlı listeyle '
+      'yeniden puanlar.';
+  static const String rescoreUnsaved =
+      'Yeniden puanlama kayıtlı listeyle çalışır. Önce kaydedin.';
+  static const String rescoreConfirmTitle = 'Arşivin tamamı yeniden puanlansın mı?';
+  static const String rescoreConfirmBody =
+      'Kayıtlı kelime listesi tüm ilanlara uygulanır ve puanlar üzerine '
+      'yazılır. Eşiği yeni geçen ilanlar için Telegram bildirimi gider — '
+      'bir kısmının son teklif tarihi geçmiş olabilir.';
+  static const String rescoreConfirm = 'Yeniden puanla';
+  static const String rescoreRunning = 'Puanlanıyor…';
+  static const String rescoreGained = 'Eşiği yeni geçenler';
+  static const String rescoreDropped = 'Artık eşiğin altında kalanlar';
+  static const String rescoreNothing =
+      'Hiçbir puan değişmedi. Arşiv zaten kayıtlı listeyle puanlanmış.';
+
+  static String rescoreSummary(int considered, int changed, int threshold) =>
+      '$considered ilan yeniden puanlandı, $changed tanesinin puanı değişti '
+      '(eşik $threshold)';
+
   // --- awards ---
   static const String awards = 'Sonuçlar';
   static const String winner = 'Yüklenici';

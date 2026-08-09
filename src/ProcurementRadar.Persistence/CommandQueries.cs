@@ -263,6 +263,31 @@ public sealed class CommandQueries : ICommandQueries
         return rows.AsList();
     }
 
+    private const string ForRescore = """
+        SELECT n.id AS "NoticeId", n.title AS "Title",
+               n.description AS "Description", n.okas_codes AS "OkasCodes",
+               coalesce(s.rule_score, 0) AS "CurrentScore"
+        FROM procurement_notice n
+        LEFT JOIN notice_score s ON s.notice_id = n.id
+        ORDER BY n.first_seen_at DESC
+        LIMIT @Limit
+        """;
+
+    public async Task<IReadOnlyList<ScorableNotice>> ListForRescoreAsync(
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var rows = await connection.QueryAsync<ScorableNotice>(
+            new CommandDefinition(ForRescore, new { Limit = limit }, cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return rows.AsList();
+    }
+
     private async Task<IReadOnlyList<CommandNotice>> QueryAsync(
         string sql,
         object parameters,

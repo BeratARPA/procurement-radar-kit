@@ -70,11 +70,17 @@ public sealed class RuleScorerTests
     [Fact]
     public void An_unrelated_notice_scores_nothing()
     {
-        var score = Scorer.Score("Temizlik Hizmeti Alımı");
+        // Neither list mentions stationery, so nothing matched at all - which is
+        // a different outcome from being ruled out and the basis records which.
+        // This read "Temizlik Hizmeti Alımı" until cleaning went on the exclude
+        // list; a rule this test was not about then decided the answer, and the
+        // test failed while the scorer was right.
+        var score = Scorer.Score("Kırtasiye Malzemesi Alımı");
 
         Assert.Equal(0, score.Value);
         Assert.Empty(score.MatchedTerms);
         Assert.Equal(ScoreBasis.Keywords, score.Basis);
+        Assert.Null(score.ExcludedBy);
     }
 
     [Fact]

@@ -524,7 +524,192 @@ class _Preview extends ConsumerWidget {
             ),
             data: (FilterPreviewResponse answer) => _Numbers(answer: answer),
           ),
+        const SizedBox(height: 28),
+        const Divider(height: 1),
+        const SizedBox(height: 20),
+        _RescorePanel(draft: draft),
       ],
+    );
+  }
+}
+
+/// Making the preview's answer true for everything already collected.
+///
+/// Beside the preview rather than beside Kaydet on purpose: the preview says
+/// what the list would catch and this is what makes it so, and the two numbers
+/// are read together. It also writes, which the rest of this screen does not,
+/// so it asks first.
+class _RescorePanel extends ConsumerWidget {
+  const _RescorePanel({required this.draft});
+
+  final KeywordDraft draft;
+
+  Future<void> _run(BuildContext context, WidgetRef ref) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text(Strings.rescoreConfirmTitle),
+        content: const Text(Strings.rescoreConfirmBody),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(Strings.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(Strings.rescoreConfirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed ?? false) await ref.read(rescoreProvider.notifier).run();
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ThemeData theme = Theme.of(context);
+    final AsyncValue<RescoreResponse>? result = ref.watch(rescoreProvider);
+    final Setting? stored = ref.watch(storedKeywordsProvider).value;
+
+    // The api rescores with what is stored, not with what is on screen. Running
+    // it over unsaved edits would report numbers for a list nobody chose, so the
+    // button waits for Kaydet and says why.
+    final bool unsaved = stored != null && stored.value != draft.toJson();
+    final bool running = result is AsyncLoading;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(Strings.rescore, style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text(
+          Strings.rescoreHelp,
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.tonalIcon(
+            onPressed: unsaved || running ? null : () => _run(context, ref),
+            icon: running
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            label: Text(running ? Strings.rescoreRunning : Strings.rescore),
+          ),
+        ),
+        if (unsaved) ...<Widget>[
+          const SizedBox(height: 8),
+          Text(
+            Strings.rescoreUnsaved,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.error),
+          ),
+        ],
+        if (result != null) ...<Widget>[
+          const SizedBox(height: 16),
+          result.when(
+            loading: () => const SizedBox.shrink(),
+            error: (Object error, StackTrace stackTrace) => FailureView(
+              error: error,
+              onRetry: () => ref.read(rescoreProvider.notifier).run(),
+            ),
+            data: (RescoreResponse answer) => _RescoreNumbers(answer: answer),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _RescoreNumbers extends StatelessWidget {
+  const _RescoreNumbers({required this.answer});
+
+  final RescoreResponse answer;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    if (answer.changed == 0) {
+      return Text(Strings.rescoreNothing, style: theme.textTheme.bodyMedium);
+    }
+
+    final List<MovedNotice> gained = answer.notable
+        .where((MovedNotice row) =>
+            row.before < answer.threshold && row.after >= answer.threshold)
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(
+          Strings.rescoreSummary(
+            answer.considered,
+            answer.changed,
+            answer.threshold,
+          ),
+          style: theme.textTheme.bodyMedium,
+        ),
+        if (gained.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 14),
+          Text(Strings.rescoreGained, style: theme.textTheme.labelLarge),
+          const SizedBox(height: 6),
+          for (final MovedNotice row in gained) _MovedRow(row: row),
+        ],
+        // Never folded into the list above. What stopped qualifying is the half
+        // of a keyword change nobody goes looking for.
+        if (answer.dropped.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 14),
+          Text(Strings.rescoreDropped, style: theme.textTheme.labelLarge),
+          const SizedBox(height: 6),
+          for (final MovedNotice row in answer.dropped)
+            _MovedRow(row: row, faded: true),
+        ],
+      ],
+    );
+  }
+}
+
+class _MovedRow extends StatelessWidget {
+  const _MovedRow({required this.row, this.faded = false});
+
+  final MovedNotice row;
+  final bool faded;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final Color colour =
+        faded ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(
+            width: 62,
+            child: Text(
+              '${row.before} → ${row.after}',
+              style: theme.textTheme.labelSmall?.copyWith(color: colour),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              row.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(color: colour),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

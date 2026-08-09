@@ -58,6 +58,12 @@ internal static class PreflightCommand
             await queries.GetStatusAsync(cancellationToken).ConfigureAwait(false);
             await queries.ListForPreviewAsync(1, cancellationToken).ConfigureAwait(false);
 
+            // Its own SQL, not the preview's, because it joins notice_score and
+            // the preview deliberately does not. A join that only the rescore
+            // button calls is exactly the kind that goes unnoticed until someone
+            // presses it.
+            await queries.ListForRescoreAsync(1, cancellationToken).ConfigureAwait(false);
+
             // The reads the interface added (T-19). Search and closing were
             // already written and had never run outside Telegram; the detail by
             // id is new SQL, and new SQL that only a screen calls is exactly the

@@ -594,3 +594,51 @@ yedi log dosyası vardı ve hiçbiri bunu söylemiyordu.
 **Sonuç:** `publish/` içinde artık `appsettings.json` (api'nin) ve
 `appsettings.worker.json` (worker'ın) yan yana duruyor, iki ayrı log dosyası
 yazılıyor, numaralı kopya yok.
+
+---
+
+## D-21 — Yeniden puanlama elle tetiklenir, kelime değişince kendiliğinden değil
+
+**Karar:** Arşivi yeniden puanlayan bir yol var — `rescore` komutu ve Filtre
+ekranındaki **Yeniden puanla** düğmesi — ama kelime listesi kaydedilince
+kendiliğinden çalışmaz. Basan kişi ne olacağını okuyup onaylar.
+
+**Sorun gerçek ve ölçüldü.** Bir ilan yalnızca ayrıştırıldığı anda puanlanır.
+Yani bugün eklenen bir kelime yalnızca yarın gelecek ilanlara işler; arşivdeki
+988 ilan artık var olmayan bir listenin puanını taşımaya devam eder. 9 Ağustos
+2026'da 26 include terimi eklendi ve önizleme "45 ilan bildirilirdi" dedi;
+listede hâlâ 39 vardı ve yeni terimlerin tuttuğu CRM ilanı **0** okuyordu.
+Son teklif tarihi üç hafta sonraydı.
+
+Yeniden puanlama sonrası: 988 ilan, 37 puan değişti, 8'i eşiği geçti, 2'si
+altına düştü. Düşen ikisi de doğruydu — biri Daikin chiller onarımı, ki
+`chiller` exclude'unun eklenme sebebi zaten oydu.
+
+**Neden otomatik değil.** İki sebep, ikisi de tek yönlü:
+
+1. **Bildirim gider.** `ListUnannounced` son teklif tarihine bakmıyor; eşiği
+   yeni geçen her ilan Telegram'a düşer. Eşik kaydırıcısını denemek için
+   oynatan biri, kaydettiği anda telefonuna bir yığın mesaj alır — bir kısmı
+   süresi geçmiş ilanlar için. Denemenin bedeli, denemeyi bırakmaya yeter.
+2. **Yazma işi.** 988 satır üzerine yazılır. Kaydet tuşunun bir de bunu
+   yapması, tuşun ne yaptığını gizler.
+
+**Neden `reparse` değil.** `reparse` arşivlenmiş sayfaları yeniden okuyup
+ilanları baştan kurar; cevabı olduğu soru "parser yanlıştı". `rescore` yalnızca
+`notice_score`'a dokunur; cevabı olduğu soru "filtre değişti". İkincisi için
+birincisini çalıştırmak, tekilleştirmeyi ve `first_seen_at`'i gereksiz yere
+riske atmak olur.
+
+**Kayıtlı listeyle çalışır, ekrandaki taslakla değil.** Uç gövdesinde kelime
+listesi almıyor. Sebebi D-16: worker'ın kullandığı liste `setting` tablosunda,
+ve arşivle worker'ın farklı listelerde anlaşamaması mümkün olmamalı. Ekranda
+kaydedilmemiş değişiklik varken düğme kilitli ve sebebini yazıyor. Bir listeyi
+denemek isteyen için zaten önizleme var — o hiçbir şey yazmaz.
+
+**`llm_score`'a dokunulmuyor.** D-03 v1'de onu `null` bırakıyor; dolduğu gün
+ucuz filtreyi yeniden çalıştırmak pahalı cevabı silmemeli. Testi var.
+
+**Ne rapor edilir.** En çok yükselenler ve **ayrıca, kesilmeden, eşiğin altına
+düşenler.** Yükselenler yükselme miktarına göre sıralı, yani sesi kesilen ilan
+listenin sonuna düşüp kırpılırdı — ve bir kelime değişikliğinin kimsenin
+bakmadığı yarısı tam olarak orası.

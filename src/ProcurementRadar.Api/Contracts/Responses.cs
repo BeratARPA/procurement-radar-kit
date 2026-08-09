@@ -133,3 +133,45 @@ public sealed record FilterPreviewResponse
     /// <summary>Those that scored something and still fell short.</summary>
     public required IReadOnlyList<ScoredNotice> Missed { get; init; }
 }
+
+/// <summary>What a rescore changed.</summary>
+public sealed record RescoreResponse
+{
+    /// <summary>How many archived notices were scored again.</summary>
+    public required int Considered { get; init; }
+
+    /// <summary>How many came out with a different number than they carried.</summary>
+    public required int Changed { get; init; }
+
+    /// <summary>How many crossed up over the threshold - the point of the exercise.</summary>
+    public required int Gained { get; init; }
+
+    /// <summary>How many dropped below it.</summary>
+    public required int Lost { get; init; }
+
+    public required int Threshold { get; init; }
+
+    /// <summary>The biggest movers, so the change can be sanity-checked by eye.</summary>
+    public required IReadOnlyList<MovedNotice> Notable { get; init; }
+
+    /// <summary>
+    /// Everything that stopped qualifying, in full.
+    /// </summary>
+    /// <remarks>
+    /// Separate from the movers because those are ordered by how far they rose,
+    /// so a notice that went quiet sorts last and gets cut - and that is the half
+    /// of a keyword change worth looking at.
+    /// </remarks>
+    public required IReadOnlyList<MovedNotice> Dropped { get; init; }
+}
+
+public sealed record MovedNotice
+{
+    public required long NoticeId { get; init; }
+
+    public required string Title { get; init; }
+
+    public required int Before { get; init; }
+
+    public required int After { get; init; }
+}
