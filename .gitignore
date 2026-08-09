@@ -1,7 +1,20 @@
 # --- Local data (D-04, D-05) -------------------------------------------------
 # Raw fetch archive, downloaded documents and the PostgreSQL volume all live
 # here. Never committed. Backup is manual: weekly tar czf to a second disk.
-data/
+#
+# The three paths are written out rather than a bare `data/`, which matches a
+# directory of that name at any depth. It matched ui/lib/src/data - the
+# connection store, the failure mapping, the notice filter and every Riverpod
+# provider - so four files the interface cannot start without were never in the
+# repository and a fresh clone would not have built. Nothing said so, because
+# `git add -A` reports no error for a path it has been told to ignore.
+#
+# PR_DATA_DIR defaults to ./data, relative to whatever the working directory is:
+# the repository root for the cli, the project directory under `dotnet run`, and
+# publish/ once deployed.
+/data/
+/src/*/data/
+/publish/data/
 
 # --- Per-machine compose overrides -------------------------------------------
 # Local-only tweaks such as the Windows named-volume workaround. Never shared.
