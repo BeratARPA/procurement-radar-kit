@@ -163,6 +163,126 @@ void main() {
     }
   });
 
+  group('nothing is quietly cut off either', () {
+    // The overflow sweep above passes on a layout nobody can use. A Row inside a
+    // horizontal SingleChildScrollView never overflows - it scrolls - so the
+    // notice filters sat off the right edge of a narrow window with no scrollbar
+    // and no fade, and three of the five were simply invisible. An exception
+    // check cannot see that. Asking whether a control is inside the window can.
+
+    /// True when every pixel of the widget is inside the viewport.
+    bool fullyVisible(WidgetTester tester, Finder finder) {
+      final Size screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+      final Rect box = tester.getRect(finder);
+
+      return box.left >= -0.5 && box.right <= screen.width + 0.5;
+    }
+
+    for (final double width in <double>[320, 360, 390, 412, 600, 768]) {
+      testWidgets('at ${width.toInt()} px every notice filter is reachable',
+          (WidgetTester tester) async {
+        await pumpAt(tester, width);
+
+        // Narrow enough that the controls live behind a button. The button is
+        // what has to be visible, and it has to say how many are on.
+        final Finder button = find.widgetWithIcon(FilledButton, Icons.tune);
+
+        expect(button, findsOneWidget, reason: 'no way in at ${width.toInt()} px');
+        expect(fullyVisible(tester, button), isTrue);
+
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+
+        // Every group, in a sheet, on one screen.
+        for (final String label in const <String>[
+          'Kapsam',
+          'Puan',
+          'Son teklife kalan',
+          'Sırala',
+        ]) {
+          expect(
+            find.text(label),
+            findsOneWidget,
+            reason: '$label missing from the sheet at ${width.toInt()} px',
+          );
+          expect(
+            fullyVisible(tester, find.text(label)),
+            isTrue,
+            reason: '$label cut off at ${width.toInt()} px',
+          );
+        }
+
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    for (final double width in <double>[1024, 1440, 1920]) {
+      testWidgets('at ${width.toInt()} px they are inline and none is cut off',
+          (WidgetTester tester) async {
+        await pumpAt(tester, width);
+
+        expect(find.widgetWithIcon(FilledButton, Icons.tune), findsNothing);
+
+        for (final String label in const <String>[
+          'Kapsam',
+          'Puan',
+          'Son teklife kalan',
+          'Sırala',
+        ]) {
+          expect(find.text(label), findsOneWidget);
+          expect(
+            fullyVisible(tester, find.text(label)),
+            isTrue,
+            reason: '$label cut off at ${width.toInt()} px',
+          );
+        }
+      });
+    }
+
+    for (final double width in <double>[360, 600, 900, 1440]) {
+      testWidgets('at ${width.toInt()} px the source editor shows its whole form',
+          (WidgetTester tester) async {
+        // Never opened before, and it was the worst of them: the form was pinned
+        // to 62% of the dialog inside a second scroll view, so the notes field
+        // was cut through the middle and the eight selector fields under it were
+        // unreachable.
+        await pumpAt(tester, width);
+
+        final GoRouter router =
+            GoRouter.of(tester.element(find.byType(Scaffold).first));
+        router.go(Routes.sources);
+        await tester.pumpAndSettle();
+
+        // A row opens the editor by being tapped; there is no edit icon.
+        await tester.tap(find.byType(ListTile).first);
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.byType(Dialog), findsOneWidget);
+
+        // The end of the form, reached by scrolling the one scroll view the
+        // dialog now has. If it cannot be scrolled to, the form is trapped -
+        // which it was, behind a fixed-height box inside a second scroller.
+        //
+        // The dialog's own scrollable, not `.last`: every TextField carries a
+        // horizontal one of its own, and dragging that scrolls a word of text
+        // rather than the form.
+        await tester.scrollUntilVisible(
+          find.text('Kayıtlı sayfaya karşı dene'),
+          300,
+          scrollable: find
+              .descendant(of: find.byType(Dialog), matching: find.byType(Scrollable))
+              .first,
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Kayıtlı sayfaya karşı dene'), findsOneWidget);
+
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
+
   group('the arrangement follows the width', () {
     testWidgets('a phone gets the bar along the bottom', (WidgetTester tester) async {
       await pumpAt(tester, 390);

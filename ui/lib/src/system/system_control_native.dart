@@ -501,20 +501,38 @@ class NativeSystemControl implements SystemControl {
 
     if (!source.existsSync()) return null;
 
-    await for (final FileSystemEntity entity
-        in source.list(recursive: true, followLinks: false)) {
-      if (entity is! File || !entity.path.endsWith('.cs')) continue;
+    // Only the projects that are actually deployed.
+    //
+    // This used to walk every .cs under src/, which includes the Cli and the
+    // Migrator - neither of which is published. Editing a cli command then
+    // announced that the running api was stale, which it was not, and a warning
+    // that is wrong is a warning people learn to scroll past. A project counts
+    // when its assembly is sitting in publish/, so nothing has to be listed
+    // here and publishing something new is covered the day it is published.
+    final List<Directory> deployed = <Directory>[
+      for (final FileSystemEntity project in source.listSync())
+        if (project is Directory &&
+            File(_in('publish/${project.path.split(Platform.pathSeparator).last}.dll'))
+                .existsSync())
+          project,
+    ];
 
-      // bin and obj are build output; they are newer than the publish by
-      // definition and would make this warn forever.
-      if (entity.path.contains('${Platform.pathSeparator}bin${Platform.pathSeparator}') ||
-          entity.path.contains('${Platform.pathSeparator}obj${Platform.pathSeparator}')) {
-        continue;
+    for (final Directory project in deployed) {
+      await for (final FileSystemEntity entity
+          in project.list(recursive: true, followLinks: false)) {
+        if (entity is! File || !entity.path.endsWith('.cs')) continue;
+
+        // bin and obj are build output; they are newer than the publish by
+        // definition and would make this warn forever.
+        if (entity.path.contains('${Platform.pathSeparator}bin${Platform.pathSeparator}') ||
+            entity.path.contains('${Platform.pathSeparator}obj${Platform.pathSeparator}')) {
+          continue;
+        }
+
+        final DateTime modified = entity.statSync().modified;
+
+        if (modified.isAfter(newestSource)) newestSource = modified;
       }
-
-      final DateTime modified = entity.statSync().modified;
-
-      if (modified.isAfter(newestSource)) newestSource = modified;
     }
 
     if (!newestSource.isAfter(built)) return null;

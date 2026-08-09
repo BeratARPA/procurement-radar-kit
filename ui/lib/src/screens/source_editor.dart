@@ -214,9 +214,18 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
           padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
           child: Row(
             children: <Widget>[
-              Text(_isNew ? Strings.addSource : Strings.editSource,
-                  style: theme.textTheme.titleMedium),
-              const Spacer(),
+              // Expanded, not a bare Text beside a Spacer. A Spacer yields all
+              // its space before the text yields any, so the title overflowed
+              // rather than shortening - on a narrow dialog, or at a large text
+              // scale, or in a test whose font draws every glyph square.
+              Expanded(
+                child: Text(
+                  _isNew ? Strings.addSource : Strings.editSource,
+                  style: theme.textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close),
@@ -233,11 +242,27 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
               // panel sits mostly empty beside it.
               final bool sideBySide = constraints.maxWidth >= 820;
 
-              final Widget form = Form(
-                key: _form,
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: <Widget>[
+              // Two fields share a line only where two fields fit. A dropdown
+              // has an intrinsic width it will not go under, so Expanded does
+              // not save it: at 360 px the type and adapter pair overflowed by
+              // ten pixels however the space was divided.
+              final bool paired = constraints.maxWidth >= 520;
+
+              Widget pair(Widget left, Widget right) => paired
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(child: left),
+                        const SizedBox(width: 16),
+                        Expanded(child: right),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[left, right],
+                    );
+
+              final List<Widget> fields = <Widget>[
                       if (_isNew)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -248,24 +273,13 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
                           ),
                         ),
                       _text('authorityName', Strings.authorityName, required: true),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Expanded(child: _text('province', Strings.province, required: true)),
-                          const SizedBox(width: 16),
-                          Expanded(child: _text('district', Strings.district)),
-                        ],
+                      pair(
+                        _text('province', Strings.province, required: true),
+                        _text('district', Strings.district),
                       ),
                       _text('url', Strings.sourceUrlLabel,
                           required: true, validator: _url),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Expanded(child: _authorityTypeField()),
-                          const SizedBox(width: 16),
-                          Expanded(child: _adapterField()),
-                        ],
-                      ),
+                      pair(_authorityTypeField(), _adapterField()),
                       const SizedBox(height: 18),
                       _text('pollIntervalMinutes', Strings.pollInterval),
                       _text('notes', Strings.notes, lines: 4, help: Strings.notesHelp),
@@ -294,28 +308,52 @@ class _SourceEditorState extends ConsumerState<SourceEditor> {
                           ),
                         ),
                       ],
-                  ],
-                ),
-              );
+              ];
 
               if (!sideBySide) {
-                // Stacked: the panel goes under the form, inside one scroll.
-                return ListView(
-                  padding: EdgeInsets.zero,
-                  children: <Widget>[
-                    SizedBox(height: constraints.maxHeight * 0.62, child: form),
-                    const Divider(height: 1),
-                    _CheckPanel(onCheck: _check),
-                  ],
+                // Stacked: one scroll view holding the fields and then the
+                // panel. It used to be a ListView whose first child was a
+                // fixed-height box containing another ListView - a scroller
+                // inside a scroller - so the form was pinned to 62% of the
+                // dialog whatever it contained. On a narrow window that showed
+                // a Notlar field cut through the middle, a band of empty space
+                // under it, and eight selector fields nobody could tell were
+                // there.
+                return Form(
+                  key: _form,
+                  child: ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: <Widget>[
+                      ...fields,
+                      const Divider(height: 40),
+                      _CheckPanel(onCheck: _check),
+                    ],
+                  ),
                 );
               }
 
               return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  Expanded(flex: 3, child: form),
+                  Expanded(
+                    flex: 3,
+                    child: Form(
+                      key: _form,
+                      child: ListView(
+                        padding: const EdgeInsets.all(20),
+                        children: fields,
+                      ),
+                    ),
+                  ),
                   const VerticalDivider(width: 1),
-                  Expanded(flex: 2, child: _CheckPanel(onCheck: _check)),
+                  // Its own scroll: a long check result should not push the form
+                  // beside it, and the two halves are read independently.
+                  Expanded(
+                    flex: 2,
+                    child: SingleChildScrollView(
+                      child: _CheckPanel(onCheck: _check),
+                    ),
+                  ),
                 ],
               );
             },
@@ -460,31 +498,40 @@ class _CheckPanel extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final AsyncValue<SourceCheckResponse>? check = ref.watch(sourceCheckProvider);
 
-    return ListView(
-      padding: const EdgeInsets.all(20),
+    // A column, not a ListView. Beside the form it is inside an Expanded that
+    // gives it a height; under the form it is inside the form's own scroll view,
+    // and a scroll view inside a scroll view is how this dialog ended up showing
+    // a cut-off Notlar field above a panel of empty space.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        FilledButton.tonalIcon(
-          onPressed: check is AsyncLoading ? null : onCheck,
-          icon: const Icon(Icons.play_arrow_outlined),
-          label: const Text(Strings.testAgainstArchive),
-        ),
-        const SizedBox(height: 16),
-        if (check == null)
-          Text(
-            Strings.checkIdle,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          )
-        else
-          check.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (Object error, StackTrace stackTrace) => Text(
-              '$error',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.error),
-            ),
-            data: (SourceCheckResponse answer) => _Result(answer: answer),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: FilledButton.tonalIcon(
+            onPressed: check is AsyncLoading ? null : onCheck,
+            icon: const Icon(Icons.play_arrow_outlined),
+            label: const Text(Strings.testAgainstArchive),
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: check == null
+              ? Text(
+                  Strings.checkIdle,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                )
+              : check.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (Object error, StackTrace stackTrace) => Text(
+                    '$error',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.error),
+                  ),
+                  data: (SourceCheckResponse answer) => _Result(answer: answer),
+                ),
+        ),
       ],
     );
   }

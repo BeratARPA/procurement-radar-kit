@@ -62,6 +62,10 @@ abstract final class Strings {
   static const String scoreLabel = 'Puan';
   static const String refresh = 'Yenile';
   static const String clearSearch = 'Aramayı temizle';
+  static const String filters = 'Filtreler';
+  static const String clearFilters = 'Sıfırla';
+
+  static String filtersActive(int count) => 'Filtreler · $count';
 
   // --- notice list filters ---
   static const String scopeFilter = 'Kapsam';

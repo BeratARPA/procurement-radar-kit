@@ -59,6 +59,10 @@ class SourcesScreen extends ConsumerWidget {
             });
 
           return ListView.separated(
+            // Room under the last row for the floating button, which otherwise
+            // sits on top of it - and the row it covers carries the switch that
+            // turns a source off.
+            padding: const EdgeInsets.only(bottom: 88),
             itemCount: ordered.length,
             separatorBuilder: (BuildContext context, int index) =>
                 const Divider(height: 1),

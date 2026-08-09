@@ -179,108 +179,214 @@ class _FilterBar extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              // Top-aligned so the chips share one baseline even if a label
-              // wraps; centred, a longer label pushes its own group out of line.
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                // Scope first: it decides what set the rest narrow. Open is the
-                // default because an expired notice cannot be bid on, but the
-                // archive is what this project accumulates and Telegram already
-                // filters - so all of it has to be reachable in one tap.
-                _Group(label: Strings.scopeFilter, children: <Widget>[
-                  _Choice(
-                    label: Strings.scopeOpen,
-                    selected: filter.scope == NoticeScope.open,
-                    onSelected: () => notifier.setScope(NoticeScope.open),
-                  ),
-                  _Choice(
-                    label: Strings.scopeAll,
-                    selected: filter.scope == NoticeScope.all,
-                    onSelected: () => notifier.setScope(NoticeScope.all),
-                  ),
-                ]),
-                const SizedBox(width: 16),
-                // The third chip is the threshold the worker is actually
-                // running on, read from the setting. It used to say 30 whatever
-                // the setting said, which made it wrong the moment anybody moved
-                // the slider on the Filtre screen.
-                _Group(label: Strings.scoreFilter, children: <Widget>[
-                  _Choice(
-                    label: Strings.scoreAny,
-                    selected: filter.minScore == 0,
-                    onSelected: () => notifier.setMinScore(0),
-                  ),
-                  _Choice(
-                    label: Strings.scoreSome,
-                    selected: filter.minScore == 1,
-                    onSelected: () => notifier.setMinScore(1),
-                  ),
-                  if (threshold != null)
-                    _Choice(
-                      label: Strings.scoreNotified(threshold),
-                      selected: filter.minScore == threshold,
-                      onSelected: () => notifier.setMinScore(threshold),
-                    ),
-                ]),
-                const SizedBox(width: 16),
-                _Group(label: Strings.deadlineFilter, children: <Widget>[
-                  _Choice(
-                    label: Strings.anyTime,
-                    selected: filter.withinHours == null,
-                    onSelected: () => notifier.setWithinHours(null),
-                  ),
-                  _Choice(
-                    label: Strings.within24,
-                    selected: filter.withinHours == 24,
-                    onSelected: () => notifier.setWithinHours(24),
-                  ),
-                  _Choice(
-                    label: Strings.within72,
-                    selected: filter.withinHours == 72,
-                    onSelected: () => notifier.setWithinHours(72),
-                  ),
-                  _Choice(
-                    label: Strings.withinWeek,
-                    selected: filter.withinHours == 168,
-                    onSelected: () => notifier.setWithinHours(168),
-                  ),
-                ]),
-                const SizedBox(width: 16),
-                _Group(label: Strings.sortBy, children: <Widget>[
-                  _Choice(
-                    label: Strings.sortDeadline,
-                    selected: filter.sort == NoticeSort.deadline,
-                    onSelected: () => notifier.setSort(NoticeSort.deadline),
-                  ),
-                  _Choice(
-                    label: Strings.sortScore,
-                    selected: filter.sort == NoticeSort.score,
-                    onSelected: () => notifier.setSort(NoticeSort.score),
-                  ),
-                ]),
-                const SizedBox(width: 16),
-                // A group like the others rather than a bare chip beside them.
-                // Every other control here is a label with choices under it, and
-                // one unlabelled chip in the row sat off the shared baseline and
-                // read as something that had been bolted on.
-                _Group(label: Strings.deadlineKnown, children: <Widget>[
-                  _Choice(
-                    label: Strings.deadlineKnownAll,
-                    selected: !filter.hideUndated,
-                    onSelected: () => notifier.setHideUndated(false),
-                  ),
-                  _Choice(
-                    label: Strings.deadlineKnownOnly,
-                    selected: filter.hideUndated,
-                    onSelected: () => notifier.setHideUndated(true),
-                  ),
-                ]),
-              ],
-            ),
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final List<Widget> groups = _groups(filter, notifier, threshold);
+
+              // Five groups is about 1100 px of chips. Below that they used to
+              // sit in a horizontal scroll view, which is why this looked broken
+              // on anything narrower: the row was cut at the window edge with no
+              // scrollbar and no fade, so three of the five filters were simply
+              // invisible and nothing said they were there.
+              if (constraints.maxWidth >= _inlineFrom) {
+                return Wrap(spacing: 16, runSpacing: 12, children: groups);
+              }
+
+              // Narrower than that, wrapping them inline would push the list
+              // itself off a phone screen - five labelled groups stack to well
+              // over half the viewport. So they move behind one button that
+              // says how many are on, and open in a sheet with room to breathe.
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: _FilterButton(filter: filter, groups: _groups),
+              );
+            },
           ),
+        ],
+      ),
+    );
+  }
+
+  /// The controls themselves, laid out the same wherever they are shown.
+  static List<Widget> _groups(
+    NoticeFilter filter,
+    NoticeFilterNotifier notifier,
+    int? threshold,
+  ) {
+    return <Widget>[
+      // Scope first: it decides what set the rest narrow. Open is the
+      // default because an expired notice cannot be bid on, but the
+      // archive is what this project accumulates and Telegram already
+      // filters - so all of it has to be reachable in one tap.
+      _Group(label: Strings.scopeFilter, children: <Widget>[
+        _Choice(
+          label: Strings.scopeOpen,
+          selected: filter.scope == NoticeScope.open,
+          onSelected: () => notifier.setScope(NoticeScope.open),
+        ),
+        _Choice(
+          label: Strings.scopeAll,
+          selected: filter.scope == NoticeScope.all,
+          onSelected: () => notifier.setScope(NoticeScope.all),
+        ),
+      ]),
+      // The third chip is the threshold the worker is actually
+      // running on, read from the setting. It used to say 30 whatever
+      // the setting said, which made it wrong the moment anybody moved
+      // the slider on the Filtre screen.
+      _Group(label: Strings.scoreFilter, children: <Widget>[
+        _Choice(
+          label: Strings.scoreAny,
+          selected: filter.minScore == 0,
+          onSelected: () => notifier.setMinScore(0),
+        ),
+        _Choice(
+          label: Strings.scoreSome,
+          selected: filter.minScore == 1,
+          onSelected: () => notifier.setMinScore(1),
+        ),
+        if (threshold != null)
+          _Choice(
+            label: Strings.scoreNotified(threshold),
+            selected: filter.minScore == threshold,
+            onSelected: () => notifier.setMinScore(threshold),
+          ),
+      ]),
+      _Group(label: Strings.deadlineFilter, children: <Widget>[
+        _Choice(
+          label: Strings.anyTime,
+          selected: filter.withinHours == null,
+          onSelected: () => notifier.setWithinHours(null),
+        ),
+        _Choice(
+          label: Strings.within24,
+          selected: filter.withinHours == 24,
+          onSelected: () => notifier.setWithinHours(24),
+        ),
+        _Choice(
+          label: Strings.within72,
+          selected: filter.withinHours == 72,
+          onSelected: () => notifier.setWithinHours(72),
+        ),
+        _Choice(
+          label: Strings.withinWeek,
+          selected: filter.withinHours == 168,
+          onSelected: () => notifier.setWithinHours(168),
+        ),
+      ]),
+      _Group(label: Strings.sortBy, children: <Widget>[
+        _Choice(
+          label: Strings.sortDeadline,
+          selected: filter.sort == NoticeSort.deadline,
+          onSelected: () => notifier.setSort(NoticeSort.deadline),
+        ),
+        _Choice(
+          label: Strings.sortScore,
+          selected: filter.sort == NoticeSort.score,
+          onSelected: () => notifier.setSort(NoticeSort.score),
+        ),
+      ]),
+      // A group like the others rather than a bare chip beside them.
+      // Every other control here is a label with choices under it, and
+      // one unlabelled chip in the row sat off the shared baseline and
+      // read as something that had been bolted on.
+      _Group(label: Strings.deadlineKnown, children: <Widget>[
+        _Choice(
+          label: Strings.deadlineKnownAll,
+          selected: !filter.hideUndated,
+          onSelected: () => notifier.setHideUndated(false),
+        ),
+        _Choice(
+          label: Strings.deadlineKnownOnly,
+          selected: filter.hideUndated,
+          onSelected: () => notifier.setHideUndated(true),
+        ),
+      ]),
+    ];
+  }
+}
+
+/// Below this the five groups go behind a button instead of inline.
+///
+/// Not one of Material's window-class boundaries on purpose: this is about how
+/// wide the controls are, not how wide the device is, and five labelled groups
+/// of chips need about 1100 px to sit on two comfortable lines.
+const double _inlineFrom = 720;
+
+/// What the filters look like when there is no room to show them.
+///
+/// The count is on the button because a filter you cannot see is a filter you
+/// forget is on - and this list showing 628 of 988 notices with no visible
+/// reason is the exact failure the Kapsam chip was added to prevent.
+class _FilterButton extends ConsumerWidget {
+  const _FilterButton({required this.filter, required this.groups});
+
+  final NoticeFilter filter;
+  final List<Widget> Function(NoticeFilter, NoticeFilterNotifier, int?) groups;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final int active = filter.activeCount;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        FilledButton.tonalIcon(
+          onPressed: () => showModalBottomSheet<void>(
+            context: context,
+            showDragHandle: true,
+            // The sheet holds the same five groups and a phone is not tall
+            // enough for them plus a keyboard, so it scrolls and can be dragged
+            // to full height rather than being clipped at half.
+            isScrollControlled: true,
+            builder: (BuildContext context) => _FilterSheet(groups: groups),
+          ),
+          icon: const Icon(Icons.tune),
+          label: Text(
+            active == 0 ? Strings.filters : Strings.filtersActive(active),
+          ),
+        ),
+        if (active > 0) ...<Widget>[
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: ref.read(noticeFilterProvider.notifier).clear,
+            child: const Text(Strings.clearFilters),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _FilterSheet extends ConsumerWidget {
+  const _FilterSheet({required this.groups});
+
+  final List<Widget> Function(NoticeFilter, NoticeFilterNotifier, int?) groups;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final NoticeFilter filter = ref.watch(noticeFilterProvider);
+    final NoticeFilterNotifier notifier = ref.read(noticeFilterProvider.notifier);
+    final int? threshold = ref.watch(notifyThresholdProvider);
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      maxChildSize: 0.95,
+      builder: (BuildContext context, ScrollController controller) => ListView(
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        children: <Widget>[
+          Text(Strings.filters, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 16),
+          // A column rather than a Wrap: there is one column of width here, and
+          // a Wrap would put two short groups side by side at a width where
+          // that reads as one group with too many chips.
+          for (final Widget group in groups(filter, notifier, threshold))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: group,
+            ),
         ],
       ),
     );
@@ -309,14 +415,10 @@ class _Group extends StatelessWidget {
                 ?.copyWith(color: theme.colorScheme.outline),
           ),
         ),
-        Row(
-          children: <Widget>[
-            for (int i = 0; i < children.length; i++) ...<Widget>[
-              if (i > 0) const SizedBox(width: 6),
-              children[i],
-            ],
-          ],
-        ),
+        // A Wrap, not a Row. "Son teklif" is four chips and on a 320 px phone
+        // they do not fit on one line - in a Row that is an overflow, here it
+        // is a second line.
+        Wrap(spacing: 6, runSpacing: 6, children: children),
       ],
     );
   }
