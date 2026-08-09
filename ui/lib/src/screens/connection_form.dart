@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +6,26 @@ import '../data/connection_store.dart';
 import '../data/providers.dart';
 import '../strings.dart';
 import '../system/system_providers.dart';
+
+/// localhost, 127.0.0.1 and ::1 - the machine asking, whichever one it is.
+bool _isLoopback(String host) {
+  final String bare = host.toLowerCase().replaceAll(RegExp(r'^\[|\]$'), '');
+
+  return bare == 'localhost' || bare == '127.0.0.1' || bare == '::1';
+}
+
+/// Whether a loopback address could reach the api from wherever this is running.
+///
+/// True on a desktop build, which runs on the collecting machine. True in a
+/// browser that was itself opened on localhost, because then the two are the
+/// same machine. False on a phone, and false in a browser opened from another
+/// machine's address - in both, loopback is the device holding the screen.
+bool get _loopbackCouldWork {
+  if (kIsWeb) return _isLoopback(Uri.base.host);
+
+  return defaultTargetPlatform != TargetPlatform.android &&
+      defaultTargetPlatform != TargetPlatform.iOS;
+}
 
 /// The address and the token, in one place used by two screens.
 ///
@@ -102,9 +123,21 @@ class _ConnectionFormState extends ConsumerState<ConnectionForm> {
 
               final Uri? uri = Uri.tryParse(text);
 
-              return uri != null && uri.hasScheme && uri.host.isNotEmpty
-                  ? null
-                  : Strings.addressNotAbsolute;
+              if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+                return Strings.addressNotAbsolute;
+              }
+
+              // The default is localhost, which is right on the machine doing
+              // the collecting and cannot work anywhere else - on a phone it
+              // means the phone. The help text under this field said so and it
+              // was not enough: the field arrives already filled in, so there is
+              // nothing to read before it looks correct. Refused rather than
+              // warned, because there is no case where it would have worked.
+              if (_isLoopback(uri.host) && !_loopbackCouldWork) {
+                return Strings.addressLoopbackElsewhere;
+              }
+
+              return null;
             },
           ),
           const SizedBox(height: 20),
