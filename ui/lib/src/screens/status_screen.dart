@@ -91,14 +91,30 @@ class _Row extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    return ListTile(
-      title: Text(label),
-      trailing: Text(
-        value,
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: warn ? theme.colorScheme.error : null,
-          fontWeight: FontWeight.w600,
-        ),
+    // Not a ListTile. `trailing` is laid out at whatever width it asks for and
+    // asserts if that is the whole tile - and one of these rows carries a
+    // formatted date, not a count. On a 320 px phone "9 Ağustos 2026 21:54" is
+    // wider than the tile, so the screen threw during layout rather than
+    // wrapping. Two flexible halves cannot do that at any width.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(flex: 3, child: Text(label)),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: warn ? theme.colorScheme.error : null,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

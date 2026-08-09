@@ -450,8 +450,47 @@ Yine de istek başlığında tek bir statik token aranır (`PR_API_TOKEN`) —
 kullanıcı hesabı değil, ev ağındaki başka bir cihazın yanlışlıkla ayar
 değiştirmesine karşı.
 
-**iOS yok.** Derlemesi Mac istiyor, ekipte Mac yok. Safari'den web sürümü
-açılır ve ana ekrana eklenir; bu bir eksiklik, gizlenmiyor.
+~~**iOS yok.** Derlemesi Mac istiyor, ekipte Mac yok. Safari'den web sürümü
+açılır ve ana ekrana eklenir; bu bir eksiklik, gizlenmiyor.~~
+
+**Güncelleme — 9 Ağustos 2026: iOS ve macOS projeleri eklendi, ama derlenmedi.**
+Kararın değişen tarafı şu: *derleyememek* ile *proje dosyalarının hiç olmaması*
+aynı şey değil. İkincisi, bir gün Mac'i olan biri geldiğinde bir akşamlık iş
+çıkarır ve o akşam bulunacak şeyler tam olarak Android'de bulunanlar oldu.
+
+Beş hedef de aynı `ui/` kod tabanından çıkıyor: web, Android, Windows, ve artık
+iOS ile macOS. Değişmeyen: bu makinede `flutter build ios` ve `flutter build
+macos` **alt komutları bile yok** — Flutter onları Windows'ta hiç tanımıyor.
+Yani iOS/macOS "hazır", "doğrulandı" değil ve bu ayrım burada duruyor.
+
+Eklerken iki şey çıktı, ikisi de Android'in `INTERNET` izniyle aynı biçimde —
+yalnızca gerçek cihazda, yayın derlemesinde görünürdü:
+
+| Platform | Şablonun bıraktığı | Sonucu |
+|---|---|---|
+| macOS | `com.apple.security.network.client` yok | Sandbox'lı uygulama **tek bir giden istek yapamaz** |
+| iOS | `NSAppTransportSecurity` yok | ATS düz http'yi reddeder, api ise `http://<ip>:5080` |
+
+macOS'ta `network.server` var ama o Dart VM servisi için; giden istekle ilgisi
+yok. İkisi de eklendi.
+
+iOS tarafında `NSAllowsArbitraryLoads` değil **`NSAllowsLocalNetworking`**
+kullanıldı: yalnızca yerel adlara ve ayrılmış özel IP aralıklarına düz http
+izni verir, internetin geri kalanı kapalı kalır. Android'de blanket izin
+verilmesinin sebebi o platformun daha darını sunmaması; iOS sunuyor, o yüzden
+dar olan seçildi. iOS 14'ün yerel ağ izni için `NSLocalNetworkUsageDescription`
+de eklendi — olmadığında istek sessizce başarısız olur.
+
+Bundle kimliği üç platformda da `com.procurementradar.radar`. `flutter create`
+iOS/macOS'a `com.procurementradar.procurementRadar` yazmıştı; sonradan
+değiştirmek uygulamayı silip yeniden kurmayı gerektirirdi.
+
+**Sistem ekranı yalnızca Windows'ta.** `isSupported => Platform.isWindows`, yani
+`dart:io`'su olan iOS/macOS/Android derlemelerinde de gizli. Doğrusu bu: o ekran
+Docker Desktop'ı ve Windows zamanlanmış görevlerini sürüyor.
+
+**Linux masaüstü eklenmedi.** İsteyen olmadı ve derlenmeyen bir hedef eskiyen
+bir hedeftir; gerekirse tek komut.
 
 ---
 

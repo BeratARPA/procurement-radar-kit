@@ -70,12 +70,62 @@ bir alan Dart'ta da null olamaz. O satır olmadan `title` bile `String?` gelir.
 | Sistem | **Yalnızca masaüstü.** Docker/worker/api durumu, başlat-durdur, açılışta başlatma, CLI komutları, log |
 | Ayarlar | Api adresi, anahtar, açık/koyu tema |
 
+## Hangi platformlar
+
+Beşi de aynı `ui/` kod tabanından. Tek fark, `dart:io` koşullu import'unun
+arkasındaki Sistem ekranı.
+
+| Hedef | Durum | Not |
+|---|---|---|
+| Web | derleniyor, canlıda kullanılıyor | Sistem ekranı yok (tarayıcı süreç başlatamaz) |
+| Android | derleniyor, APK doğrulandı | `com.procurementradar.radar` |
+| Windows | derleniyor, günlük kullanılan sürüm | Sistem ekranı **yalnızca burada** |
+| iOS | proje hazır, **derlenmedi** | Derlemek Mac ister; bu makinede `flutter build ios` alt komutu bile yok |
+| macOS | proje hazır, **derlenmedi** | Aynı sebep |
+
+iOS ve macOS için "hazır" ile "doğrulandı" arasındaki fark bilerek yazıldı
+(D-16). Eklerken çıkan iki tuzak Android'in `INTERNET` izniyle aynı biçimdeydi
+— yalnızca gerçek cihazda, yayın derlemesinde görülürdü:
+
+- **macOS:** `com.apple.security.network.client` olmadan sandbox'lı uygulama
+  tek bir giden istek yapamaz. Şablon eklemiyor; `network.server` Dart VM
+  servisi için, giden istekle ilgisi yok.
+- **iOS:** `NSAppTransportSecurity` olmadan ATS düz http'yi reddeder, api ise
+  `http://<makine-ip>:5080`. `NSAllowsArbitraryLoads` değil
+  **`NSAllowsLocalNetworking`** kullanıldı — yalnızca yerel adlar ve özel IP
+  aralıkları açılır, internetin geri kalanı kapalı kalır. iOS 14'ün yerel ağ
+  izni için `NSLocalNetworkUsageDescription` de var.
+
+Linux masaüstü yok: isteyen olmadı, ve derlenmeyen bir hedef eskiyen bir hedef.
+
+## Responsive — iddia değil, test
+
 Dar ekranda gezinme altta (`NavigationBar`), geniş ekranda yanda
-(`NavigationRail`); sınır Material 3'ün 600 px'i.
+(`NavigationRail`); sınırlar Material 3'ün kendi pencere sınıfları: 600'ün
+altı compact, 840'ın üstü expanded (rail etiketleriyle açılır).
 
 Alt çubuk en fazla beş hedef alır ve yedi hedef var. Telefonda **Filtre** ve
 **Kaynaklar** çubukta görünmez — kelime listesi düzenlemek ve CSS selector
 yazmak klavye ve geniş ekran isteyen işler. Rotaları duruyor, bağlantı açılır.
+
+Bu iddiayı `test/layout_test.dart` **on genişlikte, her ekranda** doğruluyor.
+Genişlikler yuvarlak sayı değil cihaz: 320 (iPhone SE), 360 (Türkiye'de en
+yaygın Android), 390 (iPhone 14/15), 412 (Pixel), 600 ve 840 (Material sınırları),
+768/1024 (iPad), 1440/1920 (masaüstü).
+
+Flutter taşan bir `Row`/`Column`/`Text`'i yerleşim sırasında **exception olarak**
+bildiriyor, `tester.takeException()` onu döndürüyor — yani bu bakılması gereken
+bir ekran görüntüsü değil, düşen bir test.
+
+Çubukta hedefi olmayan ekranlar (telefonda Filtre ve Kaynaklar) tıklanarak
+gezilemediği için ayrıca `router.go()` ile, bağlantıdan açılır gibi açılıyor.
+Taşmaya en yatkın ekranların atlanmaması için.
+
+**İlk çalıştırmada gerçek bir hata buldu:** Durum ekranındaki satırlar
+`ListTile.trailing` kullanıyordu ve biri sayı değil biçimlenmiş tarih taşıyor.
+320 px'de `9 Ağustos 2026 21:54` satırın tamamından geniş kalıyor ve Flutter
+sarmak yerine yerleşim sırasında atıyordu. İki esnek yarıya çevrildi; hiçbir
+genişlikte taşamaz.
 
 ## Android (T-22)
 
@@ -250,7 +300,13 @@ Türkçe karakterleriyle geldi.
 
 ```bash
 flutter build web --release
+flutter build apk --release
+flutter build windows --release
 ```
 
-Çıktı `build/web/`. Herhangi bir statik sunucudan verilebilir; api'ye ayrı
+Web çıktısı `build/web/`; herhangi bir statik sunucudan verilebilir, api'ye ayrı
 adresten gittiği için api'nin CORS ayarı (D-16) bunu zaten karşılıyor.
+
+`flutter build ios` ve `flutter build macos` bir Mac ister — bu makinede o alt
+komutlar Flutter'da hiç tanımlı değil. Proje dosyaları hazır, derlemesi
+doğrulanmadı.

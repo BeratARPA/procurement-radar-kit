@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<!--
+	  Without this a sandboxed macOS build cannot make a single outgoing request,
+	  and the interface is nothing but outgoing requests. The template does not
+	  add it; `network.server` in the debug profile is for the Dart VM service,
+	  not for talking to the api. Same shape as the Android INTERNET permission
+	  that shipped missing from the release manifest.
+	-->
+	<true/>
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.network.server</key>
+	<true/>
+</dict>
+</plist>
