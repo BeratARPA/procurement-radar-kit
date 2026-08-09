@@ -575,7 +575,14 @@ class _RescorePanel extends ConsumerWidget {
     // The api rescores with what is stored, not with what is on screen. Running
     // it over unsaved edits would report numbers for a list nobody chose, so the
     // button waits for Kaydet and says why.
-    final bool unsaved = stored != null && stored.value != draft.toJson();
+    //
+    // Compared after a round trip through the same loader, not as text. The
+    // setting column is jsonb (D-16), so Postgres hands the value back on one
+    // line in its own key order while the draft serialises indented - the two
+    // are never the same string even when nothing has been touched, and this
+    // button sat permanently disabled saying "önce kaydedin" to somebody who
+    // had not typed anything.
+    final bool unsaved = stored != null && !sameKeywordDocument(stored.value, draft);
     final bool running = result is AsyncLoading;
 
     return Column(
@@ -624,6 +631,21 @@ class _RescorePanel extends ConsumerWidget {
         ],
       ],
     );
+  }
+}
+
+/// Whether a stored keyword document and a draft say the same thing.
+///
+/// Both sides go through `KeywordDraft`, so formatting cannot make them differ
+/// and a real edit cannot make them match. Lives here rather than in the draft
+/// because it is a question about this screen's button, not about the model.
+bool sameKeywordDocument(String stored, KeywordDraft draft) {
+  try {
+    return KeywordDraft.parse(stored).toJson() == draft.toJson();
+  } on Object {
+    // Unreadable stored value: the api will report it, and a button is the
+    // wrong place to find out. Treat it as different so this stays disabled.
+    return false;
   }
 }
 
