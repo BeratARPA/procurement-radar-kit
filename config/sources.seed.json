@@ -116,7 +116,7 @@
         "row_selector": ".views-row",
         "title_selector": "a.list-group-item__title",
         "link_selector": "a.list-group-item__title",
-        "date_selector": null,
+        "date_selector": "p",
         "amount_selector": null,
         "document_selector": null,
         "base_url": "https://yitdb.metu.edu.tr"
@@ -760,7 +760,7 @@
         "row_selector": "div.faaliyet-raporlari.mb-5.page-content",
         "title_selector": "a",
         "link_selector": "a",
-        "date_selector": null,
+        "date_selector": "span",
         "time_selector": null,
         "amount_selector": null,
         "document_selector": null
