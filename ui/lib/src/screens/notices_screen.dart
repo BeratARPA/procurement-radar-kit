@@ -180,6 +180,9 @@ class _FilterBar extends ConsumerWidget {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
+              // Top-aligned so the chips share one baseline even if a label
+              // wraps; centred, a longer label pushes its own group out of line.
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 // Scope first: it decides what set the rest narrow. Open is the
                 // default because an expired notice cannot be bid on, but the
@@ -254,11 +257,22 @@ class _FilterBar extends ConsumerWidget {
                   ),
                 ]),
                 const SizedBox(width: 16),
-                FilterChip(
-                  label: const Text(Strings.hideUndated),
-                  selected: filter.hideUndated,
-                  onSelected: notifier.setHideUndated,
-                ),
+                // A group like the others rather than a bare chip beside them.
+                // Every other control here is a label with choices under it, and
+                // one unlabelled chip in the row sat off the shared baseline and
+                // read as something that had been bolted on.
+                _Group(label: Strings.deadlineKnown, children: <Widget>[
+                  _Choice(
+                    label: Strings.deadlineKnownAll,
+                    selected: !filter.hideUndated,
+                    onSelected: () => notifier.setHideUndated(false),
+                  ),
+                  _Choice(
+                    label: Strings.deadlineKnownOnly,
+                    selected: filter.hideUndated,
+                    onSelected: () => notifier.setHideUndated(true),
+                  ),
+                ]),
               ],
             ),
           ),

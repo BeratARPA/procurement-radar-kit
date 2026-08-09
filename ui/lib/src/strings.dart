@@ -85,7 +85,9 @@ abstract final class Strings {
   static const String sortDeadline = 'Aciliyete göre';
   static const String sortScore = 'Puana göre';
 
-  static const String hideUndated = 'Tarihsizleri gizle';
+  static const String deadlineKnown = 'Son teklif tarihi';
+  static const String deadlineKnownAll = 'Olsa da olmasa da';
+  static const String deadlineKnownOnly = 'Sadece okunabilenler';
   static const String clearFilter = 'Filtreyi temizle';
   static const String noneMatchFilter =
       'Bu filtreye uyan ilan yok. Filtreyi gevşetin.';
