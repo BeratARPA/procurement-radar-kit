@@ -9,25 +9,50 @@ Tüm listeyi birden vermeyin.
 
 ---
 
-## Durum — 6 Ağustos 2026
+## Durum — 9 Ağustos 2026
 
-T-00'dan T-16'ya kadar hepsi bitti; T-13 D-03 gereği açılmadı. Zincirin tamamı
-canlı sitelere karşı çalıştı: robots.txt → nezaket kuyruğu → gzip arşiv →
-kodlama çözümü → ayrıştırma → tekilleştirme → maskeleme → skorlama.
+T-00'dan T-22'ye kadar hepsi bitti; T-13 D-03 gereği, T-23 D-20 gereği açılmadı.
+Zincirin tamamı canlı sitelere karşı çalıştı: robots.txt → nezaket kuyruğu →
+gzip arşiv → kodlama çözümü → ayrıştırma → tekilleştirme → maskeleme →
+skorlama → bildirim → sonuç takibi → arayüz.
 
-- 33 aktif kaynak, 25 kaynak "kayıtlı ama pasif" (sebebi her birinin `notes`
-  alanında; hiçbiri unutulmuş değil)
-- 539 ilan, 324'ünde son teklif tarihi
+- **85 aktif kaynak, 23 pasif** (sebebi her birinin `notes` alanında, ölçüm
+  tarihiyle; hiçbiri unutulmuş değil)
+- **988 ilan, 706'sında son teklif tarihi**
+- **41 gönderilmiş Telegram bildirimi**
 - Aktif her kaynağın kaydedilmiş sayfası fixture olarak depoda, config'i testle
   korunuyor
-- 342 test
+- **424 .NET testi + 59 Dart testi**
 
-Sonuç takibi de artık çalışıyor (D-15): son teklif tarihinin üzerinden iki hafta
+> Bu blok 6 Ağustos'ta yazılmış ve 9 Ağustos'a kadar güncellenmemişti (33 kaynak,
+> 539 ilan, "Telegram token boş" diyordu). Üç gün eski bir durum bloğu, bir günü
+> olmayan bir işi öncelik sanmakla geçirtti. Rakamları elle yazmak yerine
+> arayüzün **Durum** ekranına bakmak daha güvenilir.
+
+Sonuç takibi de çalışıyor (D-15): son teklif tarihinin üzerinden iki hafta
 geçmiş, İKN'si olan ilanlar altı saatte bir EKAP'a soruluyor ve Sonuç İlanı
 yayımlandıysa kazanan, sözleşme bedeli ve teklif sayısı `award` tablosuna yazılıyor.
-Telegram'dan `/sonuclar` ile okunuyor.
+Telegram'dan `/sonuclar`, arayüzden **Sonuçlar** ekranından okunuyor. Tablo şu an
+boş ve sebebi ekranda yazıyor: gerçek İKN taşıyan 109 ihalenin hiçbiri henüz
+14 günlük olgunluk penceresini geçmedi.
 
-**Yapılmayan iki şey var ve ikisi de kod değil:**
+**9 Ağustos 2026 — kaynakların tamamı tek tek gözden geçirildi.** 108 kaynağın
+her biri kendi arşivlenmiş sayfasına karşı denendi (T-21'in `check` ucu), pasif
+olanlar ayrıca nezaket kurallarıyla bir kez taze çekildi. Sonuç:
+
+| Bulgu | Sayı |
+|---|---|
+| Düzeltildi ve açıldı (Bilkent Şehir Hastanesi, 15 ilan) | 1 |
+| `date_selector` yazıldı (ODTÜ, Gölbaşı) | 2 |
+| `date_selector` denendi ve **geri alındı** — yayın tarihiydi | 4 |
+| Sayfasında ihale listesi yok (yalnız menü/duyuru akışı) | 14 |
+| Site kapalı, boş veya sunucu yanıt vermiyor | 5 |
+| Liste JavaScript ile kuruluyor, selector'la alınamaz | 3 |
+| `robots.txt` yasaklıyor — kalıcı kapalı | 1 |
+
+Ayrıntılar D-20'de ve her kaynağın kendi `notes` alanında.
+
+**Kapanan iki madde:**
 
 1. ~~**Telegram token** — boş, tek satır mesaj gönderilmedi.~~
    **9 Ağustos 2026: doldurulmuş ve çalışıyor.** Token ve chat id `.env` içinde,
