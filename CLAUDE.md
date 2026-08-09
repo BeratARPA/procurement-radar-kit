@@ -97,6 +97,8 @@ test sees is not what the worker gets.** Not one of them was a logic error.
 | a config file | a row in `setting` | the deadline hour stayed 23:59 for two hours; an alarm shipped with no message text |
 | a hand-written parameter list | a statement PostgreSQL parses | a missing parameter killed every parse run for two hours |
 | the repository working copy | `publish/config` | settings were seeded from a stale copy |
+| the working copy on this disk | what a clone actually contains | `.gitignore`'s `data/` matched `ui/lib/src/data/`; four files the interface cannot start without were never committed, and `git add -A` never said a word |
+| an exception during layout | content quietly cut off at the window edge | a Row inside a horizontal scroll view never overflows, so three of the five notice filters sat off screen with nothing saying they existed |
 
 So, before saying a change works:
 
@@ -109,6 +111,9 @@ So, before saying a change works:
    the api validates it and keeps the previous value.
 3. **Read the log after deploying, not before.** Every fault above was already
    in it, saying exactly what was wrong, for hours.
+4. **Anything that adds files runs once from a fresh clone.** `git clone` to a
+   scratch directory, then `dotnet build` and `flutter test`. A file this disk
+   has and the repository does not is invisible from here and total from there.
 
 `dotnet test` passing is necessary and has never once been sufficient.
 

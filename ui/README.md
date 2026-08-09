@@ -121,11 +121,28 @@ bir ekran görüntüsü değil, düşen bir test.
 gezilemediği için ayrıca `router.go()` ile, bağlantıdan açılır gibi açılıyor.
 Taşmaya en yatkın ekranların atlanmaması için.
 
-**İlk çalıştırmada gerçek bir hata buldu:** Durum ekranındaki satırlar
-`ListTile.trailing` kullanıyordu ve biri sayı değil biçimlenmiş tarih taşıyor.
-320 px'de `9 Ağustos 2026 21:54` satırın tamamından geniş kalıyor ve Flutter
-sarmak yerine yerleşim sırasında atıyordu. İki esnek yarıya çevrildi; hiçbir
-genişlikte taşamaz.
+**Ama taşma testi tek başına yetmedi.** Yatay kaydırma görünümünün içindeki bir
+`Row` asla taşmaz — kayar. İlan filtreleri tam olarak öyleydi: beş grup, 1100
+px'lik bir satırda, dar pencerede sağdan kesiliyor, ne kaydırma çubuğu ne
+soluklaşma vardı. Beş filtrenin üçü görünmüyordu ve ekran 988 ilanın 628'ini
+gösterirken sebebini söyleyen hiçbir şey yoktu. Exception aramak bunu göremez;
+"bu kontrol pencerenin içinde mi" diye sormak görür — ikinci test grubu bunu
+soruyor.
+
+Bulunan ve düzeltilenler:
+
+| Nerede | Neydi |
+|---|---|
+| Durum satırları | `ListTile.trailing` biçimlenmiş tarih taşıyordu; 320 px'de yerleşim sırasında atıyordu |
+| İlan filtreleri | Yatay kaydırmada sağdan kesiliyordu; artık 720 px üstü `Wrap`, altı tek düğme + alt sayfa |
+| Kaynak düzenleyici | Form, ikinci bir kaydırıcının içinde `%62` sabit yüksekliğe kilitliydi — Notlar ortadan kesik, altında ölü alan, sekiz selector alanına ulaşılamıyordu |
+| Kaynak düzenleyici | Yan yana iki açılır liste 520 px altında 10 px taşıyordu (açılır listenin kendi asgari genişliği var) |
+| Kaynak düzenleyici | Başlık `Spacer` ile yan yanaydı; `Spacer` alanı metinden önce bırakır, o yüzden metin kısalmak yerine taşıyordu |
+| Kaynaklar listesi | Yüzen düğme son satırın üstünde oturuyordu — kapatma anahtarının üstünde |
+
+Test yazı tipi her karakteri kare çizer, yani metin testte cihazdakinden geniş
+ölçülür. Bu, taramayı yanlış değil **tedbirli** yapıyor: büyük yazı tipi ayarına
+yaklaşıyor, ki o gerçek bir ayar.
 
 ## Android (T-22)
 
