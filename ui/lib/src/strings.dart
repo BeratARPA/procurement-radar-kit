@@ -63,6 +63,7 @@ abstract final class Strings {
   static const String refresh = 'Yenile';
   static const String clearSearch = 'Aramayı temizle';
   static const String filters = 'Filtreler';
+  static const String more = 'Diğer';
   static const String clearFilters = 'Sıfırla';
 
   static String filtersActive(int count) => 'Filtreler · $count';

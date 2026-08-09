@@ -312,6 +312,75 @@ void main() {
       );
     });
 
+    for (final double width in <double>[320, 360, 390, 412, 599]) {
+      testWidgets('at ${width.toInt()} px every screen can still be walked to',
+          (WidgetTester tester) async {
+        // The bar takes five and there are seven. The first version of this
+        // simply dropped the two that did not fit, and since nothing else links
+        // to them, narrowing the window made Filtre and Kaynaklar unreachable -
+        // the routes existed and there was no way to walk to one.
+        await pumpAt(tester, width);
+
+        for (final String label in const <String>[
+          'Filtre',
+          'Kaynaklar',
+          'Sonuçlar',
+          'Durum',
+          'Ayarlar',
+          'İlanlar',
+        ]) {
+          if (await goTo(tester, label)) continue;
+
+          // Not in the bar, so it has to be behind "Diğer".
+          final Finder more = find.descendant(
+            of: find.byType(NavigationBar),
+            matching: find.text('Diğer'),
+          );
+
+          expect(
+            more,
+            findsOneWidget,
+            reason: '$label is not in the bar and there is no way to it',
+          );
+
+          await tester.tap(more);
+          await tester.pumpAndSettle();
+
+          expect(
+            find.widgetWithText(ListTile, label),
+            findsOneWidget,
+            reason: '$label is in neither the bar nor the sheet',
+          );
+
+          await tester.tap(find.widgetWithText(ListTile, label));
+          await tester.pumpAndSettle();
+
+          expect(tester.takeException(), isNull);
+        }
+      });
+    }
+
+    testWidgets('the overflow item lights up while one of its screens is open',
+        (WidgetTester tester) async {
+      // A bar highlighting İlanlar while Kaynaklar is on screen is a bar that
+      // lies about where the reader is.
+      await pumpAt(tester, 390);
+
+      await tester.tap(find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Diğer'),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ListTile, 'Kaynaklar'));
+      await tester.pumpAndSettle();
+
+      final NavigationBar bar =
+          tester.widget<NavigationBar>(find.byType(NavigationBar));
+
+      expect(bar.selectedIndex, bar.destinations.length - 1);
+    });
+
     testWidgets('the bottom bar never asks Material for more than it allows',
         (WidgetTester tester) async {
       // Material caps a NavigationBar at five destinations. There are seven, and

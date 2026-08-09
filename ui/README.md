@@ -104,9 +104,19 @@ Dar ekranda gezinme altta (`NavigationBar`), geniş ekranda yanda
 (`NavigationRail`); sınırlar Material 3'ün kendi pencere sınıfları: 600'ün
 altı compact, 840'ın üstü expanded (rail etiketleriyle açılır).
 
-Alt çubuk en fazla beş hedef alır ve yedi hedef var. Telefonda **Filtre** ve
-**Kaynaklar** çubukta görünmez — kelime listesi düzenlemek ve CSS selector
-yazmak klavye ve geniş ekran isteyen işler. Rotaları duruyor, bağlantı açılır.
+Alt çubuk en fazla beş hedef alır ve yedi hedef var. Sığmayanlar beşinci sıradaki
+**Diğer** düğmesinin arkasındaki alt sayfaya geçer. İlk geçenler Filtre ve
+Kaynaklar — kelime listesi düzenlemek ve CSS selector yazmak klavye ve geniş
+ekran isteyen işler.
+
+**Geçer, kaybolmaz.** İlk hâli o ikisini çubuktan tamamen düşürüyordu ve arayüzde
+onlara götüren başka hiçbir bağlantı yok — yani pencereyi daraltmak iki ekranı
+tamamen ulaşılamaz yapıyordu. Rotalar duruyordu ama oraya yürünemiyordu.
+`layout_test.dart` artık her dar genişlikte **her hedefin gerçekten
+tıklanabildiğini** doğruluyor: çubukta yoksa Diğer'i açıp orada arıyor.
+
+Diğer düğmesi, arkasındaki ekranlardan biri açıkken yanıyor — yoksa çubuk
+okuyucunun bulunmadığı bir yeri işaretlemiş olurdu.
 
 Bu iddiayı `test/layout_test.dart` **on genişlikte, her ekranda** doğruluyor.
 Genişlikler yuvarlak sayı değil cihaz: 320 (iPhone SE), 360 (Türkiye'de en

@@ -523,9 +523,15 @@ yazıyor; boş ve sebepsiz bir ekran bozuk görünürdü. Bunun için
 `GET /api/awards/pending` eklendi.
 
 **Gezinme yeniden bölündü.** Yedi hedef oldu ve Material alt çubuğa en fazla beş
-alıyor. Telefonda düşenler Filtre ve Kaynaklar: kelime listesi düzenlemek ve CSS
-selector yazmak klavye ve geniş ekran isteyen işler. Rotalar duruyor, bağlantı
-hâlâ açılıyor.
+alıyor. Telefonda çubuktan çıkanlar Filtre ve Kaynaklar: kelime listesi
+düzenlemek ve CSS selector yazmak klavye ve geniş ekran isteyen işler.
+
+> **9 Ağustos 2026 düzeltmesi:** bu ilk hâlinde onları çubuktan **düşürüyordu**
+> ve arayüzde o ekranlara götüren başka hiçbir bağlantı yok — yani pencereyi
+> daraltmak iki ekranı tamamen ulaşılamaz yapıyordu. "Rotalar duruyor" doğruydu
+> ve işe yaramıyordu: bir rotaya yürünemiyorsa yok demektir. Şimdi beşinci sıra
+> bir **Diğer** düğmesi ve sığmayanlar onun arkasındaki alt sayfada.
+> `layout_test.dart` her dar genişlikte her hedefin tıklanabildiğini doğruluyor.
 
 **Android'de iki tuzak vardı, ikisi de yalnızca yayın derlemesinde ortaya
 çıkardı:**
