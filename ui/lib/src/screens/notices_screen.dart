@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../api/export.dart';
 import '../data/notice_filter.dart';
 import '../data/providers.dart';
+import '../filter/filter_providers.dart';
 import '../formatting.dart';
 import '../router.dart';
 import '../strings.dart';
@@ -149,6 +150,7 @@ class _FilterBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final NoticeFilter filter = ref.watch(noticeFilterProvider);
     final NoticeFilterNotifier notifier = ref.read(noticeFilterProvider.notifier);
+    final int? threshold = ref.watch(notifyThresholdProvider);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -201,8 +203,10 @@ class _FilterBar extends ConsumerWidget {
                   ),
                 ]),
                 const SizedBox(width: 16),
-                // 30 is the notification threshold (D-14): at or above it, the
-                // system would have told you about this one.
+                // The third chip is the threshold the worker is actually
+                // running on, read from the setting. It used to say 30 whatever
+                // the setting said, which made it wrong the moment anybody moved
+                // the slider on the Filtre screen.
                 _Group(label: Strings.scoreFilter, children: <Widget>[
                   _Choice(
                     label: Strings.scoreAny,
@@ -214,11 +218,12 @@ class _FilterBar extends ConsumerWidget {
                     selected: filter.minScore == 1,
                     onSelected: () => notifier.setMinScore(1),
                   ),
-                  _Choice(
-                    label: Strings.scoreNotified,
-                    selected: filter.minScore == 30,
-                    onSelected: () => notifier.setMinScore(30),
-                  ),
+                  if (threshold != null)
+                    _Choice(
+                      label: Strings.scoreNotified(threshold),
+                      selected: filter.minScore == threshold,
+                      onSelected: () => notifier.setMinScore(threshold),
+                    ),
                 ]),
                 const SizedBox(width: 16),
                 _Group(label: Strings.deadlineFilter, children: <Widget>[

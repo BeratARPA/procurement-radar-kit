@@ -72,8 +72,12 @@ abstract final class Strings {
   static const String scoreAny = 'Tümü';
   static const String scoreSome = 'Puan almış';
 
-  /// 30 is where the system would have sent a message (D-14).
-  static const String scoreNotified = 'Bildirim eşiği (30+)';
+  /// The number is read from the stored setting, not written here.
+  ///
+  /// This label used to say 30 whatever the worker was actually running on, so
+  /// it stopped being true the moment anybody moved the slider on the Filtre
+  /// screen — a chip that names itself after a number it does not know.
+  static String scoreNotified(int threshold) => 'Bildirim eşiği ($threshold+)';
 
   static const String deadlineFilter = 'Son teklife kalan';
   static const String anyTime = 'Farketmez';

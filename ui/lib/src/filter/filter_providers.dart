@@ -15,6 +15,29 @@ final storedKeywordsProvider = FutureProvider.autoDispose<Setting>(
   retry: (int count, Object error) => null,
 );
 
+/// The threshold the worker is actually using right now.
+///
+/// Read from the stored setting rather than written down twice. The notice
+/// list's "bildirim eşiği" chip used to hardcode 30, which was true the day it
+/// was written and a lie the moment somebody moved the slider - the chip named
+/// itself after a number it did not know.
+///
+/// Null while the setting is still arriving, so the chip can say "bildirim
+/// eşiği" without claiming a number it has not read.
+final notifyThresholdProvider = Provider.autoDispose<int?>((Ref ref) {
+  final Setting? stored = ref.watch(storedKeywordsProvider).value;
+
+  if (stored == null) return null;
+
+  try {
+    return KeywordDraft.parse(stored.value).notifyThreshold;
+  } on Object {
+    // A setting the loader cannot read is the api's problem to report, not a
+    // reason for this chip to throw.
+    return null;
+  }
+});
+
 /// What is being edited.
 ///
 /// Null until the stored value has arrived; the screen shows a spinner rather
