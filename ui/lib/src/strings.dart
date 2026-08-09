@@ -63,6 +63,34 @@ abstract final class Strings {
   static const String refresh = 'Yenile';
   static const String clearSearch = 'Aramayı temizle';
 
+  // --- notice list filters ---
+  static const String scoreFilter = 'Puan';
+  static const String scoreAny = 'Tümü';
+  static const String scoreSome = 'Puan almış';
+
+  /// 30 is where the system would have sent a message (D-14).
+  static const String scoreNotified = 'Bildirim eşiği (30+)';
+
+  static const String deadlineFilter = 'Son teklife kalan';
+  static const String anyTime = 'Farketmez';
+  static const String within24 = '24 saat';
+  static const String within72 = '3 gün';
+  static const String withinWeek = '1 hafta';
+
+  static const String sortBy = 'Sırala';
+  static const String sortDeadline = 'Aciliyete göre';
+  static const String sortScore = 'Puana göre';
+
+  static const String hideUndated = 'Tarihsizleri gizle';
+  static const String clearFilter = 'Filtreyi temizle';
+  static const String noneMatchFilter =
+      'Bu filtreye uyan ilan yok. Filtreyi gevşetin.';
+
+  static String noticeCount(int n) => '$n ilan';
+
+  static String noticeCountFiltered(int shown, int total) =>
+      '$total ilandan $shown tanesi gösteriliyor';
+
   /// Shown where a deadline should be. Not an error: spec Bolum 7 says a notice
   /// whose deadline could not be read is still recorded, and the warning belongs
   /// on the screen rather than in a log nobody reads.
