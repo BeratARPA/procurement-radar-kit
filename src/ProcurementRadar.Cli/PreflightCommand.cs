@@ -178,6 +178,22 @@ internal static class PreflightCommand
             }
         }
 
+        // 5. And the copy the worker will actually read.
+        //
+        //    This check used to look only at the repository, which is the one
+        //    directory the running system never opens: install-windows.ps1
+        //    publishes both exes to publish/ and copies config beside them, so
+        //    a deployed worker reads publish/config. Anyone who runs `dotnet
+        //    publish` by hand updates the exes and leaves that copy behind.
+        //
+        //    It is not a fault while the table is populated - the table wins by
+        //    design (D-16) and the seeder does not overwrite. It becomes one the
+        //    day the table is emptied and reseeded, because it would silently
+        //    reseed from a list nobody has used for weeks. CLAUDE.md already
+        //    lists this failure; on 9 August 2026 it happened again, with the
+        //    published keywords twenty-six terms behind the repository.
+        CheckDeployedConfig(configDirectory);
+
         if (problems.Count > 0)
         {
             foreach (var problem in problems)
@@ -196,6 +212,61 @@ internal static class PreflightCommand
 
         return 0;
     }
+
+    /// <summary>
+    /// Warns when publish/config has fallen behind the repository.
+    /// </summary>
+    /// <remarks>
+    /// Only reports; the deployed copy being stale does not stop a deploy, it
+    /// makes the next reseed restore something nobody meant. Nothing is said at
+    /// all when there is no publish/ - a developer machine without one is the
+    /// normal case, not a finding.
+    /// </remarks>
+    private static void CheckDeployedConfig(string configDirectory)
+    {
+        var repository = new DirectoryInfo(configDirectory).Parent;
+
+        if (repository is null) return;
+
+        var deployed = Path.Combine(repository.FullName, "publish", ConfigDirectory.Name);
+
+        if (!Directory.Exists(deployed) || PathsMatch(deployed, configDirectory)) return;
+
+        var stale = new List<string>();
+
+        foreach (var (_, fileName) in SettingKeys.Seeds)
+        {
+            var there = Path.Combine(deployed, fileName);
+
+            if (!File.Exists(there))
+            {
+                stale.Add(fileName);
+                continue;
+            }
+
+            if (!SettingComparison.SameJson(
+                    ConfigDirectory.Read(configDirectory, fileName),
+                    File.ReadAllText(there)))
+            {
+                stale.Add(fileName);
+            }
+        }
+
+        if (stale.Count == 0) return;
+
+        Log.Warning(
+            "publish/config is behind the repository in {Count} file(s): {Files}. The worker reads "
+            + "that copy, so an emptied setting table would reseed from it. Copy config/ over it "
+            + "(deploy/install-windows.ps1 does, `dotnet publish` on its own does not).",
+            stale.Count,
+            string.Join(", ", stale));
+    }
+
+    private static bool PathsMatch(string left, string right)
+        => string.Equals(
+            Path.GetFullPath(left).TrimEnd(Path.DirectorySeparatorChar),
+            Path.GetFullPath(right).TrimEnd(Path.DirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
 
     private static object Load(string key, string json) => key switch
     {

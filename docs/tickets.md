@@ -19,15 +19,27 @@ skorlama → bildirim → sonuç takibi → arayüz.
 - **85 aktif kaynak, 23 pasif** (sebebi her birinin `notes` alanında, ölçüm
   tarihiyle; hiçbiri unutulmuş değil)
 - **988 ilan, 706'sında son teklif tarihi**
-- **41 gönderilmiş Telegram bildirimi**
+- **45 ilan bildirim eşiğini geçiyor, 49 gönderilmiş Telegram bildirimi**
 - Aktif her kaynağın kaydedilmiş sayfası fixture olarak depoda, config'i testle
   korunuyor
-- **424 .NET testi + 59 Dart testi**
+- **430 .NET testi + 77 Dart testi**
 
 > Bu blok 6 Ağustos'ta yazılmış ve 9 Ağustos'a kadar güncellenmemişti (33 kaynak,
 > 539 ilan, "Telegram token boş" diyordu). Üç gün eski bir durum bloğu, bir günü
 > olmayan bir işi öncelik sanmakla geçirtti. Rakamları elle yazmak yerine
 > arayüzün **Durum** ekranına bakmak daha güvenilir.
+
+**9 Ağustos 2026 akşamı — filtre genişletildi ve arşive işlendi.** Kelime
+listesi 22→48 include, 25→45 exclude oldu; arşivde ölçüldü (39 → 45 bildirim).
+Sonra D-21 ile arşivin tamamı yeniden puanlandı: 988 ilan, 37 puan değişti,
+8'i eşiği geçti ve Telegram'a gitti (41 → 49 bildirim), 2'si eşiğin altına
+düştü — biri `chiller` exclude'unun eklenme sebebi olan Daikin onarımıydı.
+Eşiği yeni geçenlerin dördü hâlâ açıktı; biri 25 Ağustos'ta kapanan bir CRM
+bakım-geliştirme işi. Yani eski liste canlı iş kaçırıyordu.
+
+**Bilinen açık:** depo hiçbir uzak sunucuya bağlı değil (`git remote` boş) ve
+D-04'ün haftalık elle yedeği hiç alınmadı. Tek kopya bu diskte. Kaynak listesi
+D-10'un dediği gibi tek rekabet avantajı; onu tutan tek disk yedeksiz.
 
 Sonuç takibi de çalışıyor (D-15): son teklif tarihinin üzerinden iki hafta
 geçmiş, İKN'si olan ilanlar altı saatte bir EKAP'a soruluyor ve Sonuç İlanı
