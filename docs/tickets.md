@@ -22,7 +22,7 @@ skorlama → bildirim → sonuç takibi → arayüz.
 - **45 ilan bildirim eşiğini geçiyor, 49 gönderilmiş Telegram bildirimi**
 - Aktif her kaynağın kaydedilmiş sayfası fixture olarak depoda, config'i testle
   korunuyor
-- **430 .NET testi + 77 Dart testi**
+- **430 .NET testi + 152 Dart testi** (Dart tarafı 77'den çıktı: her ekran on cihaz genişliğinde taşma ve kesilme için taranıyor, her hedefin dar ekranda tıklanabildiği doğrulanıyor)
 
 > Bu blok 6 Ağustos'ta yazılmış ve 9 Ağustos'a kadar güncellenmemişti (33 kaynak,
 > 539 ilan, "Telegram token boş" diyordu). Üç gün eski bir durum bloğu, bir günü
