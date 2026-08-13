@@ -303,6 +303,41 @@ abstract final class Strings {
       'açmayı söylüyor; selector\'ları denemeden açmak o adımı atlamak olur.';
   static const String lastNewNotice = 'Son yeni ilan';
   static const String failures = 'Üst üste hata';
+
+  // --- kaynagi kapatma sebebi (D-22) ---
+  static const String deactivateTitle = 'Kaynak neden kapatılıyor?';
+  static const String deactivateHelp =
+      'Sebep serbest metin değil, çünkü sorulan soru şu: bunlardan hangisi '
+      'kendiliğinden düzelmiş olabilir. Yalnızca ilk iki sebep günde bir kez '
+      'yeniden yoklanır; sayfa gerçekten ilan verirse kaynak kendiliğinden '
+      'açılır ve Telegram\'a haber gider.';
+  static const String deactivate = 'Kapat';
+  static const String reasonRetried = 'yeniden yoklanır';
+  static const String reasonLeftAlone = 'bir daha bakılmaz';
+  static const String quarantineProbed = 'Son yoklama';
+  static const String quarantineWaiting = 'yoklama sırasında';
+  static const String reasonUnknown = 'sebebi yazılmamış';
+
+  static const String reasonSiteUnreachable = 'Site açılmıyor';
+  static const String reasonSiteUnreachableHelp =
+      'Sunucu yanıt vermiyor, alan adı çözülmüyor, barındırma askıda. '
+      'Başkasının makinesinde ve kendiliğinden düzelebilir.';
+  static const String reasonManual = 'Elle kapatıldı';
+  static const String reasonManualHelp =
+      'Sebebi notlara yazın. Sebep verilmemiş bir kapatma trafik planlamamalı, '
+      'o yüzden yeniden yoklanmaz.';
+  static const String reasonNoTenderList = 'Sayfada ihale listesi yok';
+  static const String reasonNoTenderListHelp =
+      'Yalnızca menü veya duyuru akışı var. Bir gecede oluşmaz.';
+  static const String reasonRobots = 'robots.txt yasaklıyor';
+  static const String reasonRobotsHelp =
+      'Bu bizim gözden geçireceğimiz bir şey değil.';
+  static const String reasonSuperseded = 'Başka kaynak zaten kapsıyor';
+  static const String reasonSupersededHelp =
+      'Geri dönerse aynı ilanları mükerrer üretir.';
+  static const String reasonHealthRule = 'Sağlık kuralı kapattı';
+  static const String reasonHealthRuleHelp =
+      'Üst üste on hata. Kimsenin seçmediği tek sebep; yeniden yoklanır.';
   static const String openSourcePage = 'Sayfayı aç';
   static const String rowsFound = 'satır bulundu';
   static const String withDeadlineLabel = 'tarihi okundu';

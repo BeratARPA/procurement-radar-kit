@@ -88,11 +88,28 @@ Future<void> updateSource(
     ..invalidate(sourceProvider(id));
 }
 
-Future<void> setSourceActive(WidgetRef ref, int id, bool isActive) async {
-  await ref
-      .read(radarApiProvider)
-      .sources
-      .setSourceActive(id: id, body: ActiveChangeRequest(isActive: isActive));
+/// Switches a source on, or off with the reason it is being switched off for.
+///
+/// The reason is not optional in practice even though the api treats it as such.
+/// An absent reason is read as `manual`, and `manual` is one of the three that
+/// are never re-probed - so a screen that did not ask opted every source it
+/// switched off out of the recovery mechanism, quietly. That is what this did
+/// between 11 and 13 August.
+Future<void> setSourceActive(
+  WidgetRef ref,
+  int id,
+  bool isActive, {
+  DeactivationReason? reason,
+}) async {
+  await ref.read(radarApiProvider).sources.setSourceActive(
+        id: id,
+        body: ActiveChangeRequest(
+          isActive: isActive,
+          // Ignored by the api when switching on, and left null rather than
+          // sent as something meaningless.
+          reason: isActive ? null : reason?.json,
+        ),
+      );
 
   ref
     ..invalidate(allSourcesProvider)

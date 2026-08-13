@@ -239,6 +239,36 @@ void main() {
       });
     }
 
+    for (final double width in <double>[320, 390, 600, 1440]) {
+      testWidgets('at ${width.toInt()} px the switch-off reasons all fit',
+          (WidgetTester tester) async {
+        // Five reasons with a sentence each, in a dialog. The first version
+        // asked for a flat 460 px of width, which overflows a 320 px phone by
+        // two hundred - and a source cannot be switched off from a dialog whose
+        // buttons are past the edge of the screen.
+        await pumpAt(tester, width);
+
+        final GoRouter router =
+            GoRouter.of(tester.element(find.byType(Scaffold).first));
+        router.go(Routes.sources);
+        await tester.pumpAndSettle();
+
+        // The switch on the first switched-off row. Tapping it opens the dialog
+        // rather than switching anything, which is the point of the change.
+        await tester.tap(find.byType(Switch).first);
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('Site açılmıyor'), findsOneWidget);
+        expect(find.text('Başka kaynak zaten kapsıyor'), findsOneWidget);
+
+        // Nothing is sent until one is chosen.
+        final Finder confirm = find.widgetWithText(FilledButton, 'Kapat');
+        expect(confirm, findsOneWidget);
+        expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
+      });
+    }
+
     for (final double width in <double>[360, 600, 900, 1440]) {
       testWidgets('at ${width.toInt()} px the source editor shows its whole form',
           (WidgetTester tester) async {

@@ -748,6 +748,23 @@ kuyruğun başında tutar ve her süpürme yalnızca onu denerdi.
 `QuarantineSweeper` (Notifier), `QuarantineWorker`, `POST /api/sources/{id}/active`
 artık `reason` alıyor. 8 test.
 
+**Güncelleme — 13 Ağustos 2026: arayüz tarafı iki gün eksik kaldı.** Api 11
+Ağustos'ta `reason` alanını kazandı ama Dart istemcisi yeniden üretilmedi, yani
+Kaynaklar ekranındaki anahtar alanı hiç göndermiyordu. Api boş gelen sebebi
+`manual` sayıyor ve `manual` yeniden yoklanmayan üç sebepten biri — **arayüzden
+kapatılan her kaynak bu maddenin var olma sebebi olan mekanizmadan sessizce
+çıkıyordu.** Hiçbir yerde hata görünmedi; 400 dönmüyordu, çünkü alan zorunlu
+değil.
+
+Şimdi anahtar beş sebebi soruyor ve her birinin yanına sonucunu yazıyor
+(*yeniden yoklanır* / *bir daha bakılmaz*), sebep seçilmeden istek gitmiyor,
+ve kapalı satır sebebini ile son yoklama zamanını gösteriyor. `health_rule`
+seçilemiyor: on ardışık hata demek, onu yalnızca izleyici gözlemleyebilir.
+
+Ders, D-16'nın kurduğu düzenin bir maliyeti: **istemci şemadan üretiliyorsa, api
+değiştiğinde üretmek işin parçasıdır.** Depodaki `swagger.json` ile canlı
+şemayı karşılaştıran bir kontrol bunu ilk gün söylerdi.
+
 **Geriye dönük doldurma 11 Ağustos denetiminden geldi**, kuraldan değil: 19 pasif
 kaynağın her biri canlı sayfasına ve tüm arşivine karşı tek tek denetlendi.
 `consecutive_failures` üzerinden bir kural yalnızca tek otomatik vakayı tanırdı.

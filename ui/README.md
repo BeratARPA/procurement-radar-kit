@@ -180,6 +180,28 @@ aapt2 dump badging build/app/outputs/flutter-apk/app-release.apk
 
 `INTERNET` iznini ve `com.procurementradar.radar` paketini görmelisiniz.
 
+### Kapatırken sebep sorulur (D-22)
+
+Anahtarı kapatmaya çevirmek artık doğrudan istek göndermiyor: beş sebepten
+birini soruyor ve her birinin yanında **yeniden yoklanır** / **bir daha
+bakılmaz** yazıyor. Sebebin tek işlevi bu — karantina süpürücüsü yalnızca ilk
+grubu günde bir yokluyor.
+
+`health_rule` listede yok ve api de reddediyor: üst üste on hata demek, onu
+yalnızca izleyici gözlemleyebilir. Ekranda gösteriliyor ama seçilemiyor.
+
+Kapalı kaynağın satırı artık sebebini yazıyor, yeniden yoklananlarda son yoklama
+zamanını da. Öncesinde satır yalnızca "Kapalı" diyordu ve nedenini öğrenmenin
+yolu yirmi dört serbest metin notunu tek tek okumaktı — 11 Ağustos denetiminin
+yaptığı tam olarak buydu.
+
+**11–13 Ağustos arasında bu sessizce yanlıştı.** Api 11 Ağustos'ta
+`ActiveChangeRequest.reason` alanını kazandı, Dart istemcisi yeniden
+üretilmemişti, ekran alanı hiç göndermiyordu. Api boş gelen sebebi `manual`
+sayıyor ve `manual` yeniden yoklanmayan üç sebepten biri — yani arayüzden
+kapatılan her kaynak, karantinanın var olma sebebi olan mekanizmadan
+kendiliğinden çıkıyordu. Hiçbir yerde hata görünmüyordu.
+
 ## Kaynaklar ekranı (T-21)
 
 Kaynak eklemek, spec Bölüm 5'e göre, başkasının markup'ına karşı CSS selector
