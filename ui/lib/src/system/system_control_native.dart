@@ -18,7 +18,7 @@ class NativeSystemControl implements SystemControl {
   static const String _apiTask = 'ProcurementRadarApi';
 
   static const String _container = 'procurement-radar-db';
-  static const int _apiPort = 5080;
+  static const int _apiPort = 60080;
 
   String? _root;
 

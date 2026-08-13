@@ -53,7 +53,7 @@ class PartStatus {
   final Part part;
   final Health health;
 
-  /// One line a person can read. "healthy, 3 gün", "5080 dinliyor".
+  /// One line a person can read. "healthy, 3 gün", "60080 dinliyor".
   final String detail;
 
   /// Null when the part has no such notion, or it could not be read.

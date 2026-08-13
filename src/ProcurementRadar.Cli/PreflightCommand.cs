@@ -295,7 +295,7 @@ internal static class PreflightCommand
 
         if (!File.Exists(generated)) return;
 
-        var address = Environment.GetEnvironmentVariable("PR_API_URL") ?? "http://localhost:5080";
+        var address = Environment.GetEnvironmentVariable("PR_API_URL") ?? "http://localhost:60080";
 
         JsonDocument live;
 

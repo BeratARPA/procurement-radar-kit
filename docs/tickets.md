@@ -585,7 +585,7 @@ düzenlemek ve CSS selector yazmak klavye ve geniş ekran isteyen işler.
    koyuyor. Yayın APK'sı **tek bir istek yapamazdı** — ve debug'da çalıştığı için
    ancak telefonda görülürdü.
 2. Android 9'dan beri düz http varsayılan olarak engelli, api ise
-   `http://<makine-ip>:5080`. `network_security_config.xml` eklendi; gerekçesi
+   `http://<makine-ip>:60080`. `network_security_config.xml` eklendi; gerekçesi
    dosyanın içinde ve D-16'nın tüneli gelince nasıl geri alınacağı da yazılı.
 
 Paket adı `com.example.*` gelmişti (Google'ın ayırdığı ad alanı);

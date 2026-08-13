@@ -3,7 +3,7 @@
   Plain http is allowed, and it has to be.
 
   Android has blocked cleartext by default since 9, and the api this app talks
-  to is http://<machine-ip>:5080 on a home network with no certificate (D-16).
+  to is http://<machine-ip>:60080 on a home network with no certificate (D-16).
   Without this the phone build installs, opens, and fails every request with an
   error that says nothing about why.
 

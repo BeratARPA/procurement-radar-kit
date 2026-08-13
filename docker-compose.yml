@@ -26,7 +26,13 @@ services:
       # Bound to loopback by default. The worker runs on the same machine;
       # set POSTGRES_BIND_ADDRESS=0.0.0.0 only if you deliberately want the
       # database reachable from the local network.
-      - "${POSTGRES_BIND_ADDRESS:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
+      #
+      # 60432 on the host and not 5432, and that is D-23 rather than taste. The
+      # dynamic port range on the deployment machine is 1024-60000, so Hyper-V
+      # can and did reserve 5432 on a boot - the container ran, reported healthy,
+      # and nothing on the host could reach it. Above 60000 is outside the
+      # allocatable pool. Inside the container it is still 5432.
+      - "${POSTGRES_BIND_ADDRESS:-127.0.0.1}:${POSTGRES_PORT:-60432}:5432"
     volumes:
       # D-05: local volume under ./data, which is gitignored.
       - ./data/pgdata:/var/lib/postgresql/data

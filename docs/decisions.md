@@ -443,8 +443,8 @@ penceresi ve `robots.txt` uyumu ekranda görünür ve düzenlenebilir, ama API
 dediği gibi kazanılacak hız yok, kaybedilecek IP var; bir ayar ekranı bunu
 tek yazı hatasıyla mümkün kılmamalı.
 
-**Erişim: şimdilik ev ağı.** API `http://0.0.0.0:5080` dinler, telefondan
-`http://<makine-ip>:5080` ile açılır. Dışarıdan erişim (Tailscale veya
+**Erişim: şimdilik ev ağı.** API `http://0.0.0.0:60080` dinler, telefondan
+`http://<makine-ip>:60080` ile açılır. Dışarıdan erişim (Tailscale veya
 Cloudflare Tunnel) sonraya bırakıldı ve API'de değişiklik gerektirmiyor.
 Yine de istek başlığında tek bir statik token aranır (`PR_API_TOKEN`) —
 kullanıcı hesabı değil, ev ağındaki başka bir cihazın yanlışlıkla ayar
@@ -469,7 +469,7 @@ yalnızca gerçek cihazda, yayın derlemesinde görünürdü:
 | Platform | Şablonun bıraktığı | Sonucu |
 |---|---|---|
 | macOS | `com.apple.security.network.client` yok | Sandbox'lı uygulama **tek bir giden istek yapamaz** |
-| iOS | `NSAppTransportSecurity` yok | ATS düz http'yi reddeder, api ise `http://<ip>:5080` |
+| iOS | `NSAppTransportSecurity` yok | ATS düz http'yi reddeder, api ise `http://<ip>:60080` |
 
 macOS'ta `network.server` var ama o Dart VM servisi için; giden istekle ilgisi
 yok. İkisi de eklendi.
@@ -775,3 +775,54 @@ D-19 gereği iki exe aynı klasöre yayınlanıyor, dolayısıyla Domain, Collec
 Parsers, Scoring ve Notifier dll'lerini paylaşıyorlar. Ayakta duran api hepsini
 kilitli tutuyordu; `-Rebuild` hiç çalışamazdı ve hata hiç dokunmadığı beş dll için
 MSB3021 diyordu.
+
+---
+
+## D-23 — Portlar 60000'in üstünde, çünkü altındaki her port kapılabilir
+
+**Karar:** API `60080`, PostgreSQL host tarafında `60432`. Konteynerin içi 5432
+olarak kalıyor; değişen yalnızca dışarı açılan port.
+
+**Sorun ölçüldü.** 13 Ağustos 2026'da sistem öğleden sonra tamamen durdu. Docker
+konteyneri çalışıyor ve "healthy" görünüyordu, Postgres içeride sağlıklıydı, ama
+worker'ın her iş kolu 30 saniyede bir `Failed to connect to 127.0.0.1:5432`
+diyordu. Konteynerin yapılandırmasında eşleme vardı; Windows tarafında yoktu:
+
+```
+ports are not available: exposing port TCP 127.0.0.1:5432 ->
+listen tcp4 127.0.0.1:5432: bind: erişim izinlerince izin verilmeyen...
+```
+
+Sebebi Hyper-V. `netsh int ipv4 show excludedportrange protocol=tcp` o açılışta
+`5342-5441` aralığını rezerve etmişti ve 5432 onun içindeydi.
+
+**Asıl mesele tek bir port değil.** Bu makinede dinamik port aralığı:
+
+```
+Start Port      : 1024
+Number of Ports : 58977      ->  1024 - 60000
+```
+
+Yani **1024 ile 60000 arasındaki her port**, her açılışta Hyper-V/HNS tarafından
+kapılabilir. O bantta "güvenli port" diye bir şey yok; 5432'yi 5433'e almak aynı
+kumarı bir kez daha oynamak olurdu — nitekim 5433 de aynı rezerve aralığın
+içinde.
+
+**Neden `netsh add excludedportrange` değil.** Kalıcı rezervasyon yönetici hakkı
+ve `winnat` servisini durdurup başlatmayı gerektiriyor. Bir port çakışmasını
+sistemin ağ yığınını yeniden başlatarak çözmek, bu projenin başka bir makineye
+taşınmasını da bir kurulum adımına bağlar. Ayrıca 5432 kullanılıyorsa bir sebebi
+vardır; sıradaki kişinin de aynı porta ihtiyacı olabilir.
+
+**Neden 60000 üstü.** Dinamik aralığın dışı. 60001-65535 hiçbir açılışta
+dinamik olarak rezerve edilemez, çünkü tahsis edilebilir havuz 60000'de bitiyor.
+Rakamlar bilerek tanıdık: `60080` api'nin 5080'i, `60432` Postgres'in 5432'si.
+
+**Kural:** Bu portlar `.env` ve `.env.example` içinde, `docker-compose.yml`'ın
+varsayılanında, api'nin `appsettings.json`'ında ve arayüzün varsayılan adresinde
+aynı anda durur. Birini değiştiren hepsini değiştirir. `1024-60000` arasına geri
+çekmek bu maddeyi geçersiz kılar — o bandın tamamı kapılabilir.
+
+**Not:** Kurulu bir arayüzde adres cihazın kendi deposunda saklı; yeni sürüm
+eskisinin üstüne yazmaz. Masaüstü, telefon ve tarayıcıda Ayarlar ekranından bir
+kez güncellenir.

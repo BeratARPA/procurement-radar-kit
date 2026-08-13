@@ -21,7 +21,7 @@ flutter run -d chrome
 (`.env` içindeki `PR_API_TOKEN`). İkisi de tarayıcının yerel deposunda saklanır.
 
 Telefondan açarken adres `localhost` **değil**, toplamayı yapan makinenin ev
-ağındaki adresidir — `http://192.168.1.x:5080` gibi. `localhost` telefonun
+ağındaki adresidir — `http://192.168.1.x:60080` gibi. `localhost` telefonun
 kendisi demektir ve orada api yok.
 
 ## Dart istemcisi elle yazılmaz
@@ -31,7 +31,7 @@ Kaynağı `swagger.json` — o da api'nin `/swagger/v1/swagger.json` ucunun
 kaydedilmiş hali. Api değiştiğinde:
 
 ```bash
-curl http://localhost:5080/swagger/v1/swagger.json -o swagger.json
+curl http://localhost:60080/swagger/v1/swagger.json -o swagger.json
 dart run swagger_parser
 dart run build_runner build
 ```
@@ -91,7 +91,7 @@ iOS ve macOS için "hazır" ile "doğrulandı" arasındaki fark bilerek yazıld�
   tek bir giden istek yapamaz. Şablon eklemiyor; `network.server` Dart VM
   servisi için, giden istekle ilgisi yok.
 - **iOS:** `NSAppTransportSecurity` olmadan ATS düz http'yi reddeder, api ise
-  `http://<makine-ip>:5080`. `NSAllowsArbitraryLoads` değil
+  `http://<makine-ip>:60080`. `NSAllowsArbitraryLoads` değil
   **`NSAllowsLocalNetworking`** kullanıldı — yalnızca yerel adlar ve özel IP
   aralıkları açılır, internetin geri kalanı kapalı kalır. iOS 14'ün yerel ağ
   izni için `NSLocalNetworkUsageDescription` de var.
@@ -168,7 +168,7 @@ Play Store'a çıkmıyor: tek takımın iç aracı.
 1. Flutter şablonu `INTERNET` iznini **yalnızca debug ve profile** manifest'ine
    koyuyor. Yayın APK'sı hiçbir istek yapamazdı — ve debug'da çalıştığı için
    ancak telefonda görülürdü. İzin artık `main` manifest'te.
-2. Android 9'dan beri düz http engelli; api ise `http://<makine-ip>:5080`.
+2. Android 9'dan beri düz http engelli; api ise `http://<makine-ip>:60080`.
    `android/app/src/main/res/xml/network_security_config.xml` buna izin veriyor.
    Gerekçesi dosyanın içinde, ve tünel/TLS gelince nasıl geri alınacağı da.
 

@@ -158,7 +158,7 @@ $apiAction = New-ScheduledTaskAction `
 Register-ScheduledTask -TaskName $apiTaskName -Action $apiAction -Trigger $trigger `
     -Settings $settings -Description 'Procurement Radar api (swagger, interface)' -Force | Out-Null
 
-Write-Host "Registered '$apiTaskName' to start at logon (http://localhost:5080/swagger)." 
+Write-Host "Registered '$apiTaskName' to start at logon (http://localhost:60080/swagger)." 
 
 # --- what would still stop it -------------------------------------------------
 Write-Host ''

@@ -73,10 +73,10 @@ Widget withFakeApi({required FakeApiAdapter adapter, required Widget child}) {
   return ProviderScope(
     overrides: [
       initialConnectionProvider.overrideWithValue(
-        const Connection(baseUrl: 'http://localhost:5080', token: 'test-token'),
+        const Connection(baseUrl: 'http://localhost:60080', token: 'test-token'),
       ),
       dioProvider.overrideWith((Ref ref) {
-        final Dio dio = Dio(BaseOptions(baseUrl: 'http://localhost:5080'))
+        final Dio dio = Dio(BaseOptions(baseUrl: 'http://localhost:60080'))
           ..httpClientAdapter = adapter;
 
         // The same interceptor the real one installs, so a test can assert the

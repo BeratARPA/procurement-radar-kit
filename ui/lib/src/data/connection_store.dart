@@ -46,7 +46,7 @@ class ConnectionStore {
   /// The machine the worker runs on, seen from itself. Right for the desktop
   /// build and for a browser on the same machine; wrong from a phone, which is
   /// why the settings screen shows this field rather than hiding it.
-  static const String defaultBaseUrl = 'http://localhost:5080';
+  static const String defaultBaseUrl = 'http://localhost:60080';
 
   final SharedPreferencesAsync _preferences;
 

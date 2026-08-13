@@ -171,7 +171,7 @@ abstract final class Strings {
   static const String addressEmpty = 'Adres boş olamaz.';
   static const String addressLoopbackElsewhere =
       'localhost bu cihazın kendisi demek. Toplamayı yapan makinenin ev '
-      'ağındaki adresini yazın, örneğin http://192.168.1.10:5080';
+      'ağındaki adresini yazın, örneğin http://192.168.1.10:60080';
   static const String addressNotAbsolute =
       'Adres http:// veya https:// ile başlamalı.';
 

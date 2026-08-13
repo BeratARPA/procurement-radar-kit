@@ -9,7 +9,7 @@ import 'support/fake_api.dart';
 
 /// The address field, and the default that cannot work on a phone.
 ///
-/// `http://localhost:5080` is right on the machine doing the collecting and
+/// `http://localhost:60080` is right on the machine doing the collecting and
 /// means the device itself everywhere else. On the phone that showed up as "the
 /// api cannot be reached" - which was true and unhelpful, because the field
 /// arrives already filled in and looks correct.
@@ -59,7 +59,7 @@ void main() {
     testWidgets('localhost is refused, with a sentence saying why',
         (WidgetTester tester) async {
       expect(
-        await errorFor(tester, 'http://localhost:5080', on: TargetPlatform.android),
+        await errorFor(tester, 'http://localhost:60080', on: TargetPlatform.android),
         'refused',
       );
     });
@@ -67,14 +67,14 @@ void main() {
     testWidgets('so is 127.0.0.1, which is the same claim spelled differently',
         (WidgetTester tester) async {
       expect(
-        await errorFor(tester, 'http://127.0.0.1:5080', on: TargetPlatform.iOS),
+        await errorFor(tester, 'http://127.0.0.1:60080', on: TargetPlatform.iOS),
         'refused',
       );
     });
 
     testWidgets('a home-network address is accepted', (WidgetTester tester) async {
       expect(
-        await errorFor(tester, 'http://192.168.1.219:5080', on: TargetPlatform.android),
+        await errorFor(tester, 'http://192.168.1.219:60080', on: TargetPlatform.android),
         isNull,
       );
     });
@@ -86,14 +86,14 @@ void main() {
       // The half that would hurt more: a rule that locks the desktop build out
       // of its own api would be worse than the problem it was added for.
       expect(
-        await errorFor(tester, 'http://localhost:5080', on: TargetPlatform.windows),
+        await errorFor(tester, 'http://localhost:60080', on: TargetPlatform.windows),
         isNull,
       );
     });
 
     testWidgets('and so is a home-network address', (WidgetTester tester) async {
       expect(
-        await errorFor(tester, 'http://192.168.1.219:5080', on: TargetPlatform.macOS),
+        await errorFor(tester, 'http://192.168.1.219:60080', on: TargetPlatform.macOS),
         isNull,
       );
     });

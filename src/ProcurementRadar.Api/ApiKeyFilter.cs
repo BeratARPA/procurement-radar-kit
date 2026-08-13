@@ -11,7 +11,7 @@ namespace ProcurementRadar.Api;
 /// document describes and Swagger can offer an Authorize box for it. What it
 /// defends against is modest and worth being honest about: another device on the
 /// same home network changing a setting by accident. It is also the only thing
-/// between this api and anything that can reach port 5080.
+/// between this api and anything that can reach port 60080.
 /// </remarks>
 public sealed class ApiKeyFilter : IAsyncActionFilter
 {
