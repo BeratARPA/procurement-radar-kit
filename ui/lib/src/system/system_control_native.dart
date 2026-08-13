@@ -490,34 +490,39 @@ class NativeSystemControl implements SystemControl {
   Future<String?> staleDeployment() async {
     if (_root == null) return null;
 
-    final File published = File(_in('publish/ProcurementRadar.Api.dll'));
-
-    if (!published.existsSync()) return null;
-
-    final DateTime built = published.statSync().modified;
-    DateTime newestSource = built;
-
     final Directory source = Directory(_in('src'));
 
     if (!source.existsSync()) return null;
 
-    // Only the projects that are actually deployed.
+    // Each project against its own assembly.
     //
-    // This used to walk every .cs under src/, which includes the Cli and the
-    // Migrator - neither of which is published. Editing a cli command then
-    // announced that the running api was stale, which it was not, and a warning
-    // that is wrong is a warning people learn to scroll past. A project counts
-    // when its assembly is sitting in publish/, so nothing has to be listed
-    // here and publishing something new is covered the day it is published.
-    final List<Directory> deployed = <Directory>[
-      for (final FileSystemEntity project in source.listSync())
-        if (project is Directory &&
-            File(_in('publish/${project.path.split(Platform.pathSeparator).last}.dll'))
-                .existsSync())
-          project,
-    ];
+    // Two earlier versions of this were wrong in opposite directions. The first
+    // walked every .cs under src/, including the Cli and the Migrator, neither
+    // of which is published - so editing a cli command announced that the
+    // running api was stale. The second compared everything against
+    // publish/ProcurementRadar.Api.dll, on the assumption that its timestamp is
+    // when the last publish ran. It is not: `dotnet publish` is incremental and
+    // only rewrites assemblies whose content changed. On 13 August one project
+    // was rebuilt and seven were left alone, correctly, and this reported the
+    // deployment a day out of date.
+    //
+    // Comparing a project's sources to its own dll answers the question that
+    // was being asked all along - is the binary that is running built from the
+    // code that is here - and is right in both of those cases.
+    String? oldest;
+    Duration worst = Duration.zero;
 
-    for (final Directory project in deployed) {
+    for (final FileSystemEntity project in source.listSync()) {
+      if (project is! Directory) continue;
+
+      final String name = project.path.split(Platform.pathSeparator).last;
+      final File assembly = File(_in('publish/$name.dll'));
+
+      if (!assembly.existsSync()) continue;
+
+      final DateTime built = assembly.statSync().modified;
+      DateTime newest = built;
+
       await for (final FileSystemEntity entity
           in project.list(recursive: true, followLinks: false)) {
         if (entity is! File || !entity.path.endsWith('.cs')) continue;
@@ -531,15 +536,22 @@ class NativeSystemControl implements SystemControl {
 
         final DateTime modified = entity.statSync().modified;
 
-        if (modified.isAfter(newestSource)) newestSource = modified;
+        if (modified.isAfter(newest)) newest = modified;
+      }
+
+      final Duration behind = newest.difference(built);
+
+      if (behind > worst) {
+        worst = behind;
+        oldest = name;
       }
     }
 
-    if (!newestSource.isAfter(built)) return null;
+    if (oldest == null || worst == Duration.zero) return null;
 
-    final Duration behind = newestSource.difference(built);
-
-    return 'publish klasörü kaynaktan ${_roughly(behind)} eski — '
+    // Named, because "publish is stale" does not say what to rebuild and the
+    // answer is usually one project.
+    return '$oldest ${_roughly(worst)} önce değişti ama yeniden yayınlanmadı — '
         'çalışan sürüm derlediğiniz sürüm değil';
   }
 
