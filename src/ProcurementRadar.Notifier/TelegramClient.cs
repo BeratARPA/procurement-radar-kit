@@ -89,6 +89,23 @@ public sealed class TelegramClient
         return await PostAsync("sendMessage", payload, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// One long poll for button presses and commands.
+    /// </summary>
+    /// <remarks>
+    /// Throws when Telegram could not be asked at all, and that is deliberate.
+    /// This used to catch the transport failure and return nothing, which reads
+    /// as "asked, nothing there" - and the caller loops immediately on that,
+    /// because a successful long poll is what normally paces it. So an
+    /// unreachable Telegram turned a blocking loop into a spin: on 13 August
+    /// api.telegram.org stopped resolving for 37 minutes and this wrote 25,925
+    /// stack traces, twelve a second. Over four days: 85,711 lines, and the
+    /// bulk of a 318 MB log directory.
+    ///
+    /// CallbackWorker already had the answer - a 30 second pause after a
+    /// failure - and could never reach it, because nothing ever failed as far
+    /// as it could tell.
+    /// </remarks>
     public async Task<TelegramUpdates> GetUpdatesAsync(CancellationToken cancellationToken)
     {
         var payload = new
@@ -100,66 +117,67 @@ public sealed class TelegramClient
             allowed_updates = new[] { "callback_query", "message" }
         };
 
-        try
+        using var response = await _httpClient
+            .PostAsJsonAsync(Endpoint("getUpdates"), payload, Json, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
         {
-            using var response = await _httpClient
-                .PostAsJsonAsync(Endpoint("getUpdates"), payload, Json, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("Telegram getUpdates answered {StatusCode}", (int)response.StatusCode);
-                return Empty;
-            }
-
-            var body = await response.Content
-                .ReadFromJsonAsync<UpdatesResponse>(Json, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (body is not { Ok: true })
-            {
-                return Empty;
-            }
-
-            var callbacks = new List<TelegramCallback>();
-            var commands = new List<TelegramCommand>();
-
-            foreach (var update in body.Result)
-            {
-                _offset = Math.Max(_offset, update.UpdateId + 1);
-
-                if (update.CallbackQuery is { Id.Length: > 0, Data.Length: > 0 } query)
-                {
-                    callbacks.Add(new TelegramCallback(
-                        query.Id,
-                        query.Data,
-                        update.UpdateId,
-                        query.Message?.MessageId ?? 0));
-                }
-
-                // A command, and only the name of it. Telegram appends @thebot in
-                // groups, and anything after a space is an argument no command
-                // here takes.
-                if (update.Message?.Text is { Length: > 1 } text && text[0] == '/')
-                {
-                    // Telegram appends @thebot in groups. Everything after the
-                    // first space is the argument, kept whole - a search term can
-                    // have spaces in it and splitting further would lose them.
-                    var space = text.IndexOf(' ', StringComparison.Ordinal);
-                    var name = (space < 0 ? text : text[..space]).Split('@')[0];
-                    var argument = space < 0 ? string.Empty : text[(space + 1)..].Trim();
-
-                    commands.Add(new TelegramCommand(name, argument, update.UpdateId));
-                }
-            }
-
-            return new TelegramUpdates(callbacks, commands);
+            // Also a throw, and for the same reason as the transport failure
+            // above. The two answers that actually turn up here are 429, which
+            // is Telegram asking to be left alone, and 409, which means a second
+            // poller is running - and returning nothing on either put the caller
+            // straight back into the same call with no pause at all. Answering a
+            // rate limit by asking twelve times a second is the one response
+            // guaranteed to make it last longer.
+            throw new HttpRequestException(
+                $"Telegram getUpdates answered {(int)response.StatusCode}.",
+                null,
+                response.StatusCode);
         }
-        catch (Exception exception) when (exception is HttpRequestException or JsonException)
+
+        var body = await response.Content
+            .ReadFromJsonAsync<UpdatesResponse>(Json, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (body is not { Ok: true })
         {
-            _logger.LogWarning(exception, "Telegram getUpdates failed");
             return Empty;
         }
+
+        var callbacks = new List<TelegramCallback>();
+        var commands = new List<TelegramCommand>();
+
+        foreach (var update in body.Result)
+        {
+            _offset = Math.Max(_offset, update.UpdateId + 1);
+
+            if (update.CallbackQuery is { Id.Length: > 0, Data.Length: > 0 } query)
+            {
+                callbacks.Add(new TelegramCallback(
+                    query.Id,
+                    query.Data,
+                    update.UpdateId,
+                    query.Message?.MessageId ?? 0));
+            }
+
+            // A command, and only the name of it. Telegram appends @thebot in
+            // groups, and anything after a space is an argument no command
+            // here takes.
+            if (update.Message?.Text is { Length: > 1 } text && text[0] == '/')
+            {
+                // Telegram appends @thebot in groups. Everything after the
+                // first space is the argument, kept whole - a search term can
+                // have spaces in it and splitting further would lose them.
+                var space = text.IndexOf(' ', StringComparison.Ordinal);
+                var name = (space < 0 ? text : text[..space]).Split('@')[0];
+                var argument = space < 0 ? string.Empty : text[(space + 1)..].Trim();
+
+                commands.Add(new TelegramCommand(name, argument, update.UpdateId));
+            }
+        }
+
+        return new TelegramUpdates(callbacks, commands);
     }
 
     /// <summary>
