@@ -164,6 +164,20 @@ app.UseSwaggerUI(options =>
 
 app.MapControllers();
 
+// The root, which is where a person types the address to see whether the api is
+// up. It answered 404 - correct, there is no route there, and indistinguishable
+// from a broken deployment when you are looking for reassurance. This says what
+// is listening and where to go.
+//
+// No token: it carries nothing worth protecting, and a 401 here would be exactly
+// as unhelpful as the 404 was.
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "Procurement Radar API",
+    endpoints = "/swagger",
+    note = "Every /api route needs the X-Api-Token header."
+})).ExcludeFromDescription();
+
 var startup = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
 
 if (string.IsNullOrWhiteSpace(apiToken))
