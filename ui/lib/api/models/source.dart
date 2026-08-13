@@ -5,6 +5,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'authority_type.dart';
+import 'deactivation_reason.dart';
 
 part 'source.g.dart';
 
@@ -26,6 +27,9 @@ class Source {
     this.lastSuccessAt,
     this.lastNewNoticeAt,
     this.consecutiveFailures,
+    this.deactivatedAt,
+    this.deactivatedReason,
+    this.quarantineProbedAt,
     this.notes,
   });
   
@@ -46,6 +50,9 @@ class Source {
   final DateTime? lastSuccessAt;
   final DateTime? lastNewNoticeAt;
   final int? consecutiveFailures;
+  final DateTime? deactivatedAt;
+  final DeactivationReason? deactivatedReason;
+  final DateTime? quarantineProbedAt;
   final String? notes;
 
   Map<String, Object?> toJson() => _$SourceToJson(this);

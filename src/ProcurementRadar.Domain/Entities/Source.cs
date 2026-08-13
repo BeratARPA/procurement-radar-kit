@@ -40,5 +40,20 @@ public sealed record Source
 
     public int ConsecutiveFailures { get; init; }
 
+    /// <summary>When this source came out of the rotation. Null while it is in it.</summary>
+    public DateTimeOffset? DeactivatedAt { get; init; }
+
+    /// <summary>
+    /// Why it came out. Null while it is in the rotation.
+    /// </summary>
+    /// <remarks>
+    /// The quarantine sweep reads this and nothing else to decide whether a
+    /// switched-off source is worth asking again.
+    /// </remarks>
+    public DeactivationReason? DeactivatedReason { get; init; }
+
+    /// <summary>When the quarantine sweep last asked whether this source is back.</summary>
+    public DateTimeOffset? QuarantineProbedAt { get; init; }
+
     public string? Notes { get; init; }
 }

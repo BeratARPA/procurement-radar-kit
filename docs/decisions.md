@@ -681,3 +681,80 @@ ucuz filtreyi yeniden çalıştırmak pahalı cevabı silmemeli. Testi var.
 düşenler.** Yükselenler yükselme miktarına göre sıralı, yani sesi kesilen ilan
 listenin sonuna düşüp kırpılırdı — ve bir kelime değişikliğinin kimsenin
 bakmadığı yarısı tam olarak orası.
+
+---
+
+## D-22 — Pasife alma tek yönlü kapı değil: karantina
+
+**Karar:** Bir kaynak kapatılırken **neden** kapatıldığı yazılır
+(`source.deactivated_reason`), ve sebebi kendiliğinden ortadan kalkabilecek
+olanlar günde bir kez yeniden yoklanır. Cevap verirse kendiliğinden açılır ve
+Telegram'a haber gider.
+
+**Sorun ölçüldü, tahmin edilmedi.** ANFA A.Ş. 8 Ağustos 2026'da pasife alındı;
+sebebi kurumun barındırma hesabının askıya alınmasıydı. O gün yazılan not aynen
+şöyle bitiyordu: *"Site geri açıldığında yapılacak iş yalnızca
+`is_active = true`."* Site geri açıldı ve **üç gün kimse bakmadı.**
+
+Bakamazdı da. Mekanizma kapalı bir döngüydü:
+
+| Adım | Sonuç |
+|---|---|
+| `ListActive` yalnız `is_active = true` döner | Kapalı kaynak bir daha çekilmez |
+| `consecutive_failures` yalnız başarıyla sıfırlanır | Başarı ancak çekmeyle olur |
+| Çekme hiç olmaz | Sayaç 10'da kalır, sonsuza kadar |
+
+Geri dönüşün tek yolu bir insanın fark etmesiydi. 11 Ağustos'ta ANFA'yı bulmak
+24 pasif kaynağın Türkçe serbest metin notlarını tek tek okumayı gerektirdi.
+
+**Kural şansa bağlıydı, ayrıca.** ODTÜ (`yitdb.metu.edu.tr`) 10-11 Ağustos'ta
+**30 kez** düştü — Beypazarı'yla birebir aynı sayı. ODTÜ yaşadı çünkü hataları
+arasına başarı girdi ve sayaç sıfırlandı; Beypazarı'nınkiler aralıksız geldiği
+için öldü. İkisi arasındaki fark sorunun ciddiyeti değil, hataların dizilişiydi.
+
+**Sebep kapalı küme, cümle değil.** Sorulmak istenen soru "bunlardan hangisinin
+sebebi ortadan kalkmış olabilir" ve `notes` alanına bu sorulamaz.
+
+| `deactivated_reason` | Yeniden yoklanır mı | Neden |
+|---|---|---|
+| `health_rule` | **evet** | Kimsenin seçmediği tek sebep; 10 hata koydu |
+| `site_unreachable` | **evet** | Başkasının sunucusunda, kendiliğinden düzelebilir |
+| `manual` | hayır | Sebebi `notes`'ta; sebep verilmemiş bir kapatma trafik planlamamalı |
+| `no_tender_list` | hayır | Sayfada ihale listesi yok; bir gecede oluşmaz |
+| `robots` | hayır | Bu bizim gözden geçireceğimiz bir şey değil |
+| `superseded` | hayır | Dönerse yerine geçen kaynağı mükerrer eder |
+
+**Kurtarma durum koduna değil, ilana bakar.** Park edilmiş alan adı, askıya
+alınmış hesap sayfası ve giriş duvarı — üçü de neşeyle 200 döner. Hiçbiri
+ihaleye ayrışmaz. En az bir ilan şartı, ANFA'yı `suspendedpage.cgi` servis
+ederken geri açmayı da engeller. Alarmın okunmaya değer olmasının sebebi de bu:
+"soket açıldı" değil, "tekrar topluyor" der.
+
+**Yavaş: günde bir, beş kaynak.** Her yoklama koleksiyoncunun kullandığı aynı
+nezaket kapısından geçen gerçek bir istek. Son teklif saati bu akşam olan bir
+ilanın o kapıda, ağustostan beri yok olan bir kaynaktan önceliği var. Buraya
+düşüren şartlar da (biten hosting, çözülmeyen DNS, 522 dönen origin) gün
+ölçeğinde düzelir; saatlik sormak yalnızca trafiği sabırsız gösterirdi.
+
+**Yoklama arşive yazmaz.** Tek bir soruya cevap arar — bu kaynak canlı mı — ve
+toplamayı koleksiyoncuya bırakır. Kaynak rotasyona döndüğü anda normal döngü
+zaten alır.
+
+**`quarantine_probed_at` denemeden ÖNCE damgalanır.** Beypazarı'nın DNS'i çözmüyor
+ve her deneme exception atıyor; yalnızca başarıda damgalamak onu sonsuza kadar
+kuyruğun başında tutar ve her süpürme yalnızca onu denerdi.
+
+**Uygulama:** `011_source_quarantine.sql`, `DeactivationReason`,
+`QuarantineSweeper` (Notifier), `QuarantineWorker`, `POST /api/sources/{id}/active`
+artık `reason` alıyor. 8 test.
+
+**Geriye dönük doldurma 11 Ağustos denetiminden geldi**, kuraldan değil: 19 pasif
+kaynağın her biri canlı sayfasına ve tüm arşivine karşı tek tek denetlendi.
+`consecutive_failures` üzerinden bir kural yalnızca tek otomatik vakayı tanırdı.
+Sonuç: 1 `health_rule`, 2 `site_unreachable`, 13 `no_tender_list`, 3 `superseded`.
+
+**Ayrıca düzeltildi:** `deploy/install-windows.ps1 -Rebuild` api'yi durdurmuyordu.
+D-19 gereği iki exe aynı klasöre yayınlanıyor, dolayısıyla Domain, Collector,
+Parsers, Scoring ve Notifier dll'lerini paylaşıyorlar. Ayakta duran api hepsini
+kilitli tutuyordu; `-Rebuild` hiç çalışamazdı ve hata hiç dokunmadığı beş dll için
+MSB3021 diyordu.

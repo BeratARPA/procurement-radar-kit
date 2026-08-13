@@ -849,7 +849,7 @@
           "Sources"
         ],
         "summary": "Puts a source in or out of the rotation.",
-        "description": "Activating clears the failure count as well. Leaving it at ten would take\r\nthe source straight back out on its next stumble, and the reason it failed\r\nten times is usually the thing that was just fixed.",
+        "description": "Activating clears the failure count as well. Leaving it at ten would take\r\nthe source straight back out on its next stumble, and the reason it failed\r\nten times is usually the thing that was just fixed.\r\n            \r\nSwitching one off records a reason, which is what decides whether the\r\nquarantine sweep will ever ask it again.",
         "operationId": "setSourceActive",
         "parameters": [
           {
@@ -884,6 +884,16 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -900,6 +910,11 @@
           "isActive": {
             "type": "boolean",
             "description": "True puts the source back in the rotation and clears its failure count."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why it is being switched off: `site_unreachable`, `manual`,\r\n`no_tender_list`, `robots` or `superseded`. Ignored when\r\nswitching one on.",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1019,6 +1034,17 @@
           }
         },
         "additionalProperties": false
+      },
+      "DeactivationReason": {
+        "enum": [
+          "health_rule",
+          "site_unreachable",
+          "manual",
+          "no_tender_list",
+          "robots",
+          "superseded"
+        ],
+        "type": "string"
       },
       "FilterPreviewRequest": {
         "required": [
@@ -1370,6 +1396,19 @@
           "consecutiveFailures": {
             "type": "integer",
             "format": "int32"
+          },
+          "deactivatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deactivatedReason": {
+            "$ref": "#/components/schemas/DeactivationReason"
+          },
+          "quarantineProbedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
           },
           "notes": {
             "type": "string",

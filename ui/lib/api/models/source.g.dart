@@ -30,6 +30,15 @@ Source _$SourceFromJson(Map<String, dynamic> json) => Source(
       ? null
       : DateTime.parse(json['lastNewNoticeAt'] as String),
   consecutiveFailures: (json['consecutiveFailures'] as num?)?.toInt(),
+  deactivatedAt: json['deactivatedAt'] == null
+      ? null
+      : DateTime.parse(json['deactivatedAt'] as String),
+  deactivatedReason: json['deactivatedReason'] == null
+      ? null
+      : DeactivationReason.fromJson(json['deactivatedReason'] as String),
+  quarantineProbedAt: json['quarantineProbedAt'] == null
+      ? null
+      : DateTime.parse(json['quarantineProbedAt'] as String),
   notes: json['notes'] as String?,
 );
 
@@ -49,6 +58,9 @@ Map<String, dynamic> _$SourceToJson(Source instance) => <String, dynamic>{
   'lastSuccessAt': instance.lastSuccessAt?.toIso8601String(),
   'lastNewNoticeAt': instance.lastNewNoticeAt?.toIso8601String(),
   'consecutiveFailures': instance.consecutiveFailures,
+  'deactivatedAt': instance.deactivatedAt?.toIso8601String(),
+  'deactivatedReason': _$DeactivationReasonEnumMap[instance.deactivatedReason],
+  'quarantineProbedAt': instance.quarantineProbedAt?.toIso8601String(),
   'notes': instance.notes,
 };
 
@@ -60,4 +72,14 @@ const _$AuthorityTypeEnumMap = {
   AuthorityType.soeSubsidiary: 'soe_subsidiary',
   AuthorityType.ekap: 'ekap',
   AuthorityType.$unknown: r'$unknown',
+};
+
+const _$DeactivationReasonEnumMap = {
+  DeactivationReason.healthRule: 'health_rule',
+  DeactivationReason.siteUnreachable: 'site_unreachable',
+  DeactivationReason.manual: 'manual',
+  DeactivationReason.noTenderList: 'no_tender_list',
+  DeactivationReason.robots: 'robots',
+  DeactivationReason.superseded: 'superseded',
+  DeactivationReason.$unknown: r'$unknown',
 };

@@ -131,11 +131,19 @@ internal sealed class FakeSourceRepository : ISourceRepository
     public Task RecordRobotsCheckAsync(long sourceId, CancellationToken cancellationToken)
         => Task.CompletedTask;
 
-    public List<long> Deactivated { get; } = [];
+    public List<(long SourceId, DeactivationReason Reason)> Deactivated { get; } = [];
 
-    public Task DeactivateAsync(long sourceId, CancellationToken cancellationToken)
+    public Task DeactivateAsync(long sourceId, DeactivationReason reason, CancellationToken cancellationToken)
     {
-        Deactivated.Add(sourceId);
+        Deactivated.Add((sourceId, reason));
+
+        var index = Sources.FindIndex(stored => stored.Id == sourceId);
+
+        if (index >= 0)
+        {
+            Sources[index] = Sources[index] with { IsActive = false, DeactivatedReason = reason };
+        }
+
         return Task.CompletedTask;
     }
 
@@ -144,8 +152,45 @@ internal sealed class FakeSourceRepository : ISourceRepository
     public Task ActivateAsync(long sourceId, CancellationToken cancellationToken)
     {
         Activated.Add(sourceId);
+
+        var index = Sources.FindIndex(stored => stored.Id == sourceId);
+
+        if (index >= 0)
+        {
+            // The real statement clears the reason with the switch. A fake that
+            // kept it would let a test pass that leaves a recovered source
+            // looking quarantined.
+            Sources[index] = Sources[index] with
+            {
+                IsActive = true,
+                ConsecutiveFailures = 0,
+                DeactivatedAt = null,
+                DeactivatedReason = null,
+                QuarantineProbedAt = null
+            };
+        }
+
         return Task.CompletedTask;
     }
+
+    public List<long> Probed { get; } = [];
+
+    public Task RecordQuarantineProbeAsync(long sourceId, CancellationToken cancellationToken)
+    {
+        Probed.Add(sourceId);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Mirrors the statement: only the reasons that can stop being true.</summary>
+    public Task<IReadOnlyList<Source>> ListQuarantinedAsync(int limit, CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyList<Source>>(Sources
+            .Where(source => !source.IsActive
+                && source.DeactivatedReason is { } reason
+                && reason.CanRecover())
+            .OrderBy(source => source.QuarantineProbedAt ?? DateTimeOffset.MinValue)
+            .ThenBy(source => source.Id)
+            .Take(limit)
+            .ToList());
 
     public Task<IReadOnlyList<Source>> ListAllAsync(CancellationToken cancellationToken)
         => Task.FromResult<IReadOnlyList<Source>>(Sources.ToList());

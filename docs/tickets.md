@@ -37,6 +37,51 @@ düştü — biri `chiller` exclude'unun eklenme sebebi olan Daikin onarımıyd�
 Eşiği yeni geçenlerin dördü hâlâ açıktı; biri 25 Ağustos'ta kapanan bir CRM
 bakım-geliştirme işi. Yani eski liste canlı iş kaçırıyordu.
 
+**11 Ağustos 2026 — pasif kaynakların tamamı denetlendi, 5'i açıldı, karantina
+yazıldı.** 24 pasif kaynağın her biri canlı sayfasına, aday adreslerine, tam site
+menüsüne ve kendi arşivine karşı tek tek denetlendi.
+
+| Bulgu | Sonuç |
+|---|---|
+| Yanlış kapatılmış — site geri gelmiş, kimse bakmamış (ANFA) | açıldı |
+| Sayfa doğru, config hiç yazılmamış (97, 98, 100) | config yazıldı, açıldı |
+| Liste `POST` ucundan geliyor, `render:true` çözüyor (Ankara Üni) | açıldı, **5 canlı ihale** |
+| Kurumun kendi sitesinde ihale listesi yok | 13'ü kapalı kaldı |
+| Sunucusu arızalı (99, 101) | karantinaya alındı |
+| Zaten `json_list` ile toplanıyor (45, 104, 1690) | mükerrer, kapalı |
+
+**84 aktif → 90 aktif, 24 pasif → 18.**
+
+Son kaynağı karantinanın kendisi açtı. Yayına alındıktan beş dakika sonra ilk
+süpürme çalıştı ve Beypazarı'nın DNS'inin geri geldiğini gördü — sabah üç ayrı
+çözümleyicide ölü olan alan adı artık `104.247.179.218`'e çözülüyor. 10 ilan
+okundu, kaynak kendiliğinden rotasyona döndü, sayaç sıfırlandı, Telegram'a
+haber gitti. Elle hiçbir şey yapılmadı; mekanizmanın var olma sebebi olan
+senaryo ilk turda gerçekleşti.
+
+Üç eski not yanlış çıktı ve düzeltildi: 1690 *"robots.txt her şeyi yasaklıyor"*
+diyordu — `Disallow:` **boş**, yani her şeye izin veriyor; kaynak bir yanlış
+okuma yüzünden kalıcı kapatılmış. Çankaya *"liste JS ile açılıyor"* diyordu —
+sunucu tarafında render ediliyor, sorun modülün boş olması. ANFA *"site askıya
+alınmış"* diyordu — geri gelmişti.
+
+Denetim sırasında iki iş geri alındı: 45 ve 1690 için `render` config'i yazılıp
+açıldı, sonra o kurumların zaten çalışan `json_list` kaynağı olduğu görüldü
+(1989, 2005). Config yazmadan önce mükerrer kontrolü yapılmamıştı. 1690'ın
+ürettiği 12 mükerrer ilan, puanları ve 29 dokümanı silindi; `raw_fetch` korundu.
+
+Asıl iş **D-22**: pasife alma artık tek yönlü kapı değil. Sebep kapalı bir küme
+olarak yazılıyor ve kendiliğinden geçebilecek olanlar günde bir yoklanıyor.
+`443 .NET testi` (430'du).
+
+**Yan bulgu — `deploy/install-windows.ps1 -Rebuild` hiç çalışmıyormuş.** Betik
+worker'ı durduruyor ama api'yi durdurmuyordu; D-19 gereği ikisi aynı klasörü
+paylaştığı için ayakta duran api beş ortak dll'i kilitli tutuyordu. Düzeltildi.
+
+**Yan bulgu — api'de açık:** `PUT /api/sources/{id}` `adapter_config` boşsa
+`400` dönüyor, yani tam da config'i olmadığı için kapalı duran bir kaynağa neden
+kapalı olduğu yazılamıyor. Bu turda notlar SQL ile yazılmak zorunda kalındı.
+
 **Bilinen açık:** depo hiçbir uzak sunucuya bağlı değil (`git remote` boş) ve
 D-04'ün haftalık elle yedeği hiç alınmadı. Tek kopya bu diskte. Kaynak listesi
 D-10'un dediği gibi tek rekabet avantajı; onu tutan tek disk yedeksiz.

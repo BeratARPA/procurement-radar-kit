@@ -78,7 +78,10 @@ abstract class SourcesClient {
   ///
   /// Activating clears the failure count as well. Leaving it at ten would take.  ///
   /// the source straight back out on its next stumble, and the reason it failed.  ///
-  /// ten times is usually the thing that was just fixed.
+  /// ten times is usually the thing that was just fixed.  ///
+  ///              ///
+  /// Switching one off records a reason, which is what decides whether the.  ///
+  /// quarantine sweep will ever ask it again.
   @POST('/api/sources/{id}/active')
   Future<void> setSourceActive({
     @Path('id') required int id,

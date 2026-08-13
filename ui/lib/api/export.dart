@@ -16,6 +16,7 @@ export 'models/award_candidate.dart';
 export 'models/award_summary.dart';
 export 'models/checked_notice.dart';
 export 'models/command_notice.dart';
+export 'models/deactivation_reason.dart';
 export 'models/filter_preview_request.dart';
 export 'models/filter_preview_response.dart';
 export 'models/moved_notice.dart';

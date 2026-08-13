@@ -8,6 +8,16 @@ public enum HealthAlertKind
     /// <summary>Ten in a row, so the source has been taken out of the rotation.</summary>
     SourceDeactivated,
 
+    /// <summary>
+    /// A quarantined source answered again and was put back in the rotation.
+    /// </summary>
+    /// <remarks>
+    /// The only alarm here that is good news, and it still has to be sent. A
+    /// source coming back changes what the system is watching, and the person who
+    /// switched it off is the one who needs to know the reason stopped being true.
+    /// </remarks>
+    SourceRecovered,
+
     /// <summary>A page changed and the parser found nothing in it, having found things before.</summary>
     ParserBroken,
 

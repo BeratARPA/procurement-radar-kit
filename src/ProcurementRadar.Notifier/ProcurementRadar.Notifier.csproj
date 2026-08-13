@@ -4,6 +4,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProcurementRadar.Domain\ProcurementRadar.Domain.csproj" />
+    <!-- For BodyDecoder: the quarantine probe has to read a page the way the
+         parse pipeline reads it (D-11), or a windows-1254 page comes back as
+         replacement characters and looks like a source that never recovered.
+         Collector depends on Domain and nothing else, so this stays acyclic. -->
+    <ProjectReference Include="..\ProcurementRadar.Collector\ProcurementRadar.Collector.csproj" />
     <!-- For KeywordRules alone: /kelimeler shows the filter as it stands, and
          the filter is what the team tunes. No cycle - both sides see Domain. -->
     <ProjectReference Include="..\ProcurementRadar.Scoring\ProcurementRadar.Scoring.csproj" />

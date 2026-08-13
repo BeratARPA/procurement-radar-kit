@@ -197,6 +197,9 @@ public sealed class MessageTemplates
         [JsonPropertyName("source_deactivated")]
         public string SourceDeactivated { get; init; } = string.Empty;
 
+        [JsonPropertyName("source_recovered")]
+        public string SourceRecovered { get; init; } = string.Empty;
+
         [JsonPropertyName("parser_broken")]
         public string ParserBroken { get; init; } = string.Empty;
 

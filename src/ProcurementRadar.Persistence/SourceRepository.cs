@@ -148,8 +148,38 @@ public sealed class SourceRepository : ISourceRepository
             new { SourceId = sourceId, Now = _timeProvider.GetUtcNow() },
             cancellationToken);
 
-    public Task DeactivateAsync(long sourceId, CancellationToken cancellationToken)
-        => ExecuteAsync(SourceSql.Deactivate, new { SourceId = sourceId }, cancellationToken);
+    // The reason goes as text for the same reason the authority type does: Dapper
+    // resolves an enum to its underlying integer before it consults anything, so
+    // passing DeactivationReason.HealthRule straight through writes "0" into a
+    // text column - and the CHECK constraint would then reject it, loudly, at the
+    // worst possible moment.
+    public Task DeactivateAsync(long sourceId, DeactivationReason reason, CancellationToken cancellationToken)
+        => ExecuteAsync(
+            SourceSql.Deactivate,
+            new { SourceId = sourceId, Reason = EnumText.ToText(reason), Now = _timeProvider.GetUtcNow() },
+            cancellationToken);
+
+    public async Task<IReadOnlyList<Source>> ListQuarantinedAsync(int limit, CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var rows = await connection.QueryAsync<Source>(
+            new CommandDefinition(
+                SourceSql.ListQuarantined,
+                new { Limit = limit },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return rows.AsList();
+    }
+
+    public Task RecordQuarantineProbeAsync(long sourceId, CancellationToken cancellationToken)
+        => ExecuteAsync(
+            SourceSql.RecordQuarantineProbe,
+            new { SourceId = sourceId, Now = _timeProvider.GetUtcNow() },
+            cancellationToken);
 
     public Task ActivateAsync(long sourceId, CancellationToken cancellationToken)
         => ExecuteAsync(SourceSql.Activate, new { SourceId = sourceId }, cancellationToken);

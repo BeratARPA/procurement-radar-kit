@@ -1,4 +1,5 @@
 using ProcurementRadar.Domain.Entities;
+using ProcurementRadar.Domain.Enums;
 
 namespace ProcurementRadar.Domain.Repositories;
 
@@ -77,11 +78,34 @@ public interface ISourceRepository
     Task RecordRobotsCheckAsync(long sourceId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Takes a source out of the rotation. T-15 calls this once
+    /// Takes a source out of the rotation, recording why. T-15 calls this once
     /// <c>consecutive_failures</c> reaches ten, so that a dead page stops
     /// burning politeness budget until somebody looks at it.
     /// </summary>
-    Task DeactivateAsync(long sourceId, CancellationToken cancellationToken);
+    /// <remarks>
+    /// The reason is required rather than optional on purpose. It decides
+    /// whether the quarantine sweep will ever ask this source again, and a
+    /// default would quietly pick that answer for every caller that forgot.
+    /// </remarks>
+    Task DeactivateAsync(long sourceId, DeactivationReason reason, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Switched-off sources whose reason could stop being true, least recently
+    /// probed first.
+    /// </summary>
+    /// <remarks>
+    /// The other half of <see cref="DeactivateAsync"/>. Without this the
+    /// switched-off state is a one-way door: <see cref="ListActiveAsync"/> never
+    /// returns the source again, so it can never succeed again, so the failure
+    /// counter can never clear.
+    /// </remarks>
+    Task<IReadOnlyList<Source>> ListQuarantinedAsync(int limit, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Stamps <c>quarantine_probed_at</c> so the next sweep moves on to another
+    /// source rather than asking this one again.
+    /// </summary>
+    Task RecordQuarantineProbeAsync(long sourceId, CancellationToken cancellationToken);
 }
 
 /// <summary>Which row a definition landed in, and whether it was new.</summary>

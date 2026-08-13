@@ -216,9 +216,13 @@ public sealed class SourcesController : ControllerBase
     /// Activating clears the failure count as well. Leaving it at ten would take
     /// the source straight back out on its next stumble, and the reason it failed
     /// ten times is usually the thing that was just fixed.
+    ///
+    /// Switching one off records a reason, which is what decides whether the
+    /// quarantine sweep will ever ask it again.
     /// </remarks>
     [HttpPost("{id:long}/active", Name = "setSourceActive")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SetActive(
         long id,
         [FromBody] ActiveChangeRequest request,
@@ -230,7 +234,14 @@ public sealed class SourcesController : ControllerBase
         }
         else
         {
-            await _sources.DeactivateAsync(id, cancellationToken).ConfigureAwait(false);
+            if (!TryReadReason(request.Reason, out var reason))
+            {
+                return Problem(
+                    detail: $"'{request.Reason}' is not a deactivation reason.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            await _sources.DeactivateAsync(id, reason, cancellationToken).ConfigureAwait(false);
         }
 
         _logger.LogInformation(
@@ -239,5 +250,24 @@ public sealed class SourcesController : ControllerBase
             request.IsActive ? "on" : "off");
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Reads the reason a switch-off carries, defaulting to <c>manual</c>.
+    /// </summary>
+    /// <remarks>
+    /// <c>health_rule</c> is deliberately not accepted here. It means "nobody
+    /// chose this, ten failures did", and a person pressing a button in the
+    /// interface is the opposite of that.
+    /// </remarks>
+    private static bool TryReadReason(string? text, out DeactivationReason reason)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            reason = DeactivationReason.Manual;
+            return true;
+        }
+
+        return EnumText.TryParse(text, out reason) && reason != DeactivationReason.HealthRule;
     }
 }

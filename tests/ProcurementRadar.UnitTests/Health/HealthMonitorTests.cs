@@ -2,6 +2,7 @@ using ProcurementRadar.Domain.Settings;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ProcurementRadar.Domain.Entities;
+using ProcurementRadar.Domain.Enums;
 using ProcurementRadar.Domain.Health;
 using ProcurementRadar.Notifier;
 using ProcurementRadar.UnitTests.Archive;
@@ -121,7 +122,12 @@ public sealed class HealthMonitorTests
 
         await Monitor().RunAsync(CancellationToken.None);
 
-        Assert.Contains(12, _sources.Deactivated);
+        // The reason travels with the switch, and it has to be HealthRule: that
+        // is the only value the quarantine sweep will ever revisit, so recording
+        // Manual here would bury the source permanently.
+        var (sourceId, reason) = Assert.Single(_sources.Deactivated);
+        Assert.Equal(12, sourceId);
+        Assert.Equal(DeactivationReason.HealthRule, reason);
         Assert.Contains("pasife alındı", Assert.Single(_alerts.Messages), StringComparison.Ordinal);
     }
 

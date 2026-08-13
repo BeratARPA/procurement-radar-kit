@@ -19,6 +19,21 @@ public sealed record ActiveChangeRequest
 {
     /// <summary>True puts the source back in the rotation and clears its failure count.</summary>
     public required bool IsActive { get; init; }
+
+    /// <summary>
+    /// Why it is being switched off: <c>site_unreachable</c>, <c>manual</c>,
+    /// <c>no_tender_list</c>, <c>robots</c> or <c>superseded</c>. Ignored when
+    /// switching one on.
+    /// </summary>
+    /// <remarks>
+    /// This decides whether the quarantine sweep will ever ask the source again.
+    /// <c>site_unreachable</c> is the one that comes back on its own; the rest
+    /// are facts about the page rather than conditions, and stay off.
+    ///
+    /// Defaults to <c>manual</c>, which does not get re-probed - a switch whose
+    /// reason nobody gave should not quietly schedule traffic.
+    /// </remarks>
+    public string? Reason { get; init; }
 }
 
 public sealed record SettingChangeRequest

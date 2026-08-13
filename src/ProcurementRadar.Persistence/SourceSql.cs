@@ -23,6 +23,9 @@ internal static class SourceSql
                     last_success_at       AS "LastSuccessAt",
                     last_new_notice_at    AS "LastNewNoticeAt",
                     consecutive_failures  AS "ConsecutiveFailures",
+                    deactivated_at        AS "DeactivatedAt",
+                    replace(initcap(replace(deactivated_reason, '_', ' ')), ' ', '') AS "DeactivatedReason",
+                    quarantine_probed_at  AS "QuarantineProbedAt",
                     notes                 AS "Notes"
         """;
 
@@ -52,7 +55,11 @@ internal static class SourceSql
     // ten times is usually the thing that was just fixed.
     internal const string Activate = """
         UPDATE source
-        SET is_active = true, consecutive_failures = 0
+        SET is_active            = true,
+            consecutive_failures = 0,
+            deactivated_at       = NULL,
+            deactivated_reason   = NULL,
+            quarantine_probed_at = NULL
         WHERE id = @SourceId
         """;
 
@@ -158,9 +165,32 @@ internal static class SourceSql
         WHERE id = @SourceId
         """;
 
+    // The reason travels with the switch. Recording one without the other is how
+    // a source ends up switched off for a condition nobody can name afterwards,
+    // which is the state all nineteen of these were in before 11 Aug 2026.
     internal const string Deactivate = """
         UPDATE source
-        SET is_active = false
+        SET is_active          = false,
+            deactivated_at     = @Now,
+            deactivated_reason = @Reason
+        WHERE id = @SourceId
+        """;
+
+    // Only the reasons that can stop being true. Least recently probed first,
+    // never-probed first of all, so the queue rotates instead of asking the same
+    // source every day.
+    internal const string ListQuarantined = $"""
+        SELECT {SelectColumns}
+        FROM source
+        WHERE is_active = false
+          AND deactivated_reason IN ('health_rule', 'site_unreachable')
+        ORDER BY quarantine_probed_at ASC NULLS FIRST, id ASC
+        LIMIT @Limit
+        """;
+
+    internal const string RecordQuarantineProbe = """
+        UPDATE source
+        SET quarantine_probed_at = @Now
         WHERE id = @SourceId
         """;
 }

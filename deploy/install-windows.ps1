@@ -56,10 +56,18 @@ if ($Status) {
 $worker = Join-Path $publish 'ProcurementRadar.Worker.exe'
 
 if ($Rebuild -or -not (Test-Path $worker)) {
-    # A running worker holds its own exe open, so publishing over it fails. Stop
-    # it first; the task is registered again below either way.
-    Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    # Both processes have to go, not just the worker. They publish to the same
+    # folder on purpose (D-19: shared config\ and .env), which means they also
+    # share every class library in it - Domain, Collector, Parsers, Scoring,
+    # Notifier. A running api holds all of those open, so stopping only the
+    # worker left -Rebuild failing with MSB3021 on five dlls it had never
+    # touched, and the error named the api rather than the thing being built.
+    foreach ($name in $TaskName, ($TaskName + 'Api')) {
+        Stop-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
+    }
+
     Get-Process ProcurementRadar.Worker -ErrorAction SilentlyContinue | Stop-Process -Force
+    Get-Process ProcurementRadar.Api -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Seconds 2
 
     Write-Host 'Yayinlaniyor...'

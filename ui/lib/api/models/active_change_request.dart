@@ -10,12 +10,18 @@ part 'active_change_request.g.dart';
 class ActiveChangeRequest {
   const ActiveChangeRequest({
     required this.isActive,
+    this.reason,
   });
   
   factory ActiveChangeRequest.fromJson(Map<String, Object?> json) => _$ActiveChangeRequestFromJson(json);
   
   /// True puts the source back in the rotation and clears its failure count.
   final bool isActive;
+
+  /// Why it is being switched off: `site_unreachable`, `manual`,.  ///
+  /// `no_tender_list`, `robots` or `superseded`. Ignored when.  ///
+  /// switching one on.
+  final String? reason;
 
   Map<String, Object?> toJson() => _$ActiveChangeRequestToJson(this);
 }

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using ProcurementRadar.Domain.Enums;
 using ProcurementRadar.Domain.Health;
 using ProcurementRadar.Domain.Repositories;
 
@@ -120,7 +121,13 @@ public sealed class HealthMonitor
             {
                 // Taken out of the rotation before the alarm, so a failure to
                 // send the message does not leave it polling a dead page.
-                await _sources.DeactivateAsync(source.SourceId, cancellationToken).ConfigureAwait(false);
+                //
+                // HealthRule rather than Manual: this is the one reason nobody
+                // chose, and the only one the quarantine sweep will revisit
+                // without being asked.
+                await _sources
+                    .DeactivateAsync(source.SourceId, DeactivationReason.HealthRule, cancellationToken)
+                    .ConfigureAwait(false);
 
                 _logger.LogError(
                     "Source {SourceId} ({Authority}) deactivated after {Count} consecutive failures",

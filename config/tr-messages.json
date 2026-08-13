@@ -30,6 +30,7 @@
   "alerts": {
     "fetch_failures": "🔴 {authority} — art arda {count} tarama hatası. Sayfa taşınmış olabilir.",
     "source_deactivated": "⛔ {authority} — {count} hatadan sonra pasife alındı. Elle bakılması gerekiyor.",
+    "source_recovered": "✅ {authority} — tekrar cevap veriyor ({count} ilan okundu) ve rotasyona geri alındı. Kapatma sebebi: {reason}.",
     "parser_broken": "🟠 PARSER BOZUK OLABİLİR — {authority}. Sayfa değişmiş ama ayrıştırıcı hiçbir ilan çıkaramadı ({count} kez). Selector'ları kontrol edin.",
     "silent_source": "🔇 {authority} — {days} gündür yeni ilan yok. Daha önce ilan veriyordu.",
     "nothing_collected": "🚨 KRİTİK — son {hours} saatte sistem genelinde tek bir yeni ilan yok. Hafta içi bu normal değil.",

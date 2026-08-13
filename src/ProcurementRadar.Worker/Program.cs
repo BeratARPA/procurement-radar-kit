@@ -197,6 +197,13 @@ builder.Services.AddSingleton(new HealthOptions());
 builder.Services.AddSingleton<HealthMonitor>();
 builder.Services.AddHostedService<HealthWorker>();
 
+// The other half of the health rule. Without this, switching a source off is a
+// one-way door: the collector only lists active sources, so a source taken out
+// after ten failures can never be fetched again, never succeed again, and never
+// clear the counter that took it out.
+builder.Services.AddSingleton<QuarantineSweeper>();
+builder.Services.AddHostedService<QuarantineWorker>();
+
 if (!string.IsNullOrWhiteSpace(botToken) && !string.IsNullOrWhiteSpace(chatId))
 {
     builder.Services.AddSingleton(new TelegramOptions { BotToken = botToken, ChatId = chatId });
