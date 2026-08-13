@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Entities;
@@ -194,6 +195,21 @@ internal static class PreflightCommand
         //    published keywords twenty-six terms behind the repository.
         CheckDeployedConfig(configDirectory);
 
+        // 6. And the schema the interface was generated from.
+        //
+        //    D-16 has the Dart client generated from the api's own document
+        //    rather than hand-written, which removes a whole class of drift and
+        //    creates one: generating is now a step, and a step can be skipped.
+        //
+        //    It was, for two days. The api grew ActiveChangeRequest.reason on
+        //    11 August, the client was not regenerated, and the switch on the
+        //    Kaynaklar screen went on sending a body without it. The field is
+        //    optional, so nothing returned an error - the api simply read the
+        //    absent reason as `manual`, which is one of the three that are never
+        //    re-probed. Every source switched off from the interface opted out
+        //    of D-22 quietly.
+        await CheckGeneratedClientAsync(cancellationToken).ConfigureAwait(false);
+
         if (problems.Count > 0)
         {
             foreach (var problem in problems)
@@ -260,6 +276,131 @@ internal static class PreflightCommand
             + "(deploy/install-windows.ps1 does, `dotnet publish` on its own does not).",
             stale.Count,
             string.Join(", ", stale));
+    }
+
+    /// <summary>
+    /// Warns when ui/swagger.json has fallen behind the api's own document.
+    /// </summary>
+    /// <remarks>
+    /// Says nothing when the api is not answering. Preflight is run before a
+    /// deploy and from machines with no interface checkout; a check that failed
+    /// because something was switched off would be a check people learn to
+    /// ignore. Compares endpoint names and the field names on each type, which
+    /// is what the generator turns into methods and models - not descriptions,
+    /// which change when a comment is reworded and mean nothing to the client.
+    /// </remarks>
+    private static async Task CheckGeneratedClientAsync(CancellationToken cancellationToken)
+    {
+        var generated = Path.Combine(RepositoryRoot(), "ui", "swagger.json");
+
+        if (!File.Exists(generated)) return;
+
+        var address = Environment.GetEnvironmentVariable("PR_API_URL") ?? "http://localhost:5080";
+
+        JsonDocument live;
+
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+
+            var body = await http
+                .GetStringAsync($"{address.TrimEnd('/')}/swagger/v1/swagger.json", cancellationToken)
+                .ConfigureAwait(false);
+
+            live = JsonDocument.Parse(body);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            return;
+        }
+
+        using (live)
+        {
+            using var stored = JsonDocument.Parse(await File.ReadAllTextAsync(generated, cancellationToken).ConfigureAwait(false));
+
+            var behind = new List<string>();
+
+            behind.AddRange(Missing(live.RootElement, stored.RootElement, "paths")
+                .Select(name => $"uc {name}"));
+
+            foreach (var name in Missing(live.RootElement, stored.RootElement, "components", "schemas"))
+            {
+                behind.Add($"tip {name}");
+            }
+
+            // Field by field on the types both sides know about. This is the
+            // half that bit: no endpoint appeared and no type appeared, one
+            // request object simply grew a property.
+            var liveSchemas = Section(live.RootElement, "components", "schemas");
+            var storedSchemas = Section(stored.RootElement, "components", "schemas");
+
+            if (liveSchemas is { } ls && storedSchemas is { } ss)
+            {
+                foreach (var schema in ls.EnumerateObject())
+                {
+                    if (!ss.TryGetProperty(schema.Name, out var theirs)) continue;
+
+                    foreach (var field in Missing(schema.Value, theirs, "properties"))
+                    {
+                        behind.Add($"{schema.Name}.{field}");
+                    }
+                }
+            }
+
+            if (behind.Count == 0) return;
+
+            Log.Warning(
+                "ui/swagger.json is behind the running api in {Count} place(s): {Behind}. The Dart "
+                + "client is generated from that file, so the interface cannot see these. "
+                + "Regenerate: dart run swagger_parser && dart run build_runner build",
+                behind.Count,
+                string.Join(", ", behind.Take(12)));
+        }
+    }
+
+    private static JsonElement? Section(JsonElement root, params string[] path)
+    {
+        var current = root;
+
+        foreach (var step in path)
+        {
+            if (!current.TryGetProperty(step, out var next)) return null;
+
+            current = next;
+        }
+
+        return current;
+    }
+
+    /// <summary>Names present in the first document's section and absent from the second's.</summary>
+    private static IEnumerable<string> Missing(JsonElement live, JsonElement stored, params string[] path)
+    {
+        var here = Section(live, path);
+        var there = Section(stored, path);
+
+        if (here is not { } a) return [];
+        if (there is not { } b) return a.EnumerateObject().Select(p => p.Name);
+
+        return a.EnumerateObject()
+            .Select(p => p.Name)
+            .Where(name => !b.TryGetProperty(name, out _));
+    }
+
+    private static string RepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "ProcurementRadar.sln")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        return Directory.GetCurrentDirectory();
     }
 
     private static bool PathsMatch(string left, string right)

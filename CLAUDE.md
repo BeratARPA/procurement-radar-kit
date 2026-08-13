@@ -99,6 +99,7 @@ test sees is not what the worker gets.** Not one of them was a logic error.
 | the repository working copy | `publish/config` | settings were seeded from a stale copy |
 | the working copy on this disk | what a clone actually contains | `.gitignore`'s `data/` matched `ui/lib/src/data/`; four files the interface cannot start without were never committed, and `git add -A` never said a word |
 | an exception during layout | content quietly cut off at the window edge | a Row inside a horizontal scroll view never overflows, so three of the five notice filters sat off screen with nothing saying they existed |
+| the schema the client was generated from | the schema the api now serves | `ActiveChangeRequest.reason` was added and the client was not regenerated; the field is optional, so no request failed - the api read the absent reason as `manual` and every source switched off from the interface opted out of quarantine for two days |
 
 So, before saying a change works:
 
@@ -114,6 +115,10 @@ So, before saying a change works:
 4. **Anything that adds files runs once from a fresh clone.** `git clone` to a
    scratch directory, then `dotnet build` and `flutter test`. A file this disk
    has and the repository does not is invisible from here and total from there.
+5. **Anything that changes the api regenerates the Dart client in the same
+   commit.** `dart run swagger_parser && dart run build_runner build` in `ui/`.
+   `preflight` compares `ui/swagger.json` against the running api and names what
+   is missing, but only if the api is up when it runs.
 
 `dotnet test` passing is necessary and has never once been sufficient.
 
