@@ -19,6 +19,7 @@ public static class SettingKeys
     public const string AwardLabels = "award_labels";
     public const string EkapUi = "ekap_ui";
     public const string Politeness = "politeness";
+    public const string Backup = "backup";
 
     /// <summary>Key to config file name, in the order a settings screen should show them.</summary>
     public static IReadOnlyList<(string Key, string FileName)> Seeds { get; } =
@@ -30,6 +31,7 @@ public static class SettingKeys
         (PersonalData, "tr-personal-data.json"),
         (AwardLabels, "tr-award-labels.json"),
         (EkapUi, "ekap-ui.json"),
-        (Politeness, "politeness.json")
+        (Politeness, "politeness.json"),
+        (Backup, "backup.json")
     ];
 }

@@ -33,7 +33,8 @@ public static class SettingValidator
         // The one with floors rather than a shape: five seconds between
         // requests to a host, and robots.txt obeyed. Refused here and
         // refused again in the worker (D-16).
-        [SettingKeys.Politeness] = json => PolitenessSettings.Load(json)
+        [SettingKeys.Politeness] = json => PolitenessSettings.Load(json),
+        [SettingKeys.Backup] = json => BackupSettings.Load(json)
     };
 
     public static bool IsKnown(string key)

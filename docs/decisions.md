@@ -65,9 +65,14 @@ Kök dizin `PR_DATA_DIR` env değişkeninden okunur.
 ~60 KB, gzip sonrası ~12 KB → günde yarım MB, yılda ~180 MB. Bunun için bulut
 depolama kurmak gereksiz.
 
-**Kural:** `data/` dizini `.gitignore` içinde. Yedekleme: haftalık
+**Kural:** `data/` dizini `.gitignore` içinde. ~~Yedekleme: haftalık
 `tar czf` ile ikinci bir diske veya birinizin makinesine. Otomatik yedek
-kurmayın, elle yeterli.
+kurmayın, elle yeterli.~~
+
+**Güncelleme — 13 Ağustos 2026:** Elle yedek **bir kez alınmadı**. Sekiz gün
+sonra arşiv 418 MB'a çıkmıştı ve tek kopyası bir SSD'deydi. "Elle yeterli"
+cümlesi, kimsenin yapmadığı bir işi yapılmış saymanın adıydı. Otomatik yedek
+D-24'te; nereye yazılacağı ayar, ne zaman yazılacağı zamanlanmış görev.
 
 ---
 
@@ -826,3 +831,64 @@ aynı anda durur. Birini değiştiren hepsini değiştirir. `1024-60000` arasın
 **Not:** Kurulu bir arayüzde adres cihazın kendi deposunda saklı; yeni sürüm
 eskisinin üstüne yazmaz. Masaüstü, telefon ve tarayıcıda Ayarlar ekranından bir
 kez güncellenir.
+
+---
+
+## D-24 — Yedek: D:'ye, veritabanı her gece, dosya arşivi haftada bir
+
+**Karar:** `backup` komutu ve gece 03:00'te çalışan üçüncü bir zamanlanmış görev.
+Hedef klasör `setting` tablosunda, yani ayarlardan değiştirilebilir; varsayılan
+`D:\ProcurementRadarBackup`.
+
+**Neden şimdi.** D-04 haftalık `tar czf` istemişti ve bunu bir insana bırakmıştı.
+**Bir kez alınmadı.** 13 Ağustos 2026'da depo GitHub'a gitti ve kod risk altında
+olmaktan çıktı — ama bu projenin biriktirdiği şey kod değil. `spec.md` Bölüm 16
+bunu açıkça söylüyor: asıl değer arşivde. Onun tek kopyası bir SSD'deydi.
+
+**Ölçüm kararı verdi:**
+
+| | Boyut |
+|---|---|
+| `pg_dump -Fc` | **1,1 MB** |
+| `data/raw` + `data/doc` | 418 MB |
+
+Veritabanı bir megabayt: kaynak listesi selector'larıyla, 2.386 ilan, puanlar,
+`first_seen_at` (mimari kural 3'ün "ürünün bütün değeri" dediği alan) ve ayarlar.
+Bu kadar küçük olunca "haftada bir" demek için sebep kalmıyor — her gece.
+
+**Dosya arşivi anlık görüntü değil ayna.** Arşivde hiçbir şey değişmiyor:
+`raw_fetch` satırları hiç silinmiyor (D-04, mimari kural 2) ve altındaki dosyalar
+bir kez yazılıyor. Dolayısıyla ayna zaten tam yedek; dört haftalık anlık görüntü
+aynı 418 MB'ın dört kopyası olurdu ve ikinci tur dakikalar değil saniyeler sürer.
+İlk tur ölçüldü: 11.468 dosya, 12 saniye.
+
+**D: aynı fiziksel diskte ve bu dürüstçe yazılıyor.** Makinede tek SSD var; C: ve
+D: onun bölümleri. Bu yedek kaza silmesine, bozuk bir migration'a, yanlış bir
+SQL'e karşı korur — **disk arızasına karşı korumaz.** Gerçek koruma için hedefi
+takılı bir USB diske veya makine dışına almak gerekir; adres ayar olduğu için
+o gün tek satır değişir.
+
+OneDrive konuşuldu ve seçilmedi: CLAUDE.md "no cloud account" diyor ve kaynak
+listesini üçüncü tarafa yüklemek ayrı bir karar. Kural kalkarsa 1,1 MB'lık
+döküm için bedava katman fazlasıyla yeter.
+
+**Neden worker'da değil komutta.** `pg_dump` konteynerin içinde, bu makinede
+kurulu değil — yani yedek `docker exec` çağırmak zorunda. Panel zaten komut
+çalıştırıyor (D-18) ve dağıtım zaten görev kaydediyor (D-10), dolayısıyla hem
+düğme hem gecelik tur bedavaya geliyor; sürekli çalışan worker ise konteyner
+çalışma zamanından uzak kalıyor.
+
+**`StartWhenAvailable` bir ayrıntı değil.** D-10 makinenin çoğu zaman kapalı veya
+uykuda olduğunu yazıyor. O bayrak olmasa kapak kapalıyken denk gelen her yedek
+hiç alınmamış olurdu; onunla kaçan tur makine döner dönmez çalışıyor.
+
+**Boş hedef ve olmayan klasör hata değil.** USB takılı olmayan gün normal bir
+gün: komut söyler ve sıfır kodla çıkar. Her gece alarm veren bir görev,
+okunmayan bir görevdir.
+
+**Doğrulandı, sadece yazılmadı.** Alınan döküm geçici bir veritabanına geri
+yüklendi: 108 kaynak, 2.386 ilan, 2.386 puan, 11.206 arşiv satırı, 9 ayar ve
+`first_seen_at` 5 Ağustos'a kadar geri geldi. Denenmemiş yedek yedek değildir.
+
+**Uygulama:** `config/backup.json`, `BackupSettings`, `BackupCommand`,
+`ProcurementRadarBackup` görevi, Sistem ekranında düğme. 5 test.

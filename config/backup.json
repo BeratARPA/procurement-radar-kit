@@ -1,0 +1,18 @@
+{
+  "_comment": "Yedekleme ayarları (D-24). Bu dosya yalnızca ilk değerdir; çalışan sistemde geçerli olan `setting` tablosundaki satırdır (D-16).",
+
+  "destination": "D:\\ProcurementRadarBackup",
+  "_destination_note": "Boş bırakılırsa yedek alınmaz ve komut bunu söyler. Yol yoksa (USB takılı değilse) hata değil, atlama: loglar ve sıfır dışı kod dönmez.",
+
+  "database": true,
+  "_database_note": "pg_dump -Fc ile sıkıştırılmış döküm. 13 Ağustos 2026'da 1,1 MB — kaynak listesi, ilanlar, puanlar, first_seen_at ve ayarların tamamı. Yeri doldurulamayacak olan bu.",
+
+  "keep_dumps": 14,
+  "_keep_dumps_note": "Kaç günlük döküm saklansın. Her biri ~1 MB, ondördü bir haftalık hatayı fark edip geri dönmeye yeter.",
+
+  "archive": true,
+  "_archive_note": "data/raw ve data/doc aynalanır. Sıkıştırılmış anlık görüntü değil ayna, çünkü arşiv yalnızca büyür (D-04, mimari kural 2): silinen dosya yok, dolayısıyla ayna zaten tam yedektir ve her hafta 418 MB'ı yeniden yazmaz.",
+
+  "archive_every_days": 7,
+  "_archive_every_days_note": "Döküm her çalıştırmada alınır; dosya aynası bu kadar günde bir. Ayna artımlı olduğu için ikinci tur dakikalar değil saniyeler sürer."
+}

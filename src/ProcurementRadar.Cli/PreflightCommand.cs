@@ -418,6 +418,7 @@ internal static class PreflightCommand
         SettingKeys.PersonalData => Domain.Normalization.PersonalDataRules.Load(json),
         SettingKeys.AwardLabels => AwardLabels.Load(json),
         SettingKeys.Politeness => PolitenessSettings.Load(json),
+        SettingKeys.Backup => BackupSettings.Load(json),
         _ => json
     };
 

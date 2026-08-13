@@ -158,7 +158,38 @@ $apiAction = New-ScheduledTaskAction `
 Register-ScheduledTask -TaskName $apiTaskName -Action $apiAction -Trigger $trigger `
     -Settings $settings -Description 'Procurement Radar api (swagger, interface)' -Force | Out-Null
 
-Write-Host "Registered '$apiTaskName' to start at logon (http://localhost:60080/swagger)." 
+Write-Host "Registered '$apiTaskName' to start at logon (http://localhost:60080/swagger)."
+
+# The backup (D-24). A third task rather than a loop inside the worker, because
+# it shells out to docker for pg_dump - that binary is in the container and not
+# on this machine - and the worker has no other reason to know docker exists.
+#
+# Nightly at three, with StartWhenAvailable, which is the setting that matters
+# here: D-10 is honest that this machine is off or asleep much of the time, and
+# without it every backup scheduled while the lid was shut would simply never
+# happen. With it, a missed run goes as soon as the machine is back.
+#
+# `dotnet run` rather than a published exe: the cli is not published (D-19 puts
+# only the worker and the api in publish/), and a backup that needs a build step
+# is a backup that stops working the first time somebody cleans the repository.
+$backupTaskName = "$TaskName" + 'Backup'
+$backupAction = New-ScheduledTaskAction `
+    -Execute 'dotnet' `
+    -Argument "run --project `"$(Join-Path $repo 'src\ProcurementRadar.Cli')`" -c Release -- backup" `
+    -WorkingDirectory $repo
+
+$backupTrigger = New-ScheduledTaskTrigger -Daily -At 3am
+
+$backupSettings = New-ScheduledTaskSettingsSet `
+    -AllowStartIfOnBatteries `
+    -DontStopIfGoingOnBatteries `
+    -StartWhenAvailable `
+    -ExecutionTimeLimit (New-TimeSpan -Hours 2)
+
+Register-ScheduledTask -TaskName $backupTaskName -Action $backupAction -Trigger $backupTrigger `
+    -Settings $backupSettings -Description 'Procurement Radar backup (D-24)' -Force | Out-Null
+
+Write-Host "Registered '$backupTaskName' to run nightly at 03:00."
 
 # --- what would still stop it -------------------------------------------------
 Write-Host ''

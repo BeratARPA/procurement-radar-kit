@@ -84,6 +84,14 @@ const List<CliCommand> cliCommands = <CliCommand>[
     name: 'telegram-check',
     description: 'Token geçerli mi, bot hangi sohbetleri görüyor.',
   ),
+  // Safe in the sense that matters here: it only reads this system. It writes,
+  // but somewhere else, and there is nothing it can leave worse than it found.
+  CliCommand(
+    name: 'backup',
+    description:
+        'Veritabanı dökümünü ve dosya arşivini ayarlardaki yere kopyalar (D-24). '
+        'Gece 03:00\'te kendiliğinden de çalışır.',
+  ),
   CliCommand(
     name: 'seed',
     description: 'config/sources.seed.json dosyasını source tablosuna yazar.',
