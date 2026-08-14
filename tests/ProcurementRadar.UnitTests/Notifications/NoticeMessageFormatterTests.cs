@@ -154,14 +154,18 @@ public sealed class NoticeMessageFormatterTests
     {
         // A typo in the config file should be visible in the message, not fatal
         // at three in the morning.
-        var templates = MessageTemplates.Load("""
-            {
-              "notice": { "header": "{score} {typo} {title}", "deadline_unknown": "yok" },
-              "buttons": { "review": "a", "not_relevant": "b" },
-              "remaining": { "days": "{count} g", "hours": "{count} s", "minutes": "{count} d", "expired": "-" },
-              "score_icons": [ { "at_least": 0, "icon": "*" } ]
-            }
-            """);
+        // The real document with one header replaced, rather than a cut-down one.
+        // The loader now refuses a document missing any alert text - a template
+        // that silently defaults to empty is what sent 26 empty alarms on
+        // 14 August - so a four-key stand-in is no longer a valid document, and
+        // building one here would only teach the test to accept what production
+        // rejects.
+        var document = System.Text.Json.Nodes.JsonNode.Parse(
+            File.ReadAllText(Path.Combine(RepositoryRoot.Find().FullName, "config", "tr-messages.json")))!;
+
+        document["notice"]!["header"] = "{score} {typo} {title}";
+
+        var templates = MessageTemplates.Load(document.ToJsonString());
 
         var message = new NoticeMessageFormatter(new Fixed<MessageTemplates>(templates), Time)
             .Compose(Notice(), NotificationKind.NewNotice);

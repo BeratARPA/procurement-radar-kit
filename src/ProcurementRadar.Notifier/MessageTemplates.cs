@@ -60,6 +60,27 @@ public sealed class MessageTemplates
             throw new InvalidOperationException("tr-messages.json has no notice.header template.");
         }
 
+        // Every alarm must have something to say.
+        //
+        // Each of these properties defaults to an empty string, so a template
+        // missing from the document loads silently and the alarm sends nothing.
+        // Telegram answers "Bad Request: message text is empty" and the alarm is
+        // lost - the source is recorded as alerted in `health_alert`, the
+        // cooldown starts, and nobody hears about it.
+        //
+        // This is the second time. CLAUDE.md already records "an alarm shipped
+        // with no message text" from an earlier round; on 14 August 2026
+        // `never_produced` did it again, 26 times between 14:51 and 18:10, for
+        // the sources that had never produced a notice - which is precisely the
+        // condition nothing else in the system reports.
+        var missing = shape.Alerts.Missing();
+
+        if (missing.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "tr-messages.json has no text for these alerts: " + string.Join(", ", missing));
+        }
+
         return new MessageTemplates(
             shape.Notice,
             shape.ReminderHeader,
@@ -214,6 +235,23 @@ public sealed class MessageTemplates
 
         [JsonPropertyName("never_produced")]
         public string NeverProduced { get; init; } = string.Empty;
+
+        /// <summary>Which alert kinds have no text, by their key in the document.</summary>
+        public IReadOnlyList<string> Missing()
+            => new (string Key, string Text)[]
+                {
+                    ("fetch_failures", FetchFailures),
+                    ("source_deactivated", SourceDeactivated),
+                    ("source_recovered", SourceRecovered),
+                    ("parser_broken", ParserBroken),
+                    ("silent_source", SilentSource),
+                    ("nothing_collected", NothingCollected),
+                    ("pipeline_stalled", PipelineStalled),
+                    ("never_produced", NeverProduced)
+                }
+                .Where(alert => string.IsNullOrWhiteSpace(alert.Text))
+                .Select(alert => alert.Key)
+                .ToList();
     }
 
     public sealed record WeeklySummaryTemplates

@@ -30,6 +30,15 @@ public sealed record HealthOptions
     /// </remarks>
     public TimeSpan NeverProducedWindow { get; init; } = TimeSpan.FromDays(7);
 
+    /// <summary>How long this one alarm stays quiet after it has been raised.</summary>
+    /// <remarks>
+    /// A week rather than the usual day. A source that has produced nothing is
+    /// still producing nothing tomorrow; saying so every morning trains the
+    /// reader to ignore the channel, which is the failure spec Bölüm 9 describes
+    /// for notifications and applies just as well to alarms.
+    /// </remarks>
+    public TimeSpan NeverProducedCooldown { get; init; } = TimeSpan.FromDays(7);
+
     /// <summary>Spec Bölüm 11: three failures in a row is worth saying out loud.</summary>
     public int FailureWarningThreshold { get; init; } = 3;
 
@@ -372,8 +381,16 @@ public sealed class HealthMonitor
         string message,
         CancellationToken cancellationToken)
     {
+        // Most alarms describe something that could change by tomorrow, so a day
+        // is the right silence. "Has produced nothing since it was switched on"
+        // is not one of those: it is the same fact tomorrow, and repeating it
+        // daily is how an alarm becomes something to swipe away.
+        var cooldown = kind == HealthAlertKind.NeverProduced
+            ? _options.NeverProducedCooldown
+            : _options.Cooldown;
+
         if (!await _health
-            .TryRaiseAsync(kind, sourceId, _options.Cooldown, message, cancellationToken)
+            .TryRaiseAsync(kind, sourceId, cooldown, message, cancellationToken)
             .ConfigureAwait(false))
         {
             return 0;

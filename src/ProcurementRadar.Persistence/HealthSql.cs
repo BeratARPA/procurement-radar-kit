@@ -55,11 +55,24 @@ internal static class HealthSql
     // Fetched for long enough to have had many chances, and nothing to show for
     // it. The join is on the archive rather than on a column, because there is
     // no record of when a source was switched on - only of what it has fetched.
+    // A source that has been polled for a week and produced nothing.
+    //
+    // The keyword searches are excluded, and that is the whole difference
+    // between a signal and a flood. This alarm exists to catch selectors written
+    // against a page that happened to be empty that day - eleven sources were
+    // switched back on in exactly that state. An EKAP search for 'kbs
+    // entegrasyon' returning nothing is not that: it is the correct answer to
+    // the question asked, and it will keep being correct.
+    //
+    // Measured on 14 August 2026: 26 sources tripped this, 23 of them EKAP
+    // keyword searches. With a daily cooldown that is 26 messages a day for
+    // ever, which is how spec Bölüm 9 says Telegram gets muted.
     internal const string ListNeverProduced = """
         SELECT s.id AS "SourceId", s.authority_name AS "AuthorityName"
         FROM source s
         WHERE s.is_active
           AND s.last_new_notice_at IS NULL
+          AND s.adapter_key NOT IN ('ekap_tender', 'ekap_direct_procurement')
           AND EXISTS (
               SELECT 1 FROM raw_fetch r
               WHERE r.source_id = s.id AND r.fetched_at < @FetchedSince)
