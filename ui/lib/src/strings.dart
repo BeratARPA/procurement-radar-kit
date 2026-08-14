@@ -116,6 +116,16 @@ abstract final class Strings {
   static const String noticeDetail = 'İlan';
   static const String authority = 'İdare';
   static const String iknLabel = 'İKN';
+
+  /// The kind of purchase, and what is shown when the notice does not say.
+  ///
+  /// Stated even when unknown, which is the common case: only EKAP publishes
+  /// this, and an authority's own listing page carries a title and a link.
+  /// A blank row would read as an ordinary tender rather than as an unanswered
+  /// question, and the difference decides whether a three-person team can take
+  /// the work on at all.
+  static const String procurementKind = 'Alım türü';
+  static const String procurementKindUnknown = 'Belirtilmemiş (ilanda yazmıyor)';
   static const String rationale = 'Neden seçildi';
   static const String announcement = 'İlan metni';
   static const String noAnnouncement = 'Bu ilan için indirilmiş metin yok.';

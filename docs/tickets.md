@@ -25,6 +25,22 @@ Planda bekleyen madde yok.
 > olmayan bir işi öncelik sanmakla geçirtti. Güncel hâli her zaman arayüzün
 > **Durum** ekranında.
 
+**14 Ağustos — alım türü (D-25).** Şemada tanımlı olup hiç yazılmayan dört
+alan ölçüldü. İkisi arşivde duruyordu: EKAP'ın iki arama yanıtı da usulü ve
+maddeyi gönderiyor, iki adapter de okuyup `Description`'a düz metin yazıyordu.
+Artık kolona da yazılıyor ve arşiv yeniden işlenerek geçmişe uygulandı: 2.673
+ilanın 193'ü türünü taşıyor (138 açık ihale, 49 madde 22/d, 3 belli istekliler,
+2 madde 21/e, 1 madde 22/c). Kurumların kendi sayfaları için boş bırakılıyor —
+başlıkta ipucu %3, tahmin D-20'nin reddettiği şey. `okas_codes` ve
+`estimated_cost` erişilemiyor, sebepleri D-25'te.
+
+Yaparken üçü çıktı, üçü de mekanizmanın kendisiydi: `reparse` **EKAP arşivini
+hiç yeniden işleyemiyormuş** (kayıt defterinde tek adapter vardı), zaten
+işlenmiş satırı hiç okumuyormuş (`--again` eklendi; ilk denemede 131 numaralı
+kaynağın arşivinde **hiç kaydedilmemiş 7 ilan** buldu), ve yeni bir ayar eklemek
+kurulum betiğini kilitliyormuş — preflight satırı olmayan anahtarda ölümcül
+hata verip, o satırı dolduracak worker'ı başlatmayı reddediyordu.
+
 **Ölçülen tek kırmızı: karar verilmiyor.** spec Bölüm 15'in dört ölçütünden
 ikisi tutuyor (90 kaynak ≥ 60, ayda 67 uygun ilan ≥ 8), ikisi sıfır: teklif
 verilen 0, kazanılan 0. Altındaki sebep şu — bildirim gitmiş 69 ilanın 48'i hâlâ

@@ -13,12 +13,22 @@ public sealed class CommandQueries : ICommandQueries
         _connectionFactory = connectionFactory;
     }
 
+    // The notice half of every list row, in one place. Written out five times it
+    // was five places to forget the next column - which is exactly how
+    // bid_deadline_time_assumed went missing from the upsert for two hours. The
+    // score is left out because the open list joins it and the rest coalesce it.
+    private const string NoticeListColumns = """
+        n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
+               n.bid_deadline_at AS "BidDeadlineAt",
+               n.procurement_type AS "ProcurementType", n.procedure_code AS "ProcedureCode"
+        """;
+
     // Still new, still scored, and not already closed. A notice whose deadline has
     // passed is not open however high it scored, and showing it would waste the
     // one screen somebody is looking at.
-    private const string ListOpen = """
-        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
-               s.rule_score AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
+    private const string ListOpen = $"""
+        SELECT {NoticeListColumns},
+               s.rule_score AS "Score"
         FROM procurement_notice n
         JOIN notice_score s ON s.notice_id = n.id
         WHERE n.status = 'new'
@@ -32,9 +42,9 @@ public sealed class CommandQueries : ICommandQueries
     // still a notice - the open list can use an inner join because it filters on
     // the score anyway, and this one must not silently drop what has not been
     // scored yet.
-    private const string ListAll = """
-        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
-               coalesce(s.rule_score, 0) AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
+    private const string ListAll = $"""
+        SELECT {NoticeListColumns},
+               coalesce(s.rule_score, 0) AS "Score"
         FROM procurement_notice n
         LEFT JOIN notice_score s ON s.notice_id = n.id
         WHERE coalesce(s.rule_score, 0) >= @MinimumScore
@@ -42,9 +52,9 @@ public sealed class CommandQueries : ICommandQueries
         LIMIT @Limit
         """;
 
-    private const string ListSeenSince = """
-        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
-               coalesce(s.rule_score, 0) AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
+    private const string ListSeenSince = $"""
+        SELECT {NoticeListColumns},
+               coalesce(s.rule_score, 0) AS "Score"
         FROM procurement_notice n
         LEFT JOIN notice_score s ON s.notice_id = n.id
         WHERE n.first_seen_at >= @Since
@@ -98,9 +108,9 @@ public sealed class CommandQueries : ICommandQueries
     // ILIKE rather than a text search index: a few hundred rows today and a few
     // thousand a year, where a sequential scan costs nothing and an index would
     // want a Turkish configuration PostgreS"""L does not ship.
-    private const string Search = """
-        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
-               coalesce(s.rule_score, 0) AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
+    private const string Search = $"""
+        SELECT {NoticeListColumns},
+               coalesce(s.rule_score, 0) AS "Score"
         FROM procurement_notice n
         LEFT JOIN notice_score s ON s.notice_id = n.id
         WHERE n.title ILIKE @Pattern OR n.authority_name ILIKE @Pattern
@@ -116,6 +126,7 @@ public sealed class CommandQueries : ICommandQueries
                n.ikn AS "Ikn", coalesce(s.rule_score, 0) AS "Score", s.rationale AS "Rationale",
                n.bid_deadline_at AS "BidDeadlineAt", n.source_url AS "SourceUrl",
                n.status AS "Status",
+               n.procurement_type AS "ProcurementType", n.procedure_code AS "ProcedureCode",
                (SELECT d.extracted_text FROM notice_document d
                  WHERE d.notice_id = n.id AND d.extracted_text IS NOT NULL
                  ORDER BY length(d.extracted_text) DESC LIMIT 1) AS "AnnouncementText"
@@ -160,9 +171,9 @@ public sealed class CommandQueries : ICommandQueries
         ORDER BY count(*) DESC
         """;
 
-    private const string ClosingSoon = """
-        SELECT n.id AS "NoticeId", n.title AS "Title", n.authority_name AS "AuthorityName",
-               s.rule_score AS "Score", n.bid_deadline_at AS "BidDeadlineAt"
+    private const string ClosingSoon = $"""
+        SELECT {NoticeListColumns},
+               s.rule_score AS "Score"
         FROM procurement_notice n
         JOIN notice_score s ON s.notice_id = n.id
         WHERE n.status = 'new'

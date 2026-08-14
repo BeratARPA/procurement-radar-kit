@@ -19,6 +19,8 @@ class NoticeDetail {
     this.rationale,
     this.bidDeadlineAt,
     this.announcementText,
+    this.procurementType,
+    this.procedureCode,
   });
   
   factory NoticeDetail.fromJson(Map<String, Object?> json) => _$NoticeDetailFromJson(json);
@@ -33,6 +35,8 @@ class NoticeDetail {
   final String? announcementText;
   final String sourceUrl;
   final String status;
+  final String? procurementType;
+  final String? procedureCode;
 
   Map<String, Object?> toJson() => _$NoticeDetailToJson(this);
 }

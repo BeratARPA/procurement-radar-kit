@@ -14,6 +14,8 @@ class CommandNotice {
     required this.authorityName,
     required this.score,
     this.bidDeadlineAt,
+    this.procurementType,
+    this.procedureCode,
   });
   
   factory CommandNotice.fromJson(Map<String, Object?> json) => _$CommandNoticeFromJson(json);
@@ -23,6 +25,8 @@ class CommandNotice {
   final String authorityName;
   final int score;
   final DateTime? bidDeadlineAt;
+  final String? procurementType;
+  final String? procedureCode;
 
   Map<String, Object?> toJson() => _$CommandNoticeToJson(this);
 }

@@ -29,6 +29,18 @@ public sealed record CommandNotice
     public int Score { get; init; }
 
     public DateTimeOffset? BidDeadlineAt { get; init; }
+
+    /// <summary>direct_procurement, tender or exempt - null where nothing said.</summary>
+    /// <remarks>
+    /// Only EKAP states this. An authority's own listing page carries a title, a
+    /// link and sometimes a date; whether a 22/d purchase or an open tender is
+    /// behind it is not on the page, so most of the archive is null here and the
+    /// screen has to say "belirtilmemiş" rather than pick one.
+    /// </remarks>
+    public string? ProcurementType { get; init; }
+
+    /// <summary>art22d, art21e, open, restricted and so on.</summary>
+    public string? ProcedureCode { get; init; }
 }
 
 /// <summary>What /durum answers with.</summary>
@@ -176,6 +188,12 @@ public sealed record NoticeDetail
     /// to record the same verdict twice.
     /// </remarks>
     public string Status { get; init; } = string.Empty;
+
+    /// <summary>direct_procurement, tender or exempt - null where nothing said.</summary>
+    public string? ProcurementType { get; init; }
+
+    /// <summary>art22d, art21e, open, restricted and so on.</summary>
+    public string? ProcedureCode { get; init; }
 }
 
 public sealed record SourceHealth

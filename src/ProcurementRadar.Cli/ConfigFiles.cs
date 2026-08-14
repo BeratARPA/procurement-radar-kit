@@ -14,7 +14,8 @@ internal sealed record ConfigFiles(
     NormalizationRules Normalization,
     PersonalDataRules PersonalData,
     KeywordRules Keywords,
-    AwardLabels AwardLabels)
+    AwardLabels AwardLabels,
+    ProcedureCodes ProcedureCodes)
 {
     public static ConfigFiles LoadFrom(string? directory)
     {
@@ -29,7 +30,8 @@ internal sealed record ConfigFiles(
             NormalizationRules.Load(Read(directory, "tr-normalization.json")),
             PersonalDataRules.Load(Read(directory, "tr-personal-data.json")),
             KeywordRules.Load(Read(directory, "keywords.json")),
-            AwardLabels.Load(Read(directory, "tr-award-labels.json")));
+            AwardLabels.Load(Read(directory, "tr-award-labels.json")),
+            ProcedureCodes.Load(Read(directory, "tr-procedure-codes.json")));
 
     private static string Read(string directory, string fileName)
         => ConfigDirectory.Read(directory, fileName);

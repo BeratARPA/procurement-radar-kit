@@ -5,6 +5,7 @@ using Microsoft.Extensions.Time.Testing;
 using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Adapters;
 using ProcurementRadar.Domain.Entities;
+using ProcurementRadar.Domain.Enums;
 using ProcurementRadar.Domain.Fetching;
 using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.UnitTests.Archive;
@@ -111,6 +112,77 @@ public sealed class ParsePipelineTests : IDisposable
         var stored = Assert.Single(_notices.Notices);
         Assert.Equal(firstSeen, stored.FirstSeenAt);
         Assert.Equal(firstSeen.AddHours(6), stored.LastSeenAt);
+    }
+
+    [Fact]
+    public async Task Reprocessing_fills_a_field_the_first_pass_could_not_read()
+    {
+        // Why this exists: 2,666 notices were collected before either column was
+        // written, and the upsert cannot reach them - on a conflict it moves
+        // last_seen_at and nothing else, which is what keeps first_seen_at safe.
+        // Reprocessing the archive is how a parser fix reaches what was already
+        // collected (architecture rule 2), and a null is not a value the first
+        // record won.
+        var notice = new RawNotice(
+            "Yazılım Bakım Hizmeti Alımı",
+            "https://example.gov.tr/ilan/1",
+            BidDeadlineAt: new DateTimeOffset(2026, 3, 14, 11, 0, 0, TimeSpan.Zero));
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>1</html>"));
+        _adapter.Returns(notice);
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        var before = Assert.Single(_notices.Notices);
+        Assert.Null(before.ProcurementType);
+        Assert.Null(before.ProcedureCode);
+
+        _time.Advance(TimeSpan.FromHours(6));
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>2</html>"));
+        _adapter.Returns(notice with
+        {
+            ProcurementType = ProcurementType.DirectProcurement,
+            ProcedureCode = "art22d"
+        });
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        var after = Assert.Single(_notices.Notices);
+        Assert.Equal(ProcurementType.DirectProcurement, after.ProcurementType);
+        Assert.Equal("art22d", after.ProcedureCode);
+
+        // The half that matters more: filling a hole must not have moved the one
+        // field this product is built on.
+        Assert.Equal(before.FirstSeenAt, after.FirstSeenAt);
+    }
+
+    [Fact]
+    public async Task A_filled_field_is_not_overwritten_by_a_later_reading()
+    {
+        // Fill-only, not last-writer-wins. Spec Bölüm 8 keeps the first record
+        // where two readings disagree, and an EKAP notice that also appears on
+        // the authority's own page would otherwise have its article erased by
+        // whichever source was parsed second.
+        var notice = new RawNotice(
+            "Yazılım Bakım Hizmeti Alımı",
+            "https://example.gov.tr/ilan/1",
+            BidDeadlineAt: new DateTimeOffset(2026, 3, 14, 11, 0, 0, TimeSpan.Zero),
+            ProcurementType: ProcurementType.DirectProcurement,
+            ProcedureCode: "art22d");
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>1</html>"));
+        _adapter.Returns(notice);
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>2</html>"));
+        _adapter.Returns(notice with
+        {
+            ProcurementType = ProcurementType.Tender,
+            ProcedureCode = "open"
+        });
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        var stored = Assert.Single(_notices.Notices);
+        Assert.Equal(ProcurementType.DirectProcurement, stored.ProcurementType);
+        Assert.Equal("art22d", stored.ProcedureCode);
     }
 
     [Fact]

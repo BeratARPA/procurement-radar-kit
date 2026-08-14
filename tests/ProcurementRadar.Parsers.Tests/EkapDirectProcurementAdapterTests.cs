@@ -16,6 +16,9 @@ public sealed class EkapDirectProcurementAdapterTests
     private static readonly TurkishDatePatterns DatePatterns = TurkishDatePatterns.Load(
         File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "config", "tr-date-patterns.json")));
 
+    private static readonly ProcedureCodes Codes = ProcedureCodes.Load(
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "config", "tr-procedure-codes.json")));
+
     private static string Body => File.ReadAllText(Path.Combine(
         AppContext.BaseDirectory,
         "fixtures",
@@ -25,6 +28,7 @@ public sealed class EkapDirectProcurementAdapterTests
     private static EkapDirectProcurementAdapter Adapter() => new(
         new UnusableSearchClient(),
         new TurkishDateParser(new Fixed<TurkishDatePatterns>(DatePatterns), NullLogger<TurkishDateParser>.Instance),
+        new Fixed<ProcedureCodes>(Codes),
         NullLogger<EkapDirectProcurementAdapter>.Instance);
 
     private static Source SourceWith(string config) => new()
@@ -81,6 +85,18 @@ public sealed class EkapDirectProcurementAdapterTests
             "22/d",
             Adapter().Parse(Body, SourceWith("""{"search_text":"yazılım"}"""))[0].Description!,
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_article_also_reaches_the_column_it_belongs_in()
+    {
+        // It was already surviving into the description as prose, which a person
+        // can read and a filter cannot. 22/d is the monetary-limit purchase -
+        // the kind of work a three-person team can actually take on.
+        var notice = Adapter().Parse(Body, SourceWith("""{"search_text":"yazılım"}"""))[0];
+
+        Assert.Equal(ProcurementType.DirectProcurement, notice.ProcurementType);
+        Assert.Equal("art22d", notice.ProcedureCode);
     }
 
     [Fact]

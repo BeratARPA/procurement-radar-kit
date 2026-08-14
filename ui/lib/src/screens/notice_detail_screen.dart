@@ -9,6 +9,7 @@ import '../data/failures.dart';
 import '../data/providers.dart';
 import '../formatting.dart';
 import '../router.dart';
+import '../data/procurement_kind.dart';
 import '../strings.dart';
 import '../theme.dart';
 import 'widgets.dart';
@@ -109,6 +110,12 @@ class _Detail extends ConsumerWidget {
                 const SizedBox(height: 16),
                 _Field(label: Strings.authority, value: notice.authorityName),
                 _DeadlineField(deadlineUtc: notice.bidDeadlineAt, urgency: urgency),
+                _Field(
+                  label: Strings.procurementKind,
+                  value: procurementSummary(
+                          notice.procurementType, notice.procedureCode) ??
+                      Strings.procurementKindUnknown,
+                ),
                 if (notice.ikn != null)
                   _Field(label: Strings.iknLabel, value: notice.ikn!, copyable: true),
                 if (notice.rationale != null && notice.rationale!.isNotEmpty)

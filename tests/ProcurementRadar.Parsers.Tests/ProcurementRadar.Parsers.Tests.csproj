@@ -25,6 +25,13 @@
     <None Include="..\..\config\tr-award-labels.json"
           Link="config\tr-award-labels.json"
           CopyToOutputDirectory="PreserveNewest" />
+
+    <!-- And the procedure names. A hand-written mapping here would test the
+         assumption that EKAP writes "22/d*"; the shipped file is what actually
+         has to match the fixture. -->
+    <None Include="..\..\config\tr-procedure-codes.json"
+          Link="config\tr-procedure-codes.json"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

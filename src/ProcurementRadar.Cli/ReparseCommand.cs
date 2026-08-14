@@ -78,18 +78,70 @@ internal static class ReparseCommand
 
         var normalizer = new NoticeNormalizer(config.Normalization);
 
+        var dateParser = new TurkishDateParser(
+            new Fixed<TurkishDatePatterns>(config.DatePatterns),
+            loggerFactory.CreateLogger<TurkishDateParser>());
+
+        var rawFetches = new RawFetchRepository(connectionFactory);
+
+        // --again puts the source's archive back in the queue. Without it this
+        // command only picks up rows that were never parsed, which is not what
+        // "reparse" means and not what D-21 describes it as doing.
+        if (args.Contains("--again", StringComparer.Ordinal))
+        {
+            if (sourceId is not { } target)
+            {
+                Log.Error("--again needs --source-id. Reprocessing every source at once is not offered.");
+                return 1;
+            }
+
+            var queued = await rawFetches
+                .MarkSourceUnprocessedAsync(target, cancellationToken)
+                .ConfigureAwait(false);
+
+            Log.Information("Queued {Count} archived body(ies) of source {SourceId} to be read again",
+                queued, target);
+        }
+
         var pipeline = new ParsePipeline(
             new FileSystemRawArchive(paths, loggerFactory.CreateLogger<FileSystemRawArchive>()),
-            new RawFetchRepository(connectionFactory),
+            rawFetches,
             new SourceRepository(connectionFactory, TimeProvider.System),
             new NoticeRepository(connectionFactory, TimeProvider.System),
+            // Every adapter, not only the table one.
+            //
+            // This registry held GenericTableAdapter alone, so an archive row
+            // belonging to any other source was skipped - and the two it was
+            // skipping were the EKAP ones, which spec.md Bölüm 13 names as the
+            // most fragile component in the project and says to keep the tests
+            // tightest around. Architecture rule 2 promises the archive can be
+            // reprocessed when a parser is fixed; for the parser most likely to
+            // need it, the promise could not be kept.
+            //
+            // Neither EKAP adapter needs a browser here. The search client is
+            // only reached from FetchAsync, and Parse is a pure function over
+            // the saved response (D-12) - the same split that lets their tests
+            // run without Playwright.
             new SourceAdapterRegistry(
             [
                 new GenericTableAdapter(
                     new UnusableFetcher(),
-                    new TurkishDateParser(new Fixed<TurkishDatePatterns>(config.DatePatterns),
-                        loggerFactory.CreateLogger<TurkishDateParser>()),
-                    loggerFactory.CreateLogger<GenericTableAdapter>())
+                    dateParser,
+                    loggerFactory.CreateLogger<GenericTableAdapter>()),
+                new JsonListAdapter(
+                    new UnusableFetcher(),
+                    dateParser,
+                    loggerFactory.CreateLogger<JsonListAdapter>()),
+                new EkapAdapter(
+                    new UnusableSearchClient(),
+                    dateParser,
+                    new Fixed<ProcedureCodes>(config.ProcedureCodes),
+                    loggerFactory.CreateLogger<EkapAdapter>()),
+                new EkapDirectProcurementAdapter(
+                    new UnusableSearchClient(),
+                    dateParser,
+                    new Fixed<ProcedureCodes>(config.ProcedureCodes),
+                    loggerFactory.CreateLogger<EkapDirectProcurementAdapter>())
             ]),
             new ExternalKeyBuilder(normalizer),
             new Domain.Settings.Fixed<PersonalDataMasker>(new PersonalDataMasker(config.PersonalData)),
@@ -129,6 +181,19 @@ internal static class ReparseCommand
     /// never reach the network. This one says so out loud rather than quietly
     /// making a request.
     /// </summary>
+    private sealed class UnusableSearchClient : Domain.Fetching.IEkapSearchClient
+    {
+        public Task<Domain.Fetching.FetchResult> SearchAsync(
+            Domain.Fetching.EkapSearchRequest request,
+            CancellationToken cancellationToken)
+            => throw new InvalidOperationException("reparse reads the archive; it does not drive a browser.");
+
+        public Task<Domain.Fetching.FetchResult> FetchAnnouncementAsync(
+            string ikn,
+            CancellationToken cancellationToken)
+            => throw new InvalidOperationException("reparse reads the archive; it does not drive a browser.");
+    }
+
     private sealed class UnusableFetcher : Domain.Fetching.IHttpFetcher
     {
         public Task<Domain.Fetching.FetchResult> FetchAsync(

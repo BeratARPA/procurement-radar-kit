@@ -52,6 +52,20 @@ internal sealed class FakeRawFetchRepository : IRawFetchRepository
         Processed.Add((rawFetchId, parserVersion, noticeCount));
         return Task.CompletedTask;
     }
+
+    public Task<int> MarkSourceUnprocessedAsync(long sourceId, CancellationToken cancellationToken)
+    {
+        // "Processed" is what ListUnprocessedAsync filters on here, so forgetting
+        // the entries is the same thing the UPDATE does.
+        var ids = Rows
+            .Where(row => row.SourceId == sourceId)
+            .Select(row => row.Id)
+            .ToHashSet();
+
+        var queued = Processed.RemoveAll(done => ids.Contains(done.RawFetchId));
+
+        return Task.FromResult(queued);
+    }
 }
 
 internal sealed class FakeSourceRepository : ISourceRepository
@@ -228,6 +242,42 @@ internal sealed class FakeNoticeRepository : INoticeRepository
         Notices.Add(notice with { Id = id, FirstSeenAt = now, LastSeenAt = now });
 
         return Task.FromResult(new NoticeUpsertResult(id, true));
+    }
+
+    public Task<bool> FillProcedureAsync(
+        long noticeId,
+        ProcurementType? procurementType,
+        string? procedureCode,
+        CancellationToken cancellationToken)
+    {
+        if (procurementType is null && procedureCode is null)
+        {
+            return Task.FromResult(false);
+        }
+
+        var index = Notices.FindIndex(notice => notice.Id == noticeId);
+        if (index < 0)
+        {
+            return Task.FromResult(false);
+        }
+
+        var stored = Notices[index];
+
+        // The same coalesce the statement does, and it has to be here rather
+        // than a blind assignment: a fake that overwrites where the database
+        // fills would let a test pass on behaviour the driver does not have.
+        if (stored.ProcurementType is not null && stored.ProcedureCode is not null)
+        {
+            return Task.FromResult(false);
+        }
+
+        Notices[index] = stored with
+        {
+            ProcurementType = stored.ProcurementType ?? procurementType,
+            ProcedureCode = stored.ProcedureCode ?? procedureCode
+        };
+
+        return Task.FromResult(true);
     }
 
     public Task<IReadOnlyList<ProcurementNotice>> ListByStatusAsync(

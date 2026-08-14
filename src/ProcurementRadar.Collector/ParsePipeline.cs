@@ -218,6 +218,8 @@ public sealed class ParsePipeline
                 AuthorityName = masked.AuthorityName ?? source.AuthorityName,
                 Title = masked.Title,
                 Description = masked.Description,
+                ProcurementType = masked.ProcurementType,
+                ProcedureCode = masked.ProcedureCode,
                 EstimatedCost = masked.EstimatedCost,
                 BidDeadlineAt = masked.BidDeadlineAt,
                 BidDeadlineTimeAssumed = masked.BidDeadlineTimeAssumed,
@@ -228,6 +230,26 @@ public sealed class ParsePipeline
 
         if (!result.WasInserted)
         {
+            // A field nobody recorded is not a field the first record won.
+            //
+            // Spec Bölüm 8 says the first record is kept and only last_seen_at
+            // moves, and the upsert obeys that - there is a test on it, because
+            // recomputing first_seen_at once destroys it permanently. But that
+            // rule is about two readings disagreeing. A null here means the
+            // parser had nothing to say when the notice was first stored, and
+            // now it does: the archive is reprocessed exactly so that a fix can
+            // reach what was already collected (architecture rule 2).
+            //
+            // So this fills holes and overwrites nothing. Running it twice
+            // changes nothing the second time.
+            await _notices
+                .FillProcedureAsync(
+                    result.NoticeId,
+                    masked.ProcurementType,
+                    masked.ProcedureCode,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
             // Only last_seen_at moved. The wording has not changed, so neither
             // would the score.
             return false;

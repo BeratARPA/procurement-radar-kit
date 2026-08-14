@@ -151,7 +151,24 @@ internal static class PreflightCommand
         {
             if (!byKey.TryGetValue(key, out var json))
             {
-                problems.Add($"setting '{key}' is not in the table; the worker is running on {fileName}.");
+                // A warning, not a failure, and the difference is the deploy
+                // order. The seeder runs at worker startup and fills exactly the
+                // keys that have no row (D-16); install-windows.ps1 runs this
+                // check before starting the worker. Failing here meant that
+                // adding a setting made the install script refuse to run the
+                // very process that would have fixed it - a deadlock nobody
+                // could get out of without editing the table by hand, which is
+                // the thing D-16 exists to stop.
+                //
+                // A row that exists and disagrees with the file is still a
+                // warning below, and a row that exists and will not load is
+                // still fatal. Only "no row yet" is benign, because the seeder
+                // never overwrites and so can only be about to add it.
+                Log.Warning(
+                    "{Key} has no row yet; the worker will seed it from config/{FileName} on start.",
+                    key,
+                    fileName);
+
                 continue;
             }
 
@@ -417,6 +434,7 @@ internal static class PreflightCommand
         SettingKeys.Normalization => Domain.Normalization.NormalizationRules.Load(json),
         SettingKeys.PersonalData => Domain.Normalization.PersonalDataRules.Load(json),
         SettingKeys.AwardLabels => AwardLabels.Load(json),
+        SettingKeys.ProcedureCodes => ProcedureCodes.Load(json),
         SettingKeys.Politeness => PolitenessSettings.Load(json),
         SettingKeys.Backup => BackupSettings.Load(json),
         _ => json

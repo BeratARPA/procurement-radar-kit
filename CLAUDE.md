@@ -99,6 +99,7 @@ test sees is not what the worker gets.** Not one of them was a logic error.
 | the repository working copy | `publish/config` | settings were seeded from a stale copy |
 | the working copy on this disk | what a clone actually contains | `.gitignore`'s `data/` matched `ui/lib/src/data/`; four files the interface cannot start without were never committed, and `git add -A` never said a word |
 | an exception during layout | content quietly cut off at the window edge | a Row inside a horizontal scroll view never overflows, so three of the five notice filters sat off screen with nothing saying they existed |
+| a stub adapter standing in for the whole registry | a registry the command builds by hand, with one adapter in it | `reparse` skipped every EKAP and json_list row for a year. The archive exists so a fixed parser can reprocess it; the parser the spec calls most fragile was the one that rule could not reach |
 | the schema the client was generated from | the schema the api now serves | `ActiveChangeRequest.reason` was added and the client was not regenerated; the field is optional, so no request failed - the api read the absent reason as `manual` and every source switched off from the interface opted out of quarantine for two days |
 
 So, before saying a change works:

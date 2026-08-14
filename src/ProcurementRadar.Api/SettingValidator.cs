@@ -29,6 +29,7 @@ public static class SettingValidator
         [SettingKeys.Normalization] = json => NormalizationRules.Load(json),
         [SettingKeys.PersonalData] = json => PersonalDataRules.Load(json),
         [SettingKeys.AwardLabels] = json => AwardLabels.Load(json),
+        [SettingKeys.ProcedureCodes] = json => ProcedureCodes.Load(json),
 
         // The one with floors rather than a shape: five seconds between
         // requests to a host, and robots.txt obeyed. Refused here and

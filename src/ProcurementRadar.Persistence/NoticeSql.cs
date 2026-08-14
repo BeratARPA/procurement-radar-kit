@@ -47,6 +47,19 @@ internal static class NoticeSql
         RETURNING id AS "NoticeId", (xmax = 0) AS "WasInserted"
         """;
 
+    // Fill-only, and every clause here is load-bearing. coalesce keeps a value
+    // that is already stored, the WHERE keeps the statement from touching rows
+    // that have nothing to gain, and neither first_seen_at nor last_seen_at
+    // appears at all: this is not a sighting, it is a field being recovered from
+    // an archive that was always kept for exactly this.
+    internal const string FillProcedure = """
+        UPDATE procurement_notice
+        SET procurement_type = coalesce(procurement_type, @ProcurementType),
+            procedure_code   = coalesce(procedure_code, @ProcedureCode)
+        WHERE id = @NoticeId
+          AND (procurement_type IS NULL OR procedure_code IS NULL)
+        """;
+
     internal const string ListByStatus = $"""
         SELECT {SelectColumns}
         FROM procurement_notice

@@ -1,3 +1,5 @@
+using ProcurementRadar.Domain.Enums;
+
 namespace ProcurementRadar.Domain.Adapters;
 
 /// <summary>
@@ -25,7 +27,17 @@ public sealed record RawNotice(
     // The hour was not on the page and had to be assumed. Carried through to the
     // notification rather than left in a log line, because the reader is the one
     // deciding whether there is still time.
-    bool BidDeadlineTimeAssumed = false)
+    bool BidDeadlineTimeAssumed = false,
+    // Which law this purchase is being run under, and which article of it. Only
+    // EKAP states either; an authority's own listing page carries a title and a
+    // link and nothing that says whether a 22/d purchase or an open tender is
+    // behind it, so both stay null there rather than being guessed from the url.
+    //
+    // The distinction is what spec.md Bölüm 0 says the project is for: an open
+    // tender and a purchase under the monetary limit are different jobs for a
+    // three-person team working evenings.
+    ProcurementType? ProcurementType = null,
+    string? ProcedureCode = null)
 {
     public IReadOnlyList<string> DocumentUrls { get; init; } = DocumentUrls ?? [];
 }

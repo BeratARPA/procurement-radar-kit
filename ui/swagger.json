@@ -1031,6 +1031,14 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "procurementType": {
+            "type": "string",
+            "nullable": true
+          },
+          "procedureCode": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1179,6 +1187,14 @@
           },
           "status": {
             "type": "string"
+          },
+          "procurementType": {
+            "type": "string",
+            "nullable": true
+          },
+          "procedureCode": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

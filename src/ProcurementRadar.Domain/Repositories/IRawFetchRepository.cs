@@ -50,6 +50,18 @@ public interface IRawFetchRepository
     /// exactly the condition in spec Bölüm 11 - and there is no other way to see
     /// it after the fact.
     /// </remarks>
+    /// <summary>
+    /// Marks every archived body of one source unprocessed, so the next parse
+    /// run reads them all again.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately per-source and never for all of them: reprocessing 12,000
+    /// rows because somebody forgot an argument is an hour of work and a lot of
+    /// churn on notices that were fine.
+    /// </remarks>
+    /// <returns>How many rows were queued.</returns>
+    Task<int> MarkSourceUnprocessedAsync(long sourceId, CancellationToken cancellationToken);
+
     Task MarkProcessedAsync(
         long rawFetchId,
         string parserVersion,

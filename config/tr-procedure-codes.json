@@ -1,0 +1,38 @@
+{
+  "_comment": "EKAP'ın Türkçe usul adlarını şemadaki procedure_code değerlerine eşler. Veri, kod değil (CLAUDE.md kural 5): eşleştiren sınıf İngilizce, aradığı kelimeler Türkçe çünkü kaynak metin Türkçe. EKAP bir usulün adını değiştirdiğinde düzeltme burada yapılır, yeniden derleme gerekmez.",
+
+  "_articles": "Madde ve bent, iki ayrı yoldan gelip aynı tabloya düşüyor. Doğrudan temin araması `maddeDayanagiAdi` alanında maddeyi zaten kod gibi yazıyor ('22/d* (Parasal Limit Kapsamında)', '22/c'); ihale araması ise usul cümlesinin sonuna parantez içinde koyuyor ('İhale Usulü: Pazarlık (MD 21 E)'). İkisi de aşağıdaki anahtarlara indirgeniyor.",
+  "_articles_coverage": "Bugün arşivde yalnızca 22/c, 22/d ve 21/e görülmüş olması yarın üçüncüsünün gelmeyeceği anlamına gelmiyor; kanunun bentleri eksiksiz listeleniyor. 'ı' hem noktasız hem noktalı yazımıyla duruyor, çünkü hangisinin geleceği EKAP'ın bileceği iş.",
+  "articles": {
+    "21/a": "art21a",
+    "21/b": "art21b",
+    "21/c": "art21c",
+    "21/d": "art21d",
+    "21/e": "art21e",
+    "21/f": "art21f",
+    "22/a": "art22a",
+    "22/b": "art22b",
+    "22/c": "art22c",
+    "22/d": "art22d",
+    "22/e": "art22e",
+    "22/f": "art22f",
+    "22/g": "art22g",
+    "22/h": "art22h",
+    "22/ı": "art22i",
+    "22/i": "art22i"
+  },
+
+  "_article_in_procedure": "Usul cümlesindeki parantezli maddeyi çeker: 'Pazarlık (MD 21 E)' → 21/e. Metin önce Türkçe küçük harfe indiriliyor, o yüzden desen küçük harf arar. Tutmazsa aşağıdaki kelime eşlemesine düşülür — yani bent okunamadığında usul yine de kaydedilir.",
+  "article_in_procedure": "\\(\\s*md\\.?\\s*(?<article>\\d{1,2})\\s*[/ ]?\\s*(?<letter>[a-zçğıöşü])\\s*\\)",
+
+  "_procedures": "İhale araması `ihaleUsulAciklama` alanında usulü cümle olarak yazıyor: 'İhale Usulü: Açık', 'İhale Usulü: Belli İstekliler Arasında'. Metin Türkçe küçük harfe indirilip aşağıdaki parçalar aranır. Birden fazlası tutarsa en uzunu kazanır — yani en dar ifade; dosyadaki sıra bir şey belirlemez.",
+  "procedures": {
+    "belli istekliler": "restricted",
+    "doğrudan temin": "art22",
+    "pazarlık": "negotiated",
+    "istisna": "exempt_procedure",
+    "açık": "open"
+  },
+
+  "_why_art22_without_a_letter": "İhale aramasında 'Doğrudan Temin' usulü görülebiliyor ama bent harfi orada parantezle verilmiyor. Harfsiz 'art22' yazmak, olmayan bir harfi uydurmaktan da alanı boş bırakmaktan da doğru: madde biliniyor, bendi bilinmiyor."
+}

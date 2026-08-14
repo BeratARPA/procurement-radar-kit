@@ -63,6 +63,7 @@ var personalData = PersonalDataRules.Load(ReadConfig("tr-personal-data.json"));
 var keywords = KeywordRules.Load(ReadConfig("keywords.json"));
 var messages = MessageTemplates.Load(ReadConfig("tr-messages.json"));
 var awardLabels = AwardLabels.Load(ReadConfig("tr-award-labels.json"));
+var procedureCodes = ProcedureCodes.Load(ReadConfig("tr-procedure-codes.json"));
 var politeness = PolitenessSettings.Load(ReadConfig("politeness.json"));
 
 PersistenceSetup.RegisterTypeHandlers();
@@ -120,6 +121,8 @@ var liveMessages = new LiveSetting<MessageTemplates>(SettingKeys.Messages, Messa
 var liveDates = new LiveSetting<TurkishDatePatterns>(
     SettingKeys.DatePatterns, TurkishDatePatterns.Load, datePatterns);
 var liveAwardLabels = new LiveSetting<AwardLabels>(SettingKeys.AwardLabels, AwardLabels.Load, awardLabels);
+var liveProcedureCodes = new LiveSetting<ProcedureCodes>(
+    SettingKeys.ProcedureCodes, ProcedureCodes.Load, procedureCodes);
 var livePoliteness = new LiveSetting<PolitenessSettings>(
     SettingKeys.Politeness, PolitenessSettings.Load, politeness);
 
@@ -131,7 +134,10 @@ var liveMasker = new LiveSetting<PersonalDataMasker>(
     new PersonalDataMasker(personalData));
 
 foreach (var live in new LiveSetting[]
-         { liveKeywords, liveMessages, liveDates, liveAwardLabels, liveMasker, livePoliteness })
+         {
+             liveKeywords, liveMessages, liveDates, liveAwardLabels, liveProcedureCodes,
+             liveMasker, livePoliteness
+         })
 {
     builder.Services.AddSingleton(live);
 }
@@ -140,6 +146,7 @@ builder.Services.AddSingleton<ICurrent<KeywordRules>>(liveKeywords);
 builder.Services.AddSingleton<ICurrent<MessageTemplates>>(liveMessages);
 builder.Services.AddSingleton<ICurrent<TurkishDatePatterns>>(liveDates);
 builder.Services.AddSingleton<ICurrent<AwardLabels>>(liveAwardLabels);
+builder.Services.AddSingleton<ICurrent<ProcedureCodes>>(liveProcedureCodes);
 builder.Services.AddSingleton<ICurrent<PersonalDataMasker>>(liveMasker);
 builder.Services.AddSingleton<ICurrent<PolitenessSettings>>(livePoliteness);
 

@@ -39,15 +39,18 @@ public sealed class EkapAdapter : ISourceAdapter
 
     private readonly IEkapSearchClient _search;
     private readonly ITurkishDateParser _dateParser;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<ProcedureCodes> _procedureCodes;
     private readonly ILogger<EkapAdapter> _logger;
 
     public EkapAdapter(
         IEkapSearchClient search,
         ITurkishDateParser dateParser,
+        ProcurementRadar.Domain.Settings.ICurrent<ProcedureCodes> procedureCodes,
         ILogger<EkapAdapter> logger)
     {
         _search = search;
         _dateParser = dateParser;
+        _procedureCodes = procedureCodes;
         _logger = logger;
     }
 
@@ -153,7 +156,12 @@ public sealed class EkapAdapter : ISourceAdapter
                 BidDeadlineAt: _dateParser.TryParse(item.TenderDateTime),
                 EstimatedCost: null,
                 DocumentUrls: [],
-                Ikn: string.IsNullOrWhiteSpace(item.Ikn) ? null : item.Ikn.Trim()));
+                Ikn: string.IsNullOrWhiteSpace(item.Ikn) ? null : item.Ikn.Trim(),
+                // This search is the tender one, so what comes back is a tender
+                // by definition - EKAP runs doğrudan temin through a separate
+                // application with a separate endpoint (D-12).
+                ProcurementType: Domain.Enums.ProcurementType.Tender,
+                ProcedureCode: _procedureCodes.Value.ForProcedure(item.Procedure)));
         }
 
         _logger.LogInformation(

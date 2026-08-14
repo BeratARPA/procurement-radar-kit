@@ -17,6 +17,7 @@ public static class SettingKeys
     public const string Normalization = "normalization";
     public const string PersonalData = "personal_data";
     public const string AwardLabels = "award_labels";
+    public const string ProcedureCodes = "procedure_codes";
     public const string EkapUi = "ekap_ui";
     public const string Politeness = "politeness";
     public const string Backup = "backup";
@@ -30,6 +31,7 @@ public static class SettingKeys
         (Normalization, "tr-normalization.json"),
         (PersonalData, "tr-personal-data.json"),
         (AwardLabels, "tr-award-labels.json"),
+        (ProcedureCodes, "tr-procedure-codes.json"),
         (EkapUi, "ekap-ui.json"),
         (Politeness, "politeness.json"),
         (Backup, "backup.json")

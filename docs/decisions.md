@@ -899,3 +899,124 @@ api'den değiştirilebiliyordu, ama "api'den değiştirilebilir" ile
 "değiştirilebilir" aynı şey değil — pratikte `curl` demekti. Hedefi
 değiştirmek bu ayarın tek varlık sebebi (bugün D:, USB takıldığı gün o),
 dolayısıyla ekranı olmayan bir alan yarım iş.
+
+---
+
+## D-25 — Alım türü ve madde kaydediliyor; EKAP'ın yıl boyu gönderdiği veri artık kolonda
+
+**Karar:** `procurement_notice.procurement_type` ve `procedure_code` kolonları
+EKAP'ın iki arama yanıtından doldurulur. Türkçe usul adlarını kodlara çeviren
+eşleme `config/tr-procedure-codes.json` içinde, yani veri. Kurumların kendi
+sayfaları için ikisi de **boş bırakılır** — tahmin edilmez.
+
+**Bulgu — şemada olan, hiç yazılmayan alanlar.** 2.666 ilan üzerinde ölçüldü:
+
+| Alan | Doluluk |
+|---|---|
+| `title` | %100 |
+| `bid_deadline_at` | %89 |
+| `description` | %8 |
+| `procedure_code` | **%0** |
+| `procurement_type` | **%0** |
+| `estimated_cost` | %0 |
+| `okas_codes` | %0 |
+
+Sondaki ikisi erişilemiyor (aşağıda). Ortadaki ikisi **arşivde duruyordu.**
+437 arşivlenmiş EKAP kaleminin 422'si `ihaleUsulAciklama`, 15'i
+`maddeDayanagiAdi` taşıyor. İki adapter de bunları zaten okuyup `Description`
+alanına düz metin olarak yazıyordu — yani bilgi kaydediliyordu, ama bir insanın
+okuyabileceği, bir sorgunun okuyamayacağı biçimde.
+
+**Neden önemli.** `spec.md` Bölüm 0 bu projeyi baştan sona **doğrudan temin**
+üzerine kuruyor. Buna rağmen ne arayüzde, ne Telegram'da, ne filtrede bir ilanın
+22/d doğrudan temin mi yoksa açık ihale mi olduğu görünüyordu. Akşamları çalışan
+üç kişilik bir ekip için bu ayrım kararın kendisi: bir bakanlığın açık ihalesi
+ile parasal limit kapsamındaki bir alım aynı iş değil. 14 Ağustos'ta bildirim
+gitmiş 69 ilanın 48'i hâlâ cevapsız bekliyordu; karar için gereken bilgi ekranda
+yoktu.
+
+**Fixture beklenmedik bir şey söyledi.** İhale aramasının `İhale Usulü: Pazarlık
+(MD 21 E)` yazdığı görüldü — yani **bent harfi ihale tarafında da var.**
+`spec.md` Bölüm 4'ün `art21f` örneği tam olarak bu. Eşleme parantezli maddeyi
+de okuyor; okuyamazsa `negotiated`'a düşüyor, yani EKAP parantezi yazmayı
+bırakırsa kolon boşalmıyor, kabalaşıyor.
+
+**Kurumların sayfaları için tahmin yok.** 2.480 ilanın başlığında ipucu arandı:
+12'sinde "doğrudan temin", 62'sinde "ihale ilanı" geçiyor — %3. Url'e veya
+kaynak adına bakıp tür atamak D-20'nin ölçüp reddettiği şeyin aynısı olurdu.
+Boş kalıyor ve arayüz **"Belirtilmemiş (ilanda yazmıyor)"** yazıyor; boş bir
+satır, sıradan bir ihale gibi okunurdu.
+
+**Erişilemeyen ikisi ve sebepleri:**
+
+- `okas_codes` — iki EKAP liste yanıtının **hiçbirinde yok.** Almak için ilan
+  başına ayrı bir detay isteği gerekir; D-20 tam olarak o fikri ölçüp reddetti.
+- `estimated_cost` — EKAP liste yanıtında yok, ve `amount_selector` **90 aktif
+  kaynağın sıfırında** ayarlı. `spec.md` Bölüm 10'un mesaj biçimindeki
+  `💰 ~180.000 TL` satırı bu yüzden hiç görünmedi. Tablosunda tutar sütunu olan
+  kaynaklar için kaynak kaynak yazılabilir; bu ayrı bir iş.
+
+**Dolgu, üzerine yazma değil.** Upsert çakışmada yalnızca `last_seen_at`'i
+oynatıyor ve bu kural yerinde duruyor (`first_seen_at` ürünün bütün değeri, spec
+Bölüm 8). Ama **kimsenin kaydetmediği bir alan, ilk kaydın kazandığı bir alan
+değil.** `FillProcedureAsync` yalnızca `NULL` olanı yazar, dolu olana dokunmaz,
+iki kez çalıştırılırsa ikincisinde hiçbir şey yapmaz. İki testi var; biri
+dolduran, biri dolduranın var olanı ezmediğini gösteren.
+
+**Sonuç:** 2.673 ilanın 193'ü türünü taşıyor — 138 açık ihale, 49 madde 22/d,
+3 belli istekliler, 2 madde 21/e, 1 madde 22/c. Oran düşük (%7) ve dürüst olan
+bu: türü söyleyen tek kaynak EKAP, ve EKAP'ın doğrudan temin uygulaması hâlâ
+pilot (D-12), yani bu oran zamanla kendiliğinden büyüyecek.
+
+---
+
+### D-25'in yan bulguları — ikisi de mekanizmanın kendisiydi
+
+**1. `reparse` EKAP arşivini hiç yeniden işleyemiyormuş.** Komut adapter
+kayıt defterini elle kuruyor ve içine **yalnızca `GenericTableAdapter`**
+koyuyordu. Yani `ekap_tender`, `ekap_direct_procurement` ve `json_list`
+kaynaklarına ait her arşiv satırı sessizce atlanıyordu.
+
+Mimari kural 2 arşivin var olma sebebini "parser kırılınca düzeltir, arşivi
+yeniden işleriz" diye yazıyor. `spec.md` Bölüm 13 EKAP'ı "en kırılgan bileşen"
+ilan ediyor. İkisi bir araya gelince ortaya çıkan şey şu: **en çok ihtiyaç
+duyacak parser, kuralın erişemediği tek parserdı.** Hiçbir test bunu göremezdi;
+`ParsePipelineTests` bir `StubAdapter` kullanıyor, yani kayıt defterinin
+gerçekte ne içerdiğini sınayan hiçbir şey yoktu.
+
+Dört adapter de kayıtlı artık. EKAP adapter'ları burada tarayıcı istemiyor:
+istemci yalnızca `FetchAsync`'ten çağrılıyor, `Parse` arşivlenmiş yanıt
+üzerinde saf bir fonksiyon (D-12) — testlerinin Playwright'sız çalışmasını
+sağlayan aynı ayrım.
+
+**2. `reparse` zaten işlenmiş satırı hiç okumuyormuş.** Yalnızca
+`is_processed = false` olanları alıyordu, yani "hiç ayrıştırılamamış" satırları.
+Bir kere ayrıştırılmış her sayfa elle SQL yazmadan erişilemezdi. D-21 bu komutu
+*"arşivlenmiş sayfaları yeniden okuyup ilanları baştan kurar"* diye tarif
+ediyordu; etmiyordu.
+
+`--again` bayrağı eklendi, `--source-id` zorunlu: 12.000 satırı bir yazım hatası
+yüzünden yeniden işlemek bir saatlik iş ve iyi olan ilanlarda gereksiz çalkantı.
+İlk denemede kayda değer bir şey buldu — 131 numaralı kaynağın arşivinde **hiç
+kaydedilmemiş 7 ilan** vardı.
+
+**3. Yeni bir ayar eklemek kurulum betiğini kilitliyormuş.** `preflight`,
+`setting` tablosunda satırı olmayan her anahtar için **ölümcül** hata veriyordu;
+`install-windows.ps1` ise preflight'ı worker'ı başlatmadan önce çalıştırıyor.
+Ama tabloyu dolduran şey worker'ın açılışındaki seeder (D-16). Yani yeni bir
+ayar eklemek, onu ekleyecek süreci başlatmayı reddeden bir betik demekti —
+çıkışı elle satır yazmak olan bir kilit, ki D-16 tam olarak onu engellemek için
+var.
+
+Artık: satırı **olmayan** anahtar uyarı ("worker açılışta dosyadan
+dolduracak"), satırı olup **dosyadan farklı** olan hâlâ uyarı, satırı olup
+**yüklenemeyen** hâlâ ölümcül. Yalnızca "henüz satır yok" zararsız, çünkü seeder
+dolu olanın üstüne yazmıyor.
+
+**Uygulama:** `config/tr-procedure-codes.json`, `ProcedureCodes`,
+`SettingKeys.ProcedureCodes`, `RawNotice`'a iki alan,
+`INoticeRepository.FillProcedureAsync`, `NoticeSql.FillProcedure` +
+`RawFetchSql.MarkSourceUnprocessed`, `reparse --again`, api sözleşmelerinde
+`procurementType` / `procedureCode`, yeniden üretilmiş Dart istemcisi,
+`ui/lib/src/data/procurement_kind.dart`, ilan listesinde ve detayında görünüm.
+15 .NET + 9 Dart testi.

@@ -48,6 +48,14 @@ public sealed class NoticeRepository : INoticeRepository
         // Text, not the enum: see the note in SourceRepository.UpsertAsync.
         parameters.Add("Status", EnumText.ToText(notice.Status));
 
+        // Same conversion, and it only started mattering when something began
+        // setting it. The column is text and Dapper would have sent the enum as
+        // an integer: '0' where 'direct_procurement' belongs, on a column
+        // nothing constrains.
+        parameters.Add(
+            "ProcurementType",
+            notice.ProcurementType is { } type ? EnumText.ToText(type) : null);
+
         await using var connection = await _connectionFactory
             .OpenConnectionAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -55,6 +63,39 @@ public sealed class NoticeRepository : INoticeRepository
         return await connection.QuerySingleAsync<NoticeUpsertResult>(
             new CommandDefinition(NoticeSql.Upsert, parameters, cancellationToken: cancellationToken))
             .ConfigureAwait(false);
+    }
+
+    public async Task<bool> FillProcedureAsync(
+        long noticeId,
+        ProcurementType? procurementType,
+        string? procedureCode,
+        CancellationToken cancellationToken)
+    {
+        if (procurementType is null && procedureCode is null)
+        {
+            // Nothing to say. Most sources are in this position on every row and
+            // a statement per row that can only be a no-op is a statement not
+            // worth sending.
+            return false;
+        }
+
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var affected = await connection.ExecuteAsync(
+            new CommandDefinition(
+                NoticeSql.FillProcedure,
+                new
+                {
+                    NoticeId = noticeId,
+                    ProcurementType = procurementType is { } type ? EnumText.ToText(type) : null,
+                    ProcedureCode = procedureCode
+                },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+
+        return affected > 0;
     }
 
     public async Task<IReadOnlyList<ProcurementNotice>> ListByStatusAsync(

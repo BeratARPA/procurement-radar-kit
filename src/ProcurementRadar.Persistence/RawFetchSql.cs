@@ -54,6 +54,21 @@ internal static class RawFetchSql
         LIMIT @Limit
         """;
 
+    // Puts a source's archive back in the queue so the parsers read it again.
+    //
+    // Architecture rule 2 is the reason the archive exists: a parser is fixed
+    // and the pages already collected are read again. Nothing could actually do
+    // that - `reparse` picks up rows that were never processed, and every row
+    // the worker had already parsed was permanently out of reach without hand
+    // written SQL. `parser_version` is left alone deliberately: it records which
+    // parser last wrote these notices, and MarkProcessed will overwrite it with
+    // the truth on the way back through.
+    internal const string MarkSourceUnprocessed = """
+        UPDATE raw_fetch
+        SET is_processed = false
+        WHERE source_id = @SourceId
+        """;
+
     internal const string MarkProcessed = """
         UPDATE raw_fetch
         SET is_processed   = true,

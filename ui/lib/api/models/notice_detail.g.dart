@@ -19,6 +19,8 @@ NoticeDetail _$NoticeDetailFromJson(Map<String, dynamic> json) => NoticeDetail(
       ? null
       : DateTime.parse(json['bidDeadlineAt'] as String),
   announcementText: json['announcementText'] as String?,
+  procurementType: json['procurementType'] as String?,
+  procedureCode: json['procedureCode'] as String?,
 );
 
 Map<String, dynamic> _$NoticeDetailToJson(NoticeDetail instance) =>
@@ -33,4 +35,6 @@ Map<String, dynamic> _$NoticeDetailToJson(NoticeDetail instance) =>
       'announcementText': instance.announcementText,
       'sourceUrl': instance.sourceUrl,
       'status': instance.status,
+      'procurementType': instance.procurementType,
+      'procedureCode': instance.procedureCode,
     };

@@ -35,15 +35,18 @@ public sealed class EkapDirectProcurementAdapter : ISourceAdapter
 
     private readonly IEkapSearchClient _search;
     private readonly ITurkishDateParser _dateParser;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<ProcedureCodes> _procedureCodes;
     private readonly ILogger<EkapDirectProcurementAdapter> _logger;
 
     public EkapDirectProcurementAdapter(
         IEkapSearchClient search,
         ITurkishDateParser dateParser,
+        ProcurementRadar.Domain.Settings.ICurrent<ProcedureCodes> procedureCodes,
         ILogger<EkapDirectProcurementAdapter> logger)
     {
         _search = search;
         _dateParser = dateParser;
+        _procedureCodes = procedureCodes;
         _logger = logger;
     }
 
@@ -155,7 +158,13 @@ public sealed class EkapDirectProcurementAdapter : ISourceAdapter
                 // plays for a tender: where it exists it is the identity, and the
                 // same purchase seen on the authority's own page collapses onto
                 // it (spec Bölüm 8).
-                Ikn: string.IsNullOrWhiteSpace(item.Number) ? null : item.Number.Trim()));
+                Ikn: string.IsNullOrWhiteSpace(item.Number) ? null : item.Number.Trim(),
+                ProcurementType: Domain.Enums.ProcurementType.DirectProcurement,
+                // The article this purchase was let under - 22/d for the
+                // monetary limit, 22/c for a sole supplier and so on. It was
+                // already being read and put into the description as prose; now
+                // it also reaches the column, where it can be filtered on.
+                ProcedureCode: _procedureCodes.Value.ForArticle(item.Article)));
         }
 
         _logger.LogInformation(

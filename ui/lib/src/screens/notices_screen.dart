@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/export.dart';
 import '../data/notice_filter.dart';
+import '../data/procurement_kind.dart';
 import '../data/providers.dart';
 import '../filter/filter_providers.dart';
 import '../formatting.dart';
@@ -446,6 +447,49 @@ class _Choice extends StatelessWidget {
   }
 }
 
+/// One small icon and its text, sized so several fit on a phone line.
+class _IconLine extends StatelessWidget {
+  const _IconLine({
+    required this.icon,
+    required this.text,
+    required this.color,
+    this.bold = false,
+  });
+
+  final IconData icon;
+  final String text;
+  final Color? color;
+  final bool bold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        // Flexible, not a fixed maxWidth. A fixed 260 was written here first and
+        // layout_test caught it at 320 px: the row is inside a ListTile whose
+        // leading badge and padding already take about 90, so the number was
+        // wider than the space it was meant to fit. Flexible asks the Wrap what
+        // is actually left, which is the only number that is right on every one
+        // of the ten widths that test runs.
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color,
+                  fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
+                ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _NoticeRow extends StatelessWidget {
   const _NoticeRow({required this.notice, required this.nowUtc});
 
@@ -473,27 +517,36 @@ class _NoticeRow extends StatelessWidget {
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 4),
-            Row(
+            // A Wrap, not a Row. The kind can be as long as "Doğrudan temin ·
+            // Madde 22/d" and sits beside a deadline line that is already close
+            // to the width of a phone; a Row would have run them off the edge
+            // silently, which is how three notice filters spent a release off
+            // screen with nothing saying they existed.
+            Wrap(
+              spacing: 12,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: <Widget>[
-                Icon(
-                  urgency == Urgency.unknown
+                _IconLine(
+                  icon: urgency == Urgency.unknown
                       ? Icons.help_outline
                       : Icons.schedule_outlined,
-                  size: 14,
+                  text: _deadlineLine(notice.bidDeadlineAt, nowUtc),
                   color: urgencyColor(urgency, theme.colorScheme),
+                  bold: urgency == Urgency.hours,
                 ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    _deadlineLine(notice.bidDeadlineAt, nowUtc),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: urgencyColor(urgency, theme.colorScheme),
-                      fontWeight: urgency == Urgency.hours
-                          ? FontWeight.w700
-                          : FontWeight.w400,
-                    ),
+                // Only when the notice says. Most of the archive does not, and a
+                // "belirtilmemiş" on nine rows in ten is noise on the one screen
+                // somebody actually reads. The detail screen states it either
+                // way, where one line costs nothing.
+                if (procurementSummary(
+                    notice.procurementType, notice.procedureCode)
+                case final String kind)
+                  _IconLine(
+                    icon: Icons.gavel_outlined,
+                    text: kind,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ),
               ],
             ),
           ],

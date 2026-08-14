@@ -91,6 +91,20 @@ public sealed class RawFetchRepository : IRawFetchRepository
         return rows.AsList();
     }
 
+    public async Task<int> MarkSourceUnprocessedAsync(long sourceId, CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return await connection.ExecuteAsync(
+            new CommandDefinition(
+                RawFetchSql.MarkSourceUnprocessed,
+                new { SourceId = sourceId },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
     public async Task MarkProcessedAsync(
         long rawFetchId,
         string parserVersion,

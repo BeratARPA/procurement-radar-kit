@@ -15,6 +15,8 @@ CommandNotice _$CommandNoticeFromJson(Map<String, dynamic> json) =>
       bidDeadlineAt: json['bidDeadlineAt'] == null
           ? null
           : DateTime.parse(json['bidDeadlineAt'] as String),
+      procurementType: json['procurementType'] as String?,
+      procedureCode: json['procedureCode'] as String?,
     );
 
 Map<String, dynamic> _$CommandNoticeToJson(CommandNotice instance) =>
@@ -24,4 +26,6 @@ Map<String, dynamic> _$CommandNoticeToJson(CommandNotice instance) =>
       'authorityName': instance.authorityName,
       'score': instance.score,
       'bidDeadlineAt': instance.bidDeadlineAt?.toIso8601String(),
+      'procurementType': instance.procurementType,
+      'procedureCode': instance.procedureCode,
     };

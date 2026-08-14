@@ -26,11 +26,15 @@ public sealed class EkapAdapterTests
     private static readonly TurkishDatePatterns DatePatterns = TurkishDatePatterns.Load(
         File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "config", "tr-date-patterns.json")));
 
+    private static readonly ProcedureCodes Codes = ProcedureCodes.Load(
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "config", "tr-procedure-codes.json")));
+
     private static string Body => File.ReadAllText(FixturePath);
 
     private static EkapAdapter Adapter() => new(
         new UnusableSearchClient(),
         new TurkishDateParser(new Fixed<TurkishDatePatterns>(DatePatterns), NullLogger<TurkishDateParser>.Instance),
+        new Fixed<ProcedureCodes>(Codes),
         NullLogger<EkapAdapter>.Instance);
 
     private static Source SourceWith(string config) => new()
@@ -73,6 +77,26 @@ public sealed class EkapAdapterTests
 
         Assert.Equal("2026/271215", notices[0].Ikn);
         Assert.All(notices, notice => Assert.False(string.IsNullOrWhiteSpace(notice.Ikn)));
+    }
+
+    [Fact]
+    public void The_procedure_reaches_the_column_and_not_only_the_description()
+    {
+        // EKAP has always sent this and nothing stored it. Every notice in the
+        // archive came back with procurement_type and procedure_code null, so
+        // no screen and no query could separate an open tender from a purchase
+        // under the monetary limit - the distinction spec.md Bölüm 0 says the
+        // project exists for.
+        var notices = Adapter().Parse(Body, SourceWith("""{"search_text":"yazılım"}"""));
+
+        Assert.All(notices, notice =>
+            Assert.Equal(ProcurementType.Tender, notice.ProcurementType));
+
+        // Three open, two negotiated - and the negotiated ones name their
+        // article, so they read as 21/e rather than as the vaguer word.
+        Assert.Equal(
+            new[] { "art21e", "art21e", "open", "open", "open" },
+            notices.Select(notice => notice.ProcedureCode).Order(StringComparer.Ordinal));
     }
 
     [Fact]

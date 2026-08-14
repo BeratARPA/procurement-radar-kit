@@ -153,6 +153,17 @@ void main() {
       await tester.tap(find.textContaining('Dijital ve Kurumsal Arşiv').first);
       await tester.pumpAndSettle();
 
+      // Scrolled to first, which is what a person does. The verdict chips sit
+      // below the fold on a 900 px window and the tap used to land by accident:
+      // adding one line above them - the alım türü row - was enough to push
+      // them off, and the failure read as "the chip cannot receive pointer
+      // events" rather than as "you did not scroll".
+      // ensureVisible rather than scrollUntilVisible: the chip is already in the
+      // tree, and the shell has more than one Scrollable, which scrollUntilVisible
+      // refuses to choose between.
+      await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'İlgilenmiyoruz'));
+      await tester.pumpAndSettle();
+
       await tester.tap(find.widgetWithText(ChoiceChip, 'İlgilenmiyoruz'));
       await tester.pumpAndSettle();
 
