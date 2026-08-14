@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/export.dart';
 import '../data/providers.dart';
+import 'backup_draft.dart';
 import 'keyword_draft.dart';
 import 'politeness_draft.dart';
 
@@ -198,6 +199,39 @@ class PolitenessDraftNotifier extends Notifier<PolitenessDraft?> {
 
     if (draft != null) state = draft.withValue(key, value);
   }
+}
+
+/// The backup setting as the table holds it (D-24).
+final storedBackupProvider = FutureProvider.autoDispose<Setting>(
+  (Ref ref) => ref.watch(radarApiProvider).settings.getSetting(key: 'backup'),
+  retry: (int count, Object error) => null,
+);
+
+final NotifierProvider<BackupDraftNotifier, BackupDraft?> backupDraftProvider =
+    NotifierProvider<BackupDraftNotifier, BackupDraft?>(BackupDraftNotifier.new);
+
+class BackupDraftNotifier extends Notifier<BackupDraft?> {
+  @override
+  BackupDraft? build() => null;
+
+  void load(String json) => state = BackupDraft.parse(json);
+
+  void reset() => state = null;
+
+  void set(String key, Object? value) {
+    final BackupDraft? draft = state;
+
+    if (draft != null) state = draft.withValue(key, value);
+  }
+}
+
+Future<void> saveBackup(WidgetRef ref, BackupDraft draft) async {
+  await ref.read(radarApiProvider).settings.saveSetting(
+        key: 'backup',
+        body: SettingChangeRequest(value: draft.toJson(), updatedBy: 'ui'),
+      );
+
+  ref.invalidate(storedBackupProvider);
 }
 
 Future<void> savePoliteness(WidgetRef ref, PolitenessDraft draft) async {

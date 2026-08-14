@@ -891,4 +891,11 @@ yüklendi: 108 kaynak, 2.386 ilan, 2.386 puan, 11.206 arşiv satırı, 9 ayar ve
 `first_seen_at` 5 Ağustos'a kadar geri geldi. Denenmemiş yedek yedek değildir.
 
 **Uygulama:** `config/backup.json`, `BackupSettings`, `BackupCommand`,
-`ProcurementRadarBackup` görevi, Sistem ekranında düğme. 5 test.
+`ProcurementRadarBackup` görevi, Sistem ekranında düğme, **Ayarlar ekranında
+Yedek bölümü**. 5 .NET + 7 Dart testi.
+
+Ekran bölümü sonradan eklendi ve sebebi kayda değer: ayar ilk günden beri
+api'den değiştirilebiliyordu, ama "api'den değiştirilebilir" ile
+"değiştirilebilir" aynı şey değil — pratikte `curl` demekti. Hedefi
+değiştirmek bu ayarın tek varlık sebebi (bugün D:, USB takıldığı gün o),
+dolayısıyla ekranı olmayan bir alan yarım iş.

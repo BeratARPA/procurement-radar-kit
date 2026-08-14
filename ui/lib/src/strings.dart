@@ -50,8 +50,7 @@ abstract final class Strings {
   static const String systemOnDesktopOnly =
       'Bu bölüm yalnızca masaüstü sürümünde çalışır. Tarayıcı süreç başlatamaz, '
       'Docker\'a veya zamanlanmış görevlere erişemez.';
-  static const String tokenFromEnvFound =
-      '.env dosyasından okundu';
+  static const String tokenFromEnvFound = '.env dosyasından okundu';
   static const String readFromEnv = '.env\'den al';
 
   // --- notice list ---
@@ -162,6 +161,36 @@ abstract final class Strings {
   static const String themeLight = 'Açık';
   static const String themeDark = 'Koyu';
 
+  // --- yedek (D-24) ---
+  static const String backup = 'Yedek';
+  static const String backupHelp =
+      'Veritabanı dökümü her gece, dosya arşivi belirlenen aralıkta kopyalanır. '
+      'Gece 03:00 sularında kendiliğinden çalışır; Sistem ekranından elle de '
+      'başlatılabilir.';
+  static const String backupDestination = 'Yedek klasörü';
+  static const String backupDestinationHelp =
+      'Boş bırakılırsa yedek alınmaz. Klasör yoksa (USB takılı değilse) hata '
+      'verilmez, atlanır — her gece alarm veren bir görev okunmayan bir '
+      'görevdir.';
+  static const String backupOff = 'Şu an yedek alınmıyor: klasör boş.';
+  static const String backupKeepDumps = 'Saklanacak döküm sayısı';
+  static const String backupKeepDumpsHelp =
+      'Her döküm ~1 MB. On dördü, bir haftalık hatayı fark edip geri dönmeye '
+      'yeter.';
+  static const String backupArchiveEvery = 'Arşiv kaç günde bir';
+  static const String backupArchiveEveryHelp =
+      'Döküm her çalıştırmada alınır; dosya arşivi bu aralıkta. Ayna artımlı '
+      'olduğu için ikinci tur saniyeler sürer.';
+  static const String backupArchive = 'Dosya arşivi de kopyalansın';
+  static const String backupArchiveHelp =
+      'data/raw ve data/doc — ham sayfalar ve indirilmiş şartnameler. Kapatılırsa '
+      'yalnızca veritabanı yedeklenir; parser düzeltip arşivi yeniden işleme '
+      'imkânı (mimari kural 2) yedekten kurtarılamaz olur.';
+  static const String backupSameDiskWarning =
+      'C: ve D: aynı fiziksel diskin bölümleri. Bu yedek kaza silmesine, bozuk '
+      'bir migration ve yanlış bir SQL hatasına karşı korur; disk arızasına '
+      'karşı korumaz. Gerçek koruma için takılı bir USB diskin yolunu yazın.';
+
   // --- token gate ---
   static const String tokenNeededTitle = 'Anahtar gerekiyor';
   static const String tokenNeeded =
@@ -217,7 +246,8 @@ abstract final class Strings {
       'yeniden puanlar.';
   static const String rescoreUnsaved =
       'Yeniden puanlama kayıtlı listeyle çalışır. Önce kaydedin.';
-  static const String rescoreConfirmTitle = 'Arşivin tamamı yeniden puanlansın mı?';
+  static const String rescoreConfirmTitle =
+      'Arşivin tamamı yeniden puanlansın mı?';
   static const String rescoreConfirmBody =
       'Kayıtlı kelime listesi tüm ilanlara uygulanır ve puanlar üzerine '
       'yazılır. Eşiği yeni geçen ilanlar için Telegram bildirimi gider — '
@@ -348,25 +378,25 @@ abstract final class Strings {
   /// The api answers with a code, not a sentence — Turkish does not live in a
   /// .cs file. This is where the sentence is.
   static String checkProblem(String code) => switch (code) {
-        'config_unusable' => 'Selector ayarları okunamadı.',
-        'no_archived_page' =>
-          'Bu kaynağın arşivinde sayfa yok. Sayfayı yapıştırın ya da kaynağı bir kez taratın.',
-        'nothing_to_check' => 'Denenecek bir sayfa verilmedi.',
-        _ => code,
-      };
+    'config_unusable' => 'Selector ayarları okunamadı.',
+    'no_archived_page' =>
+      'Bu kaynağın arşivinde sayfa yok. Sayfayı yapıştırın ya da kaynağı bir kez taratın.',
+    'nothing_to_check' => 'Denenecek bir sayfa verilmedi.',
+    _ => code,
+  };
 
   static String checkWarning(String code) => switch (code) {
-        'no_rows' =>
-          'Hiçbir satır okunamadı. Ya selector\'lar bu sayfaya uymuyor, ya da '
-              'sayfada şu an gerçekten ilan yok. Açmadan önce sayfaya bakın.',
-        'no_deadline_read' =>
-          'Tek bir son teklif tarihi okunamadı. Bu, projenin en kritik alanı '
-              '(spec Bölüm 7). date_selector\'ı markup\'a, biçimi de '
-              'tr-date-patterns.json\'a karşı kontrol edin — ya da bu liste '
-              'sayfasında gerçekten tarih yoktur.',
-        'few_deadlines_read' => 'Satırların yarısından azında tarih okundu.',
-        _ => code,
-      };
+    'no_rows' =>
+      'Hiçbir satır okunamadı. Ya selector\'lar bu sayfaya uymuyor, ya da '
+          'sayfada şu an gerçekten ilan yok. Açmadan önce sayfaya bakın.',
+    'no_deadline_read' =>
+      'Tek bir son teklif tarihi okunamadı. Bu, projenin en kritik alanı '
+          '(spec Bölüm 7). date_selector\'ı markup\'a, biçimi de '
+          'tr-date-patterns.json\'a karşı kontrol edin — ya da bu liste '
+          'sayfasında gerçekten tarih yoktur.',
+    'few_deadlines_read' => 'Satırların yarısından azında tarih okundu.',
+    _ => code,
+  };
 
   // --- politeness ---
   static const String politeness = 'Nezaket';
@@ -410,6 +440,5 @@ abstract final class Strings {
       'API yanıt verdi ama bu sürümün beklediği alanlar yok. Çalışan API büyük '
       'ihtimalle eski bir derleme — publish klasörünü yenileyin.';
 
-  static String serverSaidNo(int statusCode) =>
-      'API $statusCode döndü.';
+  static String serverSaidNo(int statusCode) => 'API $statusCode döndü.';
 }
