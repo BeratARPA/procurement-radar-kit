@@ -210,10 +210,31 @@ public sealed class RepositorySqlTests
         {
             if (field is { IsLiteral: true, IsInitOnly: false } && field.FieldType == typeof(string))
             {
-                yield return ($"{holder.Name}.{field.Name}", (string)field.GetRawConstantValue()!);
+                yield return (
+                    $"{holder.Name}.{field.Name}",
+                    WithoutComments((string)field.GetRawConstantValue()!));
             }
         }
     }
+
+    /// <summary>Drops `-- ...` lines before anything is matched against the SQL.</summary>
+    /// <remarks>
+    /// A comment is not SQL and cannot reference a table, but the patterns here
+    /// are deliberately blunt and read the whole string - so an explanation
+    /// containing the words "from interval" reported `interval` as a missing
+    /// table, and rewording it to avoid that reported `that`. Three false
+    /// positives in a row from prose is not a forcing function, it is noise, and
+    /// the check loses nothing by looking only at the statement.
+    /// </remarks>
+    private static string WithoutComments(string sql)
+        => string.Join(
+            Environment.NewLine,
+            sql.Split('\n').Select(line =>
+            {
+                var comment = line.IndexOf("--", StringComparison.Ordinal);
+
+                return comment < 0 ? line : line[..comment];
+            }));
 
     private static IEnumerable<string> SplitColumnList(string columns)
         => columns

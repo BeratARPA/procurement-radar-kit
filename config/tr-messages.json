@@ -45,6 +45,7 @@
       "Gönderilen bildirim: {notices_notified}",
       "Teklif verilen: {bids_submitted}",
       "İlgilenmedik: {not_relevant}",
+      "Karar bekleyen: {awaiting_decision} (en eskisi {oldest_awaiting_days} gündür)",
       "Sorunlu kaynak: {sources_in_trouble}"
     ]
   },

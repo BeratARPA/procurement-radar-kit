@@ -111,6 +111,29 @@ public sealed record WeeklySummary
     public int NotRelevant { get; init; }
 
     public int SourcesInTrouble { get; init; }
+
+    /// <summary>
+    /// Notices that were announced and never answered.
+    /// </summary>
+    /// <remarks>
+    /// spec Bölüm 10 keeps the buttons for one reason: the verdicts are what
+    /// filter quality is measured against later. On 13 August 2026 that data did
+    /// not exist - 69 notices announced, 48 of them still `new`, and not one
+    /// marked "teklif verildi" or "ilgilenmiyoruz". Nothing was broken; nobody
+    /// was pressing anything, and nothing said so.
+    ///
+    /// A line in a report that already goes out, rather than a new alarm: the
+    /// pile is worth seeing once a week and is not worth a notification.
+    /// </remarks>
+    public int AwaitingDecision { get; init; }
+
+    /// <summary>How long the oldest unanswered one has been waiting.</summary>
+    /// <remarks>
+    /// The count alone is a number; with this it is a question. Forty-eight
+    /// waiting two days is a busy week, forty-eight waiting three weeks is a
+    /// habit that has stopped.
+    /// </remarks>
+    public int OldestAwaitingDays { get; init; }
 }
 
 public interface IHealthRepository

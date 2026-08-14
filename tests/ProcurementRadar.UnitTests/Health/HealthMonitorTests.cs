@@ -211,7 +211,9 @@ public sealed class HealthMonitorTests
             NoticesNotified = 9,
             BidsSubmitted = 3,
             NotRelevant = 5,
-            SourcesInTrouble = 2
+            SourcesInTrouble = 2,
+            AwaitingDecision = 48,
+            OldestAwaitingDays = 7
         };
 
         await Monitor().SendWeeklySummaryAsync(CancellationToken.None);
@@ -223,6 +225,27 @@ public sealed class HealthMonitorTests
         Assert.Contains("Gönderilen bildirim: 9", message, StringComparison.Ordinal);
         Assert.Contains("Teklif verilen: 3", message, StringComparison.Ordinal);
         Assert.Contains("Sorunlu kaynak: 2", message, StringComparison.Ordinal);
+
+        // The line the report gained on 14 August 2026, and the reason it did:
+        // spec Bölüm 10 keeps the buttons so filter quality can be measured, and
+        // 48 of the 69 notices ever announced had no verdict on them. The number
+        // is carried with its age because the count alone is a number and the two
+        // together are a question - forty-eight waiting two days is a busy week,
+        // forty-eight waiting three weeks is a habit that has stopped.
+        Assert.Contains("Karar bekleyen: 48", message, StringComparison.Ordinal);
+        Assert.Contains("7 gündür", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Nothing_waiting_still_reports_the_line_rather_than_hiding_it()
+    {
+        // A zero here is the good week, and it is worth seeing. A line that
+        // disappears when it is satisfied is a line nobody learns to look for.
+        _health.Summary = new WeeklySummary { AwaitingDecision = 0, OldestAwaitingDays = 0 };
+
+        await Monitor().SendWeeklySummaryAsync(CancellationToken.None);
+
+        Assert.Contains("Karar bekleyen: 0", Assert.Single(_alerts.Messages), StringComparison.Ordinal);
     }
 
     private sealed class RecordingAlertChannel : IAlertChannel

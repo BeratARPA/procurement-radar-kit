@@ -80,7 +80,23 @@ internal static class HealthSql
             (SELECT count(*)::int FROM notification WHERE sent_at >= @Since)                 AS "NoticesNotified",
             (SELECT count(*)::int FROM procurement_notice WHERE status = 'bid_submitted')    AS "BidsSubmitted",
             (SELECT count(*)::int FROM procurement_notice WHERE status = 'not_relevant')     AS "NotRelevant",
-            (SELECT count(*)::int FROM source WHERE consecutive_failures >= 3)               AS "SourcesInTrouble"
+            (SELECT count(*)::int FROM source WHERE consecutive_failures >= 3)               AS "SourcesInTrouble",
+            -- Announced and still unanswered. Not "status = new" on its own:
+            -- most of the archive is new and always will be, because most of it
+            -- was never worth telling anybody about. The question is how many of
+            -- the ones we did interrupt somebody for are still waiting.
+            (SELECT count(*)::int FROM procurement_notice n
+              WHERE n.status = 'new'
+                AND EXISTS (SELECT 1 FROM notification t
+                             WHERE t.notice_id = n.id AND t.kind = 'new_notice'))  AS "AwaitingDecision",
+            -- Whole days, by subtracting two dates. extract() would give the
+            -- day *component* of an interval, so anything over a month reads
+            -- smaller than it is - and its argument syntax puts a word after
+            -- FROM that the schema test reads as a table name.
+            (SELECT coalesce(max(now()::date - t.sent_at::date), 0)
+               FROM notification t
+               JOIN procurement_notice n ON n.id = t.notice_id
+              WHERE t.kind = 'new_notice' AND n.status = 'new')                    AS "OldestAwaitingDays"
         """;
 
     // Raises the alarm only if the same one has not been raised inside the

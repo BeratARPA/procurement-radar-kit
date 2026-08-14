@@ -351,7 +351,9 @@ public sealed class HealthMonitor
             ["notices_notified"] = summary.NoticesNotified.ToString(CultureInfo.InvariantCulture),
             ["bids_submitted"] = summary.BidsSubmitted.ToString(CultureInfo.InvariantCulture),
             ["not_relevant"] = summary.NotRelevant.ToString(CultureInfo.InvariantCulture),
-            ["sources_in_trouble"] = summary.SourcesInTrouble.ToString(CultureInfo.InvariantCulture)
+            ["sources_in_trouble"] = summary.SourcesInTrouble.ToString(CultureInfo.InvariantCulture),
+            ["awaiting_decision"] = summary.AwaitingDecision.ToString(CultureInfo.InvariantCulture),
+            ["oldest_awaiting_days"] = summary.OldestAwaitingDays.ToString(CultureInfo.InvariantCulture)
         };
 
         var message = new StringBuilder(_templates.Value.WeeklySummary.Header);
