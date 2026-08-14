@@ -140,7 +140,20 @@ public sealed class TurkishDateParser : ITurkishDateParser
             minute = fallback.Minute;
             timeWasAssumed = true;
 
-            _logger.LogWarning(
+            // Debug, not warning, and the distinction is between "something went
+            // wrong" and "something is worth knowing about this notice".
+            //
+            // The guess is real and it matters - the assumed hour can be several
+            // hours off the actual one, on the field spec Bölüm 7 calls the most
+            // important. But it does not travel in this log line: the notice
+            // carries `bid_deadline_time_assumed` all the way to the Telegram
+            // message, where the reader sees it beside that specific deadline.
+            //
+            // Left at warning it fired 4,112 times a day - two thirds of every
+            // notice, re-counted on every reparse - and D-07 counts warnings in
+            // the weekly report. A warning that fires for the expected case is a
+            // warning nobody can read the others through.
+            _logger.LogDebug(
                 "No time of day in {Text}; assuming {AssumedTime}. This is a guess, not data.",
                 original,
                 fallback);

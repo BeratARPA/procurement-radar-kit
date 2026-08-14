@@ -9,33 +9,46 @@ Tüm listeyi birden vermeyin.
 
 ---
 
-## Durum — 9 Ağustos 2026
+## Durum — 14 Ağustos 2026
 
 T-00'dan T-22'ye kadar hepsi bitti; T-13 D-03 gereği, T-23 D-20 gereği açılmadı.
-Zincirin tamamı canlı sitelere karşı çalıştı: robots.txt → nezaket kuyruğu →
-gzip arşiv → kodlama çözümü → ayrıştırma → tekilleştirme → maskeleme →
-skorlama → bildirim → sonuç takibi → arayüz.
+Planda bekleyen madde yok.
 
-- **85 aktif kaynak, 23 pasif** (sebebi her birinin `notes` alanında, ölçüm
-  tarihiyle; hiçbiri unutulmuş değil)
-- **988 ilan, 706'sında son teklif tarihi**
-- **45 ilan bildirim eşiğini geçiyor, 49 gönderilmiş Telegram bildirimi**
-- Aktif her kaynağın kaydedilmiş sayfası fixture olarak depoda, config'i testle
-  korunuyor
-- **430 .NET testi + 152 Dart testi** (Dart tarafı 77'den çıktı: her ekran on cihaz genişliğinde taşma ve kesilme için taranıyor, her hedefin dar ekranda tıklanabildiği doğrulanıyor)
+- **90 aktif kaynak, 18 pasif** (her birinin sebebi `deactivated_reason` kolonunda,
+  D-22'den beri kapalı bir küme olarak — serbest metin değil)
+- **2.665 ilan, 2.363'ünde son teklif tarihi (%89)**
+- **69 ilan bildirim eşiğini geçiyor, 78 gönderilmiş Telegram bildirimi**
+- 12.247 arşiv satırı, `data/` 418 MB
+- **453 .NET testi + 175 Dart testi**
 
-> Bu blok 6 Ağustos'ta yazılmış ve 9 Ağustos'a kadar güncellenmemişti (33 kaynak,
-> 539 ilan, "Telegram token boş" diyordu). Üç gün eski bir durum bloğu, bir günü
-> olmayan bir işi öncelik sanmakla geçirtti. Rakamları elle yazmak yerine
-> arayüzün **Durum** ekranına bakmak daha güvenilir.
+> Rakamlar elle yazıldığı için eskir; bu blok bir kez üç gün eski kalıp bir günü
+> olmayan bir işi öncelik sanmakla geçirtti. Güncel hâli her zaman arayüzün
+> **Durum** ekranında.
 
-**9 Ağustos 2026 akşamı — filtre genişletildi ve arşive işlendi.** Kelime
-listesi 22→48 include, 25→45 exclude oldu; arşivde ölçüldü (39 → 45 bildirim).
-Sonra D-21 ile arşivin tamamı yeniden puanlandı: 988 ilan, 37 puan değişti,
-8'i eşiği geçti ve Telegram'a gitti (41 → 49 bildirim), 2'si eşiğin altına
-düştü — biri `chiller` exclude'unun eklenme sebebi olan Daikin onarımıydı.
-Eşiği yeni geçenlerin dördü hâlâ açıktı; biri 25 Ağustos'ta kapanan bir CRM
-bakım-geliştirme işi. Yani eski liste canlı iş kaçırıyordu.
+**Ölçülen tek kırmızı: karar verilmiyor.** spec Bölüm 15'in dört ölçütünden
+ikisi tutuyor (90 kaynak ≥ 60, ayda 67 uygun ilan ≥ 8), ikisi sıfır: teklif
+verilen 0, kazanılan 0. Altındaki sebep şu — bildirim gitmiş 69 ilanın 48'i hâlâ
+`new`, 21'i "incelendi", ve **bir tanesi bile "teklif verildi" veya
+"ilgilenmiyoruz" değil.** spec Bölüm 10 o butonları filtre kalitesini ölçmek
+için koymuştu; o veri yok. 14 Ağustos'ta haftalık rapora "karar bekleyen" satırı
+eklendi, gerisi alışkanlık.
+
+**13-14 Ağustos — bir gün duruş ve dört düzeltme.** Sistem 13 Ağustos öğleden
+sonra tamamen durdu: Hyper-V açılışta 5342-5441 aralığını rezerve etmişti ve
+5432 onun içindeydi; konteyner "healthy" görünüyor, host'a eşleme yok, worker'ın
+her kolu 30 saniyede bir düşüyordu. Portlar 60000'in üstüne taşındı (D-23).
+
+Aynı turda çıkanlar: Telegram anketi ulaşamadığı sunucuya saniyede on iki kez
+soruyordu (85.711 satır log, 318 MB) — geri çekilme mekanizması vardı ve
+erişilemiyordu; D-22'nin karantina işi üç gündür commitlenmemişti; api 11
+Ağustos'ta `reason` alanı kazanmış ama Dart istemcisi üretilmemişti, dolayısıyla
+arayüzden kapatılan her kaynak sessizce `manual` sayılıp karantinadan çıkıyordu.
+
+**14 Ağustos — yedek (D-24).** D-04'ün istediği ve hiç alınmayan yedek otomatiğe
+bağlandı: veritabanı dökümü her gece (1,1 MB), dosya arşivi haftada bir ayna
+(418 MB, 11.468 dosya, 12 saniye). Hedef `setting` tablosunda ve Ayarlar
+ekranında. Doğrulandı: döküm geçici bir veritabanına geri yüklendi, 108 kaynak
+ve 2.386 ilan geri geldi. Dürüst sınır: C: ve D: aynı SSD'nin bölümleri.
 
 **11 Ağustos 2026 — pasif kaynakların tamamı denetlendi, 5'i açıldı, karantina
 yazıldı.** 24 pasif kaynağın her biri canlı sayfasına, aday adreslerine, tam site
@@ -82,9 +95,10 @@ paylaştığı için ayakta duran api beş ortak dll'i kilitli tutuyordu. Düzel
 `400` dönüyor, yani tam da config'i olmadığı için kapalı duran bir kaynağa neden
 kapalı olduğu yazılamıyor. Bu turda notlar SQL ile yazılmak zorunda kalındı.
 
-**Bilinen açık:** depo hiçbir uzak sunucuya bağlı değil (`git remote` boş) ve
-D-04'ün haftalık elle yedeği hiç alınmadı. Tek kopya bu diskte. Kaynak listesi
-D-10'un dediği gibi tek rekabet avantajı; onu tutan tek disk yedeksiz.
+~~**Bilinen açık:** depo hiçbir uzak sunucuya bağlı değil (`git remote` boş) ve
+D-04'ün haftalık elle yedeği hiç alınmadı. Tek kopya bu diskte.~~
+**13-14 Ağustos'ta ikisi de kapandı:** depo `github.com/BeratARPA/procurement-radar-kit`
+(private, D-10 kamuya açık depoyu reddediyor) ve yedek D-24'te otomatiğe bağlandı.
 
 Sonuç takibi de çalışıyor (D-15): son teklif tarihinin üzerinden iki hafta
 geçmiş, İKN'si olan ilanlar altı saatte bir EKAP'a soruluyor ve Sonuç İlanı
