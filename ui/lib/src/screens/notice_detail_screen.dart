@@ -9,6 +9,7 @@ import '../data/failures.dart';
 import '../data/providers.dart';
 import '../formatting.dart';
 import '../router.dart';
+import '../data/announcement_outline.dart';
 import '../data/procurement_kind.dart';
 import '../strings.dart';
 import '../theme.dart';
@@ -127,17 +128,108 @@ class _Detail extends ConsumerWidget {
                 const Divider(height: 32),
                 Text(Strings.announcement, style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
-                SelectableText(
-                  notice.announcementText?.trim().isNotEmpty ?? false
-                      ? notice.announcementText!.trim()
-                      : Strings.noAnnouncement,
-                  style: theme.textTheme.bodyMedium,
-                ),
+                _Announcement(text: notice.announcementText),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The announcement, with the line breaks extraction lost put back.
+///
+/// What arrives is one paragraph thousands of characters long - the whole of a
+/// Turkish tender announcement flattened. The outline is still in it as
+/// numbering, so this renders that: sections as headings, numbered items
+/// indented under them, and a label in bold beside its value.
+///
+/// Wrapped in one SelectionArea rather than made of SelectableTexts, so a
+/// selection can run across items the way it did when this was a single block
+/// of text. Copying an address out of it is the commonest thing anybody does
+/// on this screen.
+class _Announcement extends StatelessWidget {
+  const _Announcement({required this.text});
+
+  final String? text;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final List<AnnouncementBlock> blocks = readAnnouncement(text);
+
+    if (blocks.isEmpty) {
+      return Text(Strings.noAnnouncement, style: theme.textTheme.bodyMedium);
+    }
+
+    return SelectionArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          for (final AnnouncementBlock block in blocks)
+            switch (block) {
+              AnnouncementProse(:final String text) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(text, style: theme.textTheme.bodyMedium),
+                ),
+              AnnouncementSection(:final String number, :final String title) =>
+                Padding(
+                  padding: const EdgeInsets.only(top: 16, bottom: 8),
+                  child: Text(
+                    '$number. $title',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              AnnouncementItem item => Padding(
+                  // Indented by depth, capped: 4.3.1.1 is four levels in and a
+                  // proportional indent would leave a phone-width column about
+                  // as wide as the word it holds.
+                  padding: EdgeInsets.only(
+                    left: (item.depth - 1).clamp(0, 2) * 14.0,
+                    bottom: 6,
+                  ),
+                  child: _Item(item: item),
+                ),
+            },
+        ],
+      ),
+    );
+  }
+}
+
+class _Item extends StatelessWidget {
+  const _Item({required this.item});
+
+  final AnnouncementItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final TextStyle? body = theme.textTheme.bodyMedium;
+
+    // One RichText rather than a Row of two, because a value is usually far
+    // longer than its label and a two-column layout would leave the label
+    // column mostly empty and wrap the value into a narrow ribbon. The number
+    // is dimmed: it orders the document and nobody reads it for content.
+    return Text.rich(
+      TextSpan(
+        children: <InlineSpan>[
+          TextSpan(
+            text: '${item.number}  ',
+            style: body?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          if (item.label case final String label)
+            TextSpan(
+              text: '$label: ',
+              style: body?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          TextSpan(text: item.value, style: body),
+        ],
+      ),
     );
   }
 }

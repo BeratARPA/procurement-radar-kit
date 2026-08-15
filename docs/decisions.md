@@ -1020,3 +1020,65 @@ dolu olanın üstüne yazmıyor.
 `procurementType` / `procedureCode`, yeniden üretilmiş Dart istemcisi,
 `ui/lib/src/data/procurement_kind.dart`, ilan listesinde ve detayında görünüm.
 15 .NET + 9 Dart testi.
+
+---
+
+## D-26 — İlan metni: kaybolan satır sonları geri konur, markdown'a çevrilmez
+
+**Karar:** `notice_document.extracted_text` veritabanında **olduğu gibi** durur.
+Okunur hale getirme ekranda, `announcement_outline.dart` ile yapılır: metindeki
+numaralandırma okunup satır sonları geri konur. Markdown veya HTML'e
+çevrilmez.
+
+**Sorun.** Detay ekranındaki İlan metni binlerce karakterlik tek bir paragraf
+olarak duruyordu ve okunmuyordu. Ama metin düzensiz değil — **düzeni ezilmiş.**
+Numaralandırma yerinde:
+
+```
+1- İdarenin 1.1. Adı : ... 1.2. Adresi : ... 2- İhalenin 2.1. Tarih ve Saati : ...
+```
+
+Yani yapılan iş metni biçimlendirmek değil, hâlâ orada duran ama görünmez hale
+gelmiş bir dizini okumak. D-15 aynı problemi sonuç ilanı için zaten çözmüştü:
+*"bir değer, bir sonraki harf başladığı yerde biter."*
+
+**Neden markdown değil — ölçüldü.** İlk akla gelen fikir buydu ve burada
+**aktif olarak yanlış:** saklanan 267 metnin **236'sı `***` içeriyor**, çünkü
+`Parse` iletişim adlarını ve telefonları veritabanına girmeden maskeliyor
+(CLAUDE.md). Markdown'da üç yıldız kalın+italik açar ve kapanışını arayarak
+belgenin geri kalanını yutar. Kaynakta zaten hiç işaretleme yok; bir
+render'cı eklemek yalnızca metni yanlış okumanın bir yolunu eklerdi.
+
+**Neden api'de değil ekranda.** D-11'in kuralı: ham olanı sakla, okurken
+yorumla. `extracted_text`'i veritabanında yeniden yazmak, saklanan kopyayı
+bugünkü "nasıl görünmeli" fikrine bağlardı ve sonraki bir düzeltme zaten
+yazılmış olana erişemezdi. Bu değişiklik hiçbir veriye dokunmuyor.
+
+**Bugün ne yaptığıysa ona düşer.** 267 metnin 16'sı EKAP ilanı değil — pdf'ten
+çıkarılmış, taranmış bir belediye ilanının içinde dizin yok. İki bölüm
+başlığından azını bulursa metni olduğu gibi geri verir, yani ekranın önceki
+davranışı.
+
+**Yan bulgu — maskeleme bir sonraki maddenin ilk hanesini yiyor.** Fixture
+okunarak bulundu, akıl yürüterek değil. `PersonalDataMasker` iletişim
+etiketinden **cümle sonuna** kadar her şeyi siliyor ve cümle ilk noktada
+bitiyor — o nokta da bir sonraki maddenin numarasının içindeki nokta:
+
+```
+1.3. Telefon: 0312 ... 1.4. İhale dokümanının ...
+1.3. Telefon: ***.4. İhale dokümanının ...        <- saklanan
+```
+
+Bu belgede iki kez oluyor (`1.4` ve `4.1.2.1`). Numarası kalmayan madde bir
+üsttekinin değerinin içinde kalıyor. Dizin bunu **onarmaya çalışmıyor**:
+metinde olmayan bir hane geri getirilemez, uydurulan bir hane ise ait
+olmadığı bir başlığın altına içerik koyardı. Maskelemeyi düzeltmek ayrı bir
+iş — hem maskeleyiciyi hem de 267 belgenin metin çıkarımını yeniden
+çalıştırmayı gerektirir, ve fazla maskelemek eksik maskelemekten iyi
+(`config/tr-personal-data.json`).
+
+**Uygulama:** `ui/lib/src/data/announcement_outline.dart`,
+`ui/test/fixtures/ekap-announcement-2026-1340114.txt` (gerçek ilan, D-09),
+detay ekranında `_Announcement` + `_Item`. Tamamı tek bir `SelectionArea`
+içinde: seçim maddeler arasında akmalı, çünkü bu ekranda en sık yapılan şey
+bir adresi kopyalamak. 13 Dart testi.
