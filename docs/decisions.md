@@ -1082,3 +1082,135 @@ iş — hem maskeleyiciyi hem de 267 belgenin metin çıkarımını yeniden
 detay ekranında `_Announcement` + `_Item`. Tamamı tek bir `SelectionArea`
 içinde: seçim maddeler arasında akmalı, çünkü bu ekranda en sık yapılan şey
 bir adresi kopyalamak. 13 Dart testi.
+
+---
+
+## D-27 — Bir tur kapatma: yeniden başlatma, boş liste, maskeleme ve log seviyeleri
+
+Bu madde tek bir karar değil, 18 Ağustos 2026'da logdan çıkan dokuz kusurun
+kaydı. Ortak noktaları var: **hiçbiri bir testi kırmıyordu.** Sekizi ancak
+çalışan sistemin logu okunarak, biri de fixture okunarak bulundu.
+
+### 1. Yeniden başlatma politikası yazılıydı ve çalışmıyordu
+
+Görevde `RestartCount 999`, `RestartInterval 5 dakika` duruyordu. 15 Ağustos'ta
+worker 06:06'da öldü ve **24 saat sonra hâlâ ölüydü**; yaklaşık 1.500 sayfa
+çekmesi ve bir günlük `first_seen_at` doğruluğu kayboldu.
+
+Windows'un bu ayarı, görev **başlatılamazsa** devreye giriyor. Başlayıp sonra
+ölen bir süreç görevi "tamamlandı" bırakıyor ve hiçbir şey yeniden denemiyor.
+Bu worker'ı ayağa kaldıran tek şey oturum açılışıydı ve bir gün boyunca oturum
+açılmadı.
+
+İlk düzeltme de çalışmadı ve bu kayda değer: tekrar **oturum açılışı
+tetikleyicisine** bağlandı, `Get-ScheduledTask` `PT5M` diye geri okudu, ve
+hiçbir şey olmadı — bir tekrar, tetikleyicisinin *ateşlenmesine* ait; oturum
+günler önce açılmıştı, dolayısıyla tekrarlayacak bir şey yoktu. `NextRunTime`
+boştu. Doğru çözüm **ikinci ve zaman tabanlı bir tetikleyici**.
+
+Doğrulama ayarı okuyarak değil, **worker öldürülerek** yapıldı: 174 saniye
+sonra kendiliğinden geri geldi.
+
+`MultipleInstances = IgnoreNew` artık açıkça yazılıyor. Varsayılan zaten oydu,
+ama beş dakikada bir ikinci bir koleksiyoncu başlatmak tek bir nezaket kapısını
+paylaşan iki süreç demek — yazılmamış bir varsayılana dayanacak yer değil.
+`-Rebuild` de `Stop` yerine `Disable` kullanıyor: aksi halde yayın ortasında
+gelen bir tik paylaşılan beş dll'i yeniden kilitlerdi (D-19, D-22).
+
+### 2. "Parser bozuk" alarmı boş listeyi ayırt edemiyordu
+
+spec Bölüm 11'in kuralı — HTTP 200 + 0 kayıt + hash değişmiş — bir sitenin
+yeniden tasarlandığını saatler içinde yakalayan tek kural. Aynı zamanda o hafta
+açık ihalesi olmayan bir belediyeyi de yakalıyor ve veritabanından ikisi
+birbirinin aynı görünüyor. Kahramankazan üç gün boyunca her gün alarm çaldı;
+selector'ları baştan sona doğruydu.
+
+Ayrımı yalnızca adapter yapabilir, çünkü satırların nerede olması gerektiğini
+yalnızca o bilir. `ISourceAdapter.ListWasEmpty` varsayılan gövdesiyle eklendi
+(`Parse`'ın imzası spec Bölüm 6 ve kırk testten çağrılıyor; sıfır-ilan
+durumunda sorulan bir soru her çağıranın aldığı şeyi değiştirmemeli).
+`GenericTableAdapter` satır selector'ının son adımını atarak kabı arıyor:
+`div.common-list ul li` satırları, `div.common-list ul` içinde durdukları
+listeyi tarif eder. Kap var ve satır yoksa sayfa sağlam ve boş; kap da yoksa
+sayfa değişmiş ve alarm doğru.
+
+Varsayılan `false` — bilemeyen adapter alarm çalmaya devam eder. Kaçırılan bir
+alarmın bedeli spec Bölüm 11'in açılış cümlesi.
+
+Kolon: `012_raw_fetch_empty_list.sql`. Testler kaynağın **kendi arşivlenmiş iki
+gövdesine** karşı (D-09): 105 KB içinde tek bir `li` kadar farklılar.
+
+### 3. Şartname metinleri hiç maskelenmiyormuş
+
+Bu turun en ciddisi ve aranarak değil, yolda bulundu. `EkapAnnouncementEnricher`
+maskeliyordu; `DocumentDownloader` — indirilen her pdf'in metnini yazan yol —
+hiç maskelemiyordu. Ölçüm: saklanan 270 metnin **188'inde e-posta adresi**,
+17'sinde telefon görünümlü dizi.
+
+CLAUDE.md ve spec Bölüm 12 bunu açıkça yasaklıyor. Kodu düzeltmek yalnızca
+bundan sonrasını durdurur; `remask` komutu diskteki dosyalardan metni yeniden
+çıkarıp maskeleyerek geçmişi de kapattı — 210 doküman, e-posta **188 → 0**.
+Diskteki baytlara dokunulmadı: onlar arşiv (D-11), maskelenen kolona giden kopya.
+
+### 4. Maskeleme sonraki maddenin ilk hanesini yiyordu
+
+D-26'da bulunmuştu, burada kapandı. Değer "cümle sonuna kadar" gidiyordu ve
+cümle bir sonraki madde numarasının içindeki noktada bitiyordu:
+`1.3. Telefon: ***.4. İhale`. Desene dar bir koruma eklendi — sonunda nokta
+isteyen bir madde numarası görürse durur, `2.5 milyon` gibi ondalık onu erken
+kesmez. Erken kesmek maskeyi eksiltir, o yüzden koruma dar olan.
+
+### 5-8. Log seviyeleri: beklenen durum uyarı değildir
+
+D-07 uyarı ve hataları haftalık raporda sayıyor. Dört beklenen durum onları
+dolduruyordu:
+
+| Satır | Eskiden | Şimdi | Sebep |
+|---|---|---|---|
+| EKAP arama zaman aşımı | Error, ~150/gün | ilk denemede Debug | Yeniden deneme çoğu zaman tutuyor; **başarılı bir aramanın ardında Error duruyordu** |
+| "ilk deneme sonuç vermedi" | Warning, ~140/gün | Debug | Aynı olayın ikinci yarısı |
+| "50 satır isteyemedik, 10 aldık" | Warning, ~150/gün | Debug | EKAP'ın kendi sınırı, D-13'te zaten ölçülü |
+| "N satır atlandı, M tutuldu" | Warning, her çekmede | yalnız **hiç tutulmadıysa** Warning | Bazı satır selector'ları geniş (Tailwind `.transition-all`, `.col-md-4`); atlananlar sayfa çerçevesi, ilan değil |
+| "tarih okunamadı" | Warning, 211/3 gün | tarih-biçimli değilse Debug | Metin başlıksa bu başarısız ayrıştırma değil, tarih olmayan bir alan |
+
+Hiçbiri gizlenmedi: gerçekten başarısız olan arama hâlâ Error, hepsi atlanan
+sayfa hâlâ Warning, okunamayan **tarih** hâlâ Warning ve spec Bölüm 7'nin
+haftalık gözden geçirmesine düşüyor.
+
+### 9. Config'i olmayan kaynak arayüzden düzenlenemiyordu
+
+`PUT /api/sources/{id}` generic_table için geçerli config şart koşuyordu —
+yani config'i olmadığı için kapalı duran on üç kaynağa config yazmak da, neden
+kapalı olduğunu not düşmek de imkânsızdı. 11 Ağustos denetiminde o notlar elle
+SQL ile yazılmak zorunda kalmıştı, ki D-16 tam olarak bunu engellemek için var.
+
+Artık **boş** config serbest, **bozuk** config hâlâ 400 ve sebebini yazıyor.
+İlk işi 99 ve 101 numaralı kaynakları kurtarmak oldu (aşağıda).
+
+### Yan bulgular
+
+**Kaynak 99'un adresi bir ara sayfaymış.** Karantinada "site erişilemiyor" diye
+duruyordu; arşivlenmiş gövdesinde içerik bölümü boş ve yalnızca iki alt sayfaya
+link var. Adres doğrudan temin alt sayfasına çekildi, selector'lar kardeş kurum
+Bilkent Şehir Hastanesi'nden alındı. 101'in arşivinde tek sayfa yoktu, aynı
+şablon yazıldı. **İkisi de karantinada bırakıldı** — günlük yoklama nezaketle
+çekecek, en az bir ilan ayrışırsa D-22 kendiliğinden geri açacak. Doğrulamayı
+mekanizma yapıyor, biz değil.
+
+**Son teklif tarihi geriye dönük doldurulamıyor — ve sebebi kimliğin kendisi.**
+`FillMissingAsync` tarihi de dolduracak şekilde genişletildi, ama bu yalnızca
+İKN taşıyan ilanlarda işe yarar: İKN yoksa `external_key` tarihin gününü içerir
+(spec Bölüm 8), dolayısıyla tarihsiz kaydedilmiş bir ilan sonradan tarihle
+okunduğunda **aynı ilan olarak tanınmaz, ikinci kez yazılır**. ODTÜ'nün 12
+tarihsiz ilanı tam olarak bu durumda: selector 9 Ağustos'ta yazıldı, ilanlar
+5-7 Ağustos'tan. `reparse` onları düzeltmez, çoğaltır. Bunu yazan bir test var.
+Düzeltmek arşivi bir kez daha işlemekle değil, kimlik hakkında bir kararla olur.
+
+**EKAP filtresi yeniden adlandırılmamış.** 582 satır sanılmıştı; ölçünce 561
+başarı, 31 başarısızlık çıktı — %5. Panel bazen zamanında çizilmiyor. Bir kez
+yeniden deneniyor, mesaj da artık doğru şeyi söylüyor.
+
+**Ölçüldü ve değiştirilmedi:** Gölbaşı'nın `date_selector: span`'ı denenen
+alternatiflerin en iyisi (8/10, diğerleri 6/10). ODTÜ'nün config'i arşive karşı
+10/10 okuyor. Sanatoryum'un `date_selector: a`'sı doğru — tarih bağlantı
+metninin içinde parantezde.

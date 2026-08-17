@@ -186,8 +186,24 @@ public sealed class SourcesController : ControllerBase
             return false;
         }
 
+        // An absent config is allowed; a broken one is not.
+        //
+        // The rule used to be "generic_table must have a usable config", which
+        // reads sensibly and locked out the exact sources that needed editing:
+        // thirteen are switched off *because* nobody has written their selectors
+        // yet, and this refused to save them - so a note explaining why one is
+        // off could not be written from the interface either. The 11 August
+        // audit had to put those notes in with hand SQL, which is what D-16
+        // exists to stop.
+        //
+        // Nothing is lost by allowing it. A source with no config collects
+        // nothing whether or not the api says so, it cannot be switched on
+        // usefully, and preflight already names any active source in that state.
+        // Text that is present and does not parse is still refused, because that
+        // is a typo somebody wants to hear about while they are looking at it.
         if (request.AdapterKey == GenericTableAdapter.AdapterKey
-            && !GenericTableAdapterConfig.TryRead(request.AdapterConfig ?? string.Empty, out _, out var configProblem))
+            && !IsBlankConfig(request.AdapterConfig)
+            && !GenericTableAdapterConfig.TryRead(request.AdapterConfig!, out _, out var configProblem))
         {
             problem = configProblem;
             return false;
@@ -208,6 +224,18 @@ public sealed class SourcesController : ControllerBase
 
         return true;
     }
+
+    /// <summary>
+    /// Nothing worth validating: absent, empty, or an empty json object.
+    /// </summary>
+    /// <remarks>
+    /// The three spellings all mean the same thing to the collector, and all
+    /// three are in the table today - preflight counts a generic_table source
+    /// unconfigured on exactly this test.
+    /// </remarks>
+    private static bool IsBlankConfig(string? adapterConfig)
+        => string.IsNullOrWhiteSpace(adapterConfig)
+            || adapterConfig.Trim() is "{}" or "null";
 
     /// <summary>
     /// Puts a source in or out of the rotation.

@@ -1,0 +1,17 @@
+{
+  "_comment": "Kahramankazan Belediyesi, kaynak 19. 17 Ağustos 2026'da arşivden alındı (raw_fetch 15050) — canlı siteden değil, koleksiyoncunun o gün gerçekten indirdiği gövde.",
+  "_shape": "Listede tek ilan var. Eşi olan boş sürümle birlikte okunmalı: ikisi 105 KB içinde tek bir li kadar farklı, ve veritabanının onlar hakkında görebildiği her şey aynı.",
+  "adapter_config": {
+    "base_url": "https://kahramankazan.bel.tr",
+    "row_selector": "div.common-list ul li",
+    "title_selector": "h3.title",
+    "link_selector": "a.common-list__wrapper",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null
+  },
+  "captured_bytes": 107726,
+  "captured_sha256": "b1b726b268567e5c0f9ce9470cc37edb6f22370515abfaee223457cf601a6e58",
+  "expected_notice_count": 1,
+  "expected_first_title": "DÜKKAN İŞLETMECİLİĞİ (SATIKADIN MAHALLESİ)"
+}

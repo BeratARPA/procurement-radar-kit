@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using ProcurementRadar.Collector;
 using ProcurementRadar.Domain.Fetching;
+using ProcurementRadar.Domain.Normalization;
+using ProcurementRadar.Domain.Settings;
 using ProcurementRadar.UnitTests.Archive;
 
 namespace ProcurementRadar.UnitTests.Documents;
@@ -25,6 +27,11 @@ public sealed class DocumentDownloaderTests : IDisposable
             _documents,
             _paths,
             new DocumentTextExtractor(NullLogger<DocumentTextExtractor>.Instance),
+            // The real masker on the real rules. A no-op stand-in here would let
+            // the untouched-text bug back in without a single test going red.
+            new Fixed<PersonalDataMasker>(new PersonalDataMasker(PersonalDataRules.Load(
+                File.ReadAllText(Path.Combine(
+                    RepositoryRoot.Find().FullName, "config", "tr-personal-data.json"))))),
             _time,
             NullLogger<DocumentDownloader>.Instance);
     }

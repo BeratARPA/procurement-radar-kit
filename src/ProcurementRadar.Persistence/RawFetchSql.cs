@@ -73,7 +73,8 @@ internal static class RawFetchSql
         UPDATE raw_fetch
         SET is_processed   = true,
             parser_version = @ParserVersion,
-            notice_count   = @NoticeCount
+            notice_count   = @NoticeCount,
+            list_was_empty = @ListWasEmpty
         WHERE id = @RawFetchId
         """;
 }

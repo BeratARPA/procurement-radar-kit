@@ -49,8 +49,26 @@ public sealed class PersonalDataMasker
         // of the description.
         var labels = string.Join('|', rules.ContactLabels.Select(AnyTurkishCasing));
 
+        // The value stops one character short of a following outline number, and
+        // that guard is why this reads the way it does.
+        //
+        // A tender announcement is a numbered list flattened into one line:
+        //
+        //     1.3. Telefon: 0312 ... 1.4. İhale dokümanının ...
+        //
+        // "up to the end of the sentence" ended at the first full stop, which is
+        // the one *inside* 1.4 - so the value swallowed that leading 1 and the
+        // stored text read "Telefon: ***.4. İhale dokümanının". Item 1.4 lost
+        // the number it is found by. Twice per announcement, in 236 of the 270
+        // documents held.
+        //
+        // The guard is deliberately narrow: it needs a trailing dot as well, so
+        // it blocks on " 1.4." and " 4.1.2.1." and not on a plain decimal like
+        // " 2.5 milyon", which would otherwise cut the mask short. Cutting the
+        // mask short is the direction that risks leaving a name behind, so it
+        // gets the narrow rule.
         _labelPattern = new Regex(
-            $@"\b(?<label>{labels})\b\s*[:\-]?\s*(?<value>[^.;\r\n]{{0,80}})",
+            $@"\b(?<label>{labels})\b\s*[:\-]?\s*(?<value>(?:(?!\s\d{{1,2}}(?:\.\d{{1,2}})+\.)[^.;\r\n]){{0,80}})",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     }
 

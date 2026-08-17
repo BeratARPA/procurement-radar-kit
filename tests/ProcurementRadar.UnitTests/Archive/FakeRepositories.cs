@@ -14,7 +14,7 @@ internal sealed class FakeRawFetchRepository : IRawFetchRepository
 
     public List<RawFetch> Rows { get; } = [];
 
-    public List<(long RawFetchId, string ParserVersion, int NoticeCount)> Processed { get; } = [];
+    public List<(long RawFetchId, string ParserVersion, int NoticeCount, bool ListWasEmpty)> Processed { get; } = [];
 
     public Task<long> ReserveIdAsync(CancellationToken cancellationToken)
         => Task.FromResult(Interlocked.Increment(ref _nextId));
@@ -47,9 +47,10 @@ internal sealed class FakeRawFetchRepository : IRawFetchRepository
         long rawFetchId,
         string parserVersion,
         int noticeCount,
+        bool listWasEmpty,
         CancellationToken cancellationToken)
     {
-        Processed.Add((rawFetchId, parserVersion, noticeCount));
+        Processed.Add((rawFetchId, parserVersion, noticeCount, listWasEmpty));
         return Task.CompletedTask;
     }
 
@@ -244,13 +245,15 @@ internal sealed class FakeNoticeRepository : INoticeRepository
         return Task.FromResult(new NoticeUpsertResult(id, true));
     }
 
-    public Task<bool> FillProcedureAsync(
+    public Task<bool> FillMissingAsync(
         long noticeId,
         ProcurementType? procurementType,
         string? procedureCode,
+        DateTimeOffset? bidDeadlineAt,
+        bool bidDeadlineTimeAssumed,
         CancellationToken cancellationToken)
     {
-        if (procurementType is null && procedureCode is null)
+        if (procurementType is null && procedureCode is null && bidDeadlineAt is null)
         {
             return Task.FromResult(false);
         }
@@ -266,7 +269,9 @@ internal sealed class FakeNoticeRepository : INoticeRepository
         // The same coalesce the statement does, and it has to be here rather
         // than a blind assignment: a fake that overwrites where the database
         // fills would let a test pass on behaviour the driver does not have.
-        if (stored.ProcurementType is not null && stored.ProcedureCode is not null)
+        if (stored.ProcurementType is not null
+            && stored.ProcedureCode is not null
+            && stored.BidDeadlineAt is not null)
         {
             return Task.FromResult(false);
         }
@@ -274,7 +279,11 @@ internal sealed class FakeNoticeRepository : INoticeRepository
         Notices[index] = stored with
         {
             ProcurementType = stored.ProcurementType ?? procurementType,
-            ProcedureCode = stored.ProcedureCode ?? procedureCode
+            ProcedureCode = stored.ProcedureCode ?? procedureCode,
+            BidDeadlineAt = stored.BidDeadlineAt ?? bidDeadlineAt,
+            BidDeadlineTimeAssumed = stored.BidDeadlineAt is null && bidDeadlineAt is not null
+                ? bidDeadlineTimeAssumed
+                : stored.BidDeadlineTimeAssumed
         };
 
         return Task.FromResult(true);

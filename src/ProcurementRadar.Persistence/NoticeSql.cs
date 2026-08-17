@@ -52,12 +52,32 @@ internal static class NoticeSql
     // that have nothing to gain, and neither first_seen_at nor last_seen_at
     // appears at all: this is not a sighting, it is a field being recovered from
     // an archive that was always kept for exactly this.
-    internal const string FillProcedure = """
+    //
+    // bid_deadline_at is here for the same reason the other two are, and it is
+    // the one that pays: a source gets its date_selector written weeks after it
+    // started collecting, and every notice stored before that keeps a null
+    // deadline forever. ODTÜ is the measured case - its selector reads 10 of 10
+    // against the archived page and its twelve stored notices, all from before
+    // the selector existed, have no deadline at all. Thirty-two notices across
+    // the archive are in that position.
+    //
+    // The assumed-hour flag moves only when the deadline it describes moves.
+    // Copying it onto a row that already had a deadline would relabel a real
+    // hour as a guess.
+    internal const string FillMissing = """
         UPDATE procurement_notice
         SET procurement_type = coalesce(procurement_type, @ProcurementType),
-            procedure_code   = coalesce(procedure_code, @ProcedureCode)
+            procedure_code   = coalesce(procedure_code, @ProcedureCode),
+            bid_deadline_at  = coalesce(bid_deadline_at, @BidDeadlineAt),
+            bid_deadline_time_assumed = CASE
+                WHEN bid_deadline_at IS NULL AND @BidDeadlineAt IS NOT NULL
+                    THEN @BidDeadlineTimeAssumed
+                ELSE bid_deadline_time_assumed
+            END
         WHERE id = @NoticeId
-          AND (procurement_type IS NULL OR procedure_code IS NULL)
+          AND (procurement_type IS NULL
+               OR procedure_code IS NULL
+               OR bid_deadline_at IS NULL)
         """;
 
     internal const string ListByStatus = $"""

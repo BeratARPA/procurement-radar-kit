@@ -65,13 +65,15 @@ public sealed class NoticeRepository : INoticeRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<bool> FillProcedureAsync(
+    public async Task<bool> FillMissingAsync(
         long noticeId,
         ProcurementType? procurementType,
         string? procedureCode,
+        DateTimeOffset? bidDeadlineAt,
+        bool bidDeadlineTimeAssumed,
         CancellationToken cancellationToken)
     {
-        if (procurementType is null && procedureCode is null)
+        if (procurementType is null && procedureCode is null && bidDeadlineAt is null)
         {
             // Nothing to say. Most sources are in this position on every row and
             // a statement per row that can only be a no-op is a statement not
@@ -85,12 +87,16 @@ public sealed class NoticeRepository : INoticeRepository
 
         var affected = await connection.ExecuteAsync(
             new CommandDefinition(
-                NoticeSql.FillProcedure,
+                NoticeSql.FillMissing,
                 new
                 {
                     NoticeId = noticeId,
                     ProcurementType = procurementType is { } type ? EnumText.ToText(type) : null,
-                    ProcedureCode = procedureCode
+                    ProcedureCode = procedureCode,
+                    // Normalized for the same reason the upsert does it: a
+                    // non-zero offset is a hard error on a timestamptz parameter.
+                    BidDeadlineAt = bidDeadlineAt?.ToUniversalTime(),
+                    BidDeadlineTimeAssumed = bidDeadlineTimeAssumed
                 },
                 cancellationToken: cancellationToken))
             .ConfigureAwait(false);

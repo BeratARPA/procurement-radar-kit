@@ -25,6 +25,9 @@ internal static class HealthSql
         JOIN source s ON s.id = r.source_id
         WHERE r.is_processed = true
           AND r.notice_count = 0
+          -- The listing was on the page with nothing in it (012). That is a
+          -- week with no tender, not a parser that stopped reading.
+          AND r.list_was_empty = false
           AND r.http_status = 200
           AND r.fetched_at >= @Since
           AND EXISTS (SELECT 1 FROM procurement_notice n WHERE n.source_id = s.id)

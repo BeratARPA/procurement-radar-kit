@@ -27,12 +27,16 @@ $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $publish = Join-Path $repo 'publish'
 
 if ($Uninstall) {
-    # Stop first: an unregister while it is mid-poll leaves the process orphaned.
+    # Disable, then stop, then unregister. Stopping alone races the five-minute
+    # repetition, which would start the worker again in the gap before the
+    # unregister and leave a process behind with no task to stop it.
     foreach ($name in $TaskName, ($TaskName + 'Api')) {
+        Disable-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue | Out-Null
         Stop-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
         Unregister-ScheduledTask -TaskName $name -Confirm:$false -ErrorAction SilentlyContinue
     }
     Get-Process ProcurementRadar.Worker -ErrorAction SilentlyContinue | Stop-Process -Force
+    Get-Process ProcurementRadar.Api -ErrorAction SilentlyContinue | Stop-Process -Force
     Write-Host "Kaldirildi: '$TaskName'. Geri kurmak icin ayni betigi parametresiz calistirin."
     return
 }
@@ -62,13 +66,32 @@ if ($Rebuild -or -not (Test-Path $worker)) {
     # Notifier. A running api holds all of those open, so stopping only the
     # worker left -Rebuild failing with MSB3021 on five dlls it had never
     # touched, and the error named the api rather than the thing being built.
+    #
+    # And disabled, not merely stopped. The tasks repeat every five minutes now
+    # (see the trigger below), so Stop-ScheduledTask only buys until the next
+    # tick - and a tick landing mid-publish would relock those same five dlls
+    # and fail the build halfway through. Disabling holds for as long as needed.
     foreach ($name in $TaskName, ($TaskName + 'Api')) {
+        Disable-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue | Out-Null
         Stop-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
     }
 
     Get-Process ProcurementRadar.Worker -ErrorAction SilentlyContinue | Stop-Process -Force
     Get-Process ProcurementRadar.Api -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Seconds 2
+
+    # If a publish throws, the tasks are left disabled and the collector is off
+    # with nothing saying so - the exact failure this whole round is about. The
+    # re-register below turns them back on in the normal path; this covers the
+    # one where we never reach it.
+    trap {
+        foreach ($name in $TaskName, ($TaskName + 'Api')) {
+            Enable-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue | Out-Null
+        }
+
+        Write-Host 'Yayin basarisiz; gorevler yeniden etkinlestirildi.'
+        break
+    }
 
     Write-Host 'Yayinlaniyor...'
     & dotnet publish (Join-Path $repo 'src\ProcurementRadar.Worker') -c Release -o $publish --nologo -v q
@@ -130,19 +153,68 @@ $action = New-ScheduledTaskAction `
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 $trigger.Delay = 'PT2M'
 
+# And then every five minutes, forever. This is the watchdog, and it is on the
+# trigger rather than in the settings because the settings version does not work.
+#
+# Measured, not assumed: on 15 August the worker died at 06:06 and was still
+# down 24 hours later, having lost about 1,500 page fetches and a day of
+# first_seen_at accuracy - the field architecture rule 3 calls the product's
+# whole value. RestartCount 999 / RestartInterval 5M was set the whole time.
+# Windows applies those when the task *fails to start*; a process that starts
+# and later exits leaves the task "completed" with a non-zero result, and
+# nothing retries it. The only thing that had ever started this worker was a
+# logon, and there was no logon for a day.
+#
+# A repetition costs nothing when the worker is alive: MultipleInstances is
+# IgnoreNew (below), so Windows sees the instance already running and does
+# nothing. When it is dead, the next tick starts it. Worst case five minutes
+# down instead of a day.
+#
+# A second trigger, and it has to be a second one.
+#
+# Hanging the repetition off the logon trigger was tried first and registers
+# perfectly: Get-ScheduledTask reads back Repetition=PT5M, IgnoreNew, the lot.
+# It also does nothing. A repetition belongs to a *firing* of its trigger, and
+# the logon fired days ago, so there was nothing to repeat - NextRunTime came
+# back empty and a worker killed at 01:01 was still dead half an hour later.
+# Configuration that reads correct and does not run is what this whole round is
+# about; the only reason this one was caught is that the worker was killed on
+# purpose to watch it come back.
+#
+# A time trigger has no such dependency. It fires on its own schedule whether or
+# not anybody logged in, and StartWhenAvailable picks up the ticks a sleeping
+# machine missed.
+#
+# No -RepetitionDuration: "forever" here is an *absent* duration, not a big one.
+# [TimeSpan]::MaxValue serialises to P99999999DT23H59M59S and Register-ScheduledTask
+# rejects the whole task with "the task XML contains a value which is incorrectly
+# formatted or out of range" - an error that names the XML and not the field.
+$watchdog = New-ScheduledTaskTrigger `
+    -Once -At (Get-Date).Date `
+    -RepetitionInterval (New-TimeSpan -Minutes 5)
+
+$triggers = @($trigger, $watchdog)
+
 $settings = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries `
     -DontStopIfGoingOnBatteries `
     -StartWhenAvailable `
+    -MultipleInstances IgnoreNew `
     -RestartInterval (New-TimeSpan -Minutes 5) `
     -RestartCount 999 `
     -ExecutionTimeLimit ([TimeSpan]::Zero)
+
+# IgnoreNew is stated rather than left to the default, because the whole
+# five-minute watchdog rests on it: without it every tick would start a second
+# worker, and two collectors sharing one politeness gate is how an IP gets
+# banned. It happens to be the default today; a load-bearing default that
+# nothing writes down is a default somebody changes.
 
 # On a laptop the battery settings are not a detail. Without them Windows stops
 # the task the moment the charger comes out, which is exactly when nobody is
 # watching.
 
-Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
+Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $triggers `
     -Settings $settings -Description 'Procurement Radar worker' -Force | Out-Null
 
 Write-Host "Registered '$TaskName' to start at logon."
@@ -155,7 +227,7 @@ $apiAction = New-ScheduledTaskAction `
     -Execute (Join-Path $publish 'ProcurementRadar.Api.exe') `
     -WorkingDirectory $publish
 
-Register-ScheduledTask -TaskName $apiTaskName -Action $apiAction -Trigger $trigger `
+Register-ScheduledTask -TaskName $apiTaskName -Action $apiAction -Trigger $triggers `
     -Settings $settings -Description 'Procurement Radar api (swagger, interface)' -Force | Out-Null
 
 Write-Host "Registered '$apiTaskName' to start at logon (http://localhost:60080/swagger)."

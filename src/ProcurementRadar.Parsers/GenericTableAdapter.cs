@@ -128,7 +128,22 @@ public sealed class GenericTableAdapter : ISourceAdapter
 
         if (skipped > 0)
         {
-            _logger.LogWarning(
+            // A warning only when *everything* was skipped.
+            //
+            // Several row selectors are broader than the rows they are after -
+            // Nallıhan matches a Tailwind `.transition-all`, Kocaeli a
+            // `.col-md-4` grid column - so each fetch also matches the header,
+            // the sidebar and the footer, and drops them for having no title.
+            // That is imprecise and it is not a fault: the notices are all
+            // kept, and the skipped elements were never notices. It was 464
+            // skipped against 377 kept on one source in three days, every line
+            // of it at warning level, counted in the weekly report (D-07).
+            //
+            // Nothing kept is different. Then the selector matched things and
+            // none of them was readable, which is the shape of a page that has
+            // been redesigned underneath us.
+            _logger.Log(
+                notices.Count == 0 ? LogLevel.Warning : LogLevel.Debug,
                 "Source {SourceId}: {Skipped} row(s) skipped, {Kept} kept",
                 source.Id,
                 skipped,
@@ -138,6 +153,57 @@ public sealed class GenericTableAdapter : ISourceAdapter
         document.Dispose();
 
         return notices;
+    }
+
+    /// <summary>
+    /// Whether the listing container is on the page with no rows inside it.
+    /// </summary>
+    /// <remarks>
+    /// The container is the row selector with its last step removed:
+    /// <c>div.common-list ul li</c> describes rows, and <c>div.common-list ul</c>
+    /// describes the list they sit in. If the list is there and the rows are
+    /// not, the page is intact and empty; if the list is gone too, the page has
+    /// changed underneath us and that is what the alarm is for.
+    ///
+    /// A single-step selector has no container to fall back to, so it answers
+    /// false - unknown, keep alarming. Same for a selector whose container part
+    /// will not compile. The safe direction here is the noisy one: a missed
+    /// alarm is a source that quietly stops collecting, and one of those cost
+    /// three months in the story spec.md Bölüm 11 opens with.
+    /// </remarks>
+    public bool ListWasEmpty(string body, Source source)
+    {
+        if (!GenericTableAdapterConfig.TryRead(source.AdapterConfig, out var config, out _))
+        {
+            return false;
+        }
+
+        var lastStep = config.RowSelector.LastIndexOf(' ');
+
+        if (lastStep <= 0)
+        {
+            return false;
+        }
+
+        var container = config.RowSelector[..lastStep].Trim();
+
+        try
+        {
+            using var document = new HtmlParser().ParseDocument(body);
+
+            return document.QuerySelectorAll(container).Length > 0
+                && document.QuerySelectorAll(config.RowSelector).Length == 0;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogDebug(
+                exception,
+                "Source {SourceId}: could not test container selector '{Container}'",
+                source.Id,
+                container);
+
+            return false;
+        }
     }
 
     private bool TryReadRow(

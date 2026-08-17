@@ -29,6 +29,7 @@ public sealed class RepositoryGuardTests
                 rawFetchId: 1,
                 parserVersion: "  ",
                 noticeCount: 0,
+                listWasEmpty: false,
                 CancellationToken.None));
     }
 

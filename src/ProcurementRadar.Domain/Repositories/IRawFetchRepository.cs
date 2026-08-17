@@ -62,9 +62,14 @@ public interface IRawFetchRepository
     /// <returns>How many rows were queued.</returns>
     Task<int> MarkSourceUnprocessedAsync(long sourceId, CancellationToken cancellationToken);
 
+    /// <param name="listWasEmpty">
+    /// The listing was present and had no rows on it. Keeps the parser-broken
+    /// alarm off a page that is intact and simply has nothing today (012).
+    /// </param>
     Task MarkProcessedAsync(
         long rawFetchId,
         string parserVersion,
         int noticeCount,
+        bool listWasEmpty,
         CancellationToken cancellationToken);
 }

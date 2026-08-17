@@ -36,4 +36,29 @@ public interface ISourceAdapter
     /// skipped and logged, and the rest of the page still comes back.
     /// </summary>
     IReadOnlyList<RawNotice> Parse(string body, Source source);
+
+    /// <summary>
+    /// Asked only when <see cref="Parse"/> returned nothing: was the listing
+    /// there and empty, or could the page not be read at all?
+    /// </summary>
+    /// <remarks>
+    /// The health rule in spec.md Bölüm 11 - HTTP 200, zero notices, content
+    /// hash moved - is the one that catches a redesigned site within hours
+    /// instead of within a month. It cannot tell that apart from a municipality
+    /// that simply has no open tender this week, and Kahramankazan proved the
+    /// difference matters: it served
+    /// <c>&lt;div class="common-list"&gt;&lt;ul&gt;&lt;/ul&gt;&lt;/div&gt;</c>
+    /// for three days and raised a parser-broken alarm every one of them. The
+    /// selectors were correct the whole time.
+    ///
+    /// A default of false keeps this honest for adapters that cannot tell: they
+    /// go on alarming, which is the safe direction. Only an adapter that can
+    /// actually see its container answers true.
+    ///
+    /// Separate from <see cref="Parse"/> rather than folded into its return
+    /// type, because that signature is spec.md Bölüm 6 and is implemented four
+    /// times and called from forty tests. A question asked only in the
+    /// zero-notice case does not need to change what every caller receives.
+    /// </remarks>
+    bool ListWasEmpty(string body, Source source) => false;
 }

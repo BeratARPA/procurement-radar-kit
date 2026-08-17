@@ -109,6 +109,7 @@ public sealed class RawFetchRepository : IRawFetchRepository
         long rawFetchId,
         string parserVersion,
         int noticeCount,
+        bool listWasEmpty,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parserVersion);
@@ -121,7 +122,13 @@ public sealed class RawFetchRepository : IRawFetchRepository
         await connection.ExecuteAsync(
             new CommandDefinition(
                 RawFetchSql.MarkProcessed,
-                new { RawFetchId = rawFetchId, ParserVersion = parserVersion, NoticeCount = noticeCount },
+                new
+                {
+                    RawFetchId = rawFetchId,
+                    ParserVersion = parserVersion,
+                    NoticeCount = noticeCount,
+                    ListWasEmpty = listWasEmpty
+                },
                 cancellationToken: cancellationToken))
             .ConfigureAwait(false);
     }

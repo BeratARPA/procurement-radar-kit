@@ -1,0 +1,16 @@
+{
+  "_comment": "Aynı kaynağın bir saat sonraki gövdesi (raw_fetch 15640).",
+  "_shape": "Kap yerinde, içi boş: `div.common-list ul` var, `li` yok. Kurumun o hafta açık ihalesi yok. spec Bölüm 11'in 'parser bozuk' kuralı bunu kırık bir parser'dan ayıramıyordu ve 16-18 Ağustos'ta her gün alarm çaldı; ayrım artık `ListWasEmpty` ile yapılıyor (012).",
+  "adapter_config": {
+    "base_url": "https://kahramankazan.bel.tr",
+    "row_selector": "div.common-list ul li",
+    "title_selector": "h3.title",
+    "link_selector": "a.common-list__wrapper",
+    "date_selector": null,
+    "amount_selector": null,
+    "document_selector": null
+  },
+  "captured_bytes": 107161,
+  "captured_sha256": "1d970c0a7fb7e23cf86520ec6fa45042b51cd379a839c6c46a07b2759608acd2",
+  "expected_notice_count": 0
+}

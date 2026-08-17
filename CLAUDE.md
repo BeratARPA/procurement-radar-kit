@@ -99,6 +99,8 @@ test sees is not what the worker gets.** Not one of them was a logic error.
 | the repository working copy | `publish/config` | settings were seeded from a stale copy |
 | the working copy on this disk | what a clone actually contains | `.gitignore`'s `data/` matched `ui/lib/src/data/`; four files the interface cannot start without were never committed, and `git add -A` never said a word |
 | an exception during layout | content quietly cut off at the window edge | a Row inside a horizontal scroll view never overflows, so three of the five notice filters sat off screen with nothing saying they existed |
+| a green test suite and a passing preflight | a scheduled task whose restart policy Windows never applies | the worker died at 06:06 and was still dead 24 hours later. `RestartCount 999` was set the whole time; it only covers a task that *fails to start*. The fix read back correctly from `Get-ScheduledTask` and also did nothing, until the worker was killed on purpose to watch it come back |
+| the announcement path, which masks | the document path, which did not | 188 of 270 stored texts carried an email address. spec Bölüm 12 forbids it, one of the two writers obeyed, and nothing compared them |
 | a stub adapter standing in for the whole registry | a registry the command builds by hand, with one adapter in it | `reparse` skipped every EKAP and json_list row for a year. The archive exists so a fixed parser can reprocess it; the parser the spec calls most fragile was the one that rule could not reach |
 | the schema the client was generated from | the schema the api now serves | `ActiveChangeRequest.reason` was added and the client was not regenerated; the field is optional, so no request failed - the api read the absent reason as `manual` and every source switched off from the interface opted out of quarantine for two days |
 
@@ -122,6 +124,11 @@ So, before saying a change works:
    is missing, but only if the api is up when it runs.
 
 `dotnet test` passing is necessary and has never once been sufficient.
+
+6. **Anything that changes a scheduled task, a service or a restart policy is
+   proved by killing the thing.** Reading the setting back only proves it was
+   stored. Both attempts at the watchdog read back correctly; one of them
+   worked.
 
 ## Definition of done
 

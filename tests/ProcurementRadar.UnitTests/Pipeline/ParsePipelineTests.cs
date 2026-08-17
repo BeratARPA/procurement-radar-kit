@@ -155,6 +155,98 @@ public sealed class ParsePipelineTests : IDisposable
     }
 
     [Fact]
+    public async Task A_deadline_read_later_reaches_a_notice_the_state_has_numbered()
+    {
+        // Only where the identity does not move. An IKN *is* the external key,
+        // so the same tender read again - this time with a deadline on it -
+        // lands on the same row and the empty field fills.
+        var notice = new RawNotice(
+            "Yazılım Bakım Hizmeti Alımı",
+            "https://example.gov.tr/ilan/1",
+            Ikn: "2026/1340114");
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>1</html>"));
+        _adapter.Returns(notice);
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        Assert.Null(Assert.Single(_notices.Notices).BidDeadlineAt);
+
+        var deadline = new DateTimeOffset(2026, 8, 13, 11, 0, 0, TimeSpan.Zero);
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>2</html>"));
+        _adapter.Returns(notice with { BidDeadlineAt = deadline, BidDeadlineTimeAssumed = true });
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        var stored = Assert.Single(_notices.Notices);
+        Assert.Equal(deadline, stored.BidDeadlineAt);
+
+        // The flag travels with the deadline it describes, or a guessed hour
+        // would be presented as a read one.
+        Assert.True(stored.BidDeadlineTimeAssumed);
+    }
+
+    [Fact]
+    public async Task Without_an_IKN_a_new_deadline_makes_a_new_notice_rather_than_filling_one()
+    {
+        // Not a bug being tested, a limit being written down.
+        //
+        // Where there is no IKN the key is built from authority, title and the
+        // deadline's own date (spec Bölüm 8), so a notice first stored with no
+        // deadline and later read with one is not recognisable as the same
+        // notice. It is stored again.
+        //
+        // This is why the thirty-two dateless notices whose sources have since
+        // been given a date_selector cannot simply be reparsed into shape: the
+        // run would add a second, dated copy of each and leave the first behind.
+        // ODTÜ's twelve are exactly that case. Filling them needs a decision
+        // about identity, not another pass over the archive.
+        var notice = new RawNotice("Yazılım Bakım Hizmeti Alımı", "https://example.gov.tr/ilan/1");
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>1</html>"));
+        _adapter.Returns(notice);
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>2</html>"));
+        _adapter.Returns(notice with
+        {
+            BidDeadlineAt = new DateTimeOffset(2026, 8, 13, 11, 0, 0, TimeSpan.Zero)
+        });
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        Assert.Equal(2, _notices.Notices.Count);
+    }
+
+    [Fact]
+    public async Task A_deadline_already_read_is_not_replaced()
+    {
+        // The same tender announced twice, once with the publication date where
+        // the deadline belongs. D-20 measured what writing the wrong one costs:
+        // the notice drops out of the open list and Telegram calls it expired.
+        var real = new DateTimeOffset(2026, 8, 13, 11, 0, 0, TimeSpan.Zero);
+        var notice = new RawNotice(
+            "Yazılım Bakım Hizmeti Alımı",
+            "https://example.gov.tr/ilan/1",
+            BidDeadlineAt: real,
+            Ikn: "2026/1340114");
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>1</html>"));
+        _adapter.Returns(notice);
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        await ArchiveAsync(Encoding.UTF8.GetBytes("<html>2</html>"));
+        _adapter.Returns(notice with
+        {
+            BidDeadlineAt = new DateTimeOffset(2026, 8, 1, 6, 0, 0, TimeSpan.Zero),
+            BidDeadlineTimeAssumed = true
+        });
+        await Pipeline().RunAsync(null, 10, CancellationToken.None);
+
+        var stored = Assert.Single(_notices.Notices);
+        Assert.Equal(real, stored.BidDeadlineAt);
+        Assert.False(stored.BidDeadlineTimeAssumed);
+    }
+
+    [Fact]
     public async Task A_filled_field_is_not_overwritten_by_a_later_reading()
     {
         // Fill-only, not last-writer-wins. Spec Bölüm 8 keeps the first record

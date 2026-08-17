@@ -103,18 +103,25 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
         EkapSearchRequest request,
         CancellationToken cancellationToken)
     {
-        var first = await RunSearchAsync(request, cancellationToken).ConfigureAwait(false);
+        var first = await RunSearchAsync(request, isFinalAttempt: false, cancellationToken)
+            .ConfigureAwait(false);
 
         if (first.Outcome == FetchOutcome.Fetched)
         {
             return first;
         }
 
-        _logger.LogWarning(
+        // Debug, not warning, and the two lines below it are the reason. A first
+        // attempt that times out and a second that succeeds is an ordinary EKAP
+        // search - it happened about 140 times a day - and between them they
+        // were writing one Error and one Warning for something that worked.
+        // D-07 counts both in the weekly report, so the report was mostly this.
+        _logger.LogDebug(
             "First EKAP attempt for '{SearchText}' did not produce a result; trying once more",
             request.SearchText);
 
-        return await RunSearchAsync(request, cancellationToken).ConfigureAwait(false);
+        return await RunSearchAsync(request, isFinalAttempt: true, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>The search response for this request, whenever it arrives.</summary>
@@ -141,19 +148,40 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
             return;
         }
 
-        try
+        // Tried twice, because measuring it said to. Over three days the click
+        // landed 561 times and missed 31 - five per cent - and the wording
+        // blamed a rename for what is nearly always a panel that had not
+        // finished drawing. A second attempt costs one control timeout on the
+        // one search in twenty that needs it.
+        for (var attempt = 1; attempt <= 2; attempt++)
         {
-            await page.GetByText(label, new PageGetByTextOptions { Exact = true }).First
-                .ClickAsync(new LocatorClickOptions { Timeout = (float)_browserOptions.ControlTimeout.TotalMilliseconds })
-                .ConfigureAwait(false);
+            try
+            {
+                await page.GetByText(label, new PageGetByTextOptions { Exact = true }).First
+                    .ClickAsync(new LocatorClickOptions { Timeout = (float)_browserOptions.ControlTimeout.TotalMilliseconds })
+                    .ConfigureAwait(false);
 
-            _logger.LogInformation("Switched on the EKAP filter '{Filter}'", label);
-        }
-        catch (Exception exception) when (exception is TimeoutException or PlaywrightException)
-        {
-            _logger.LogWarning(
-                "No EKAP filter labelled '{Filter}'; searching without it. Their panel may have been renamed.",
-                label);
+                _logger.LogInformation("Switched on the EKAP filter '{Filter}'", label);
+                return;
+            }
+            catch (Exception exception) when (exception is TimeoutException or PlaywrightException)
+            {
+                if (attempt == 1)
+                {
+                    _logger.LogDebug("EKAP filter '{Filter}' was not ready; trying once more", label);
+                    continue;
+                }
+
+                // Still a warning at the end of it, and deliberately so: the
+                // search then covers everything rather than what is open, which
+                // changes what comes back. It is not a failure - a wide search
+                // beats no search, and the day EKAP renames this label is not
+                // the day this project goes quiet.
+                _logger.LogWarning(
+                    "EKAP filter '{Filter}' did not appear twice; searching without it. "
+                        + "If this stops being occasional, their panel has been renamed.",
+                    label);
+            }
         }
     }
 
@@ -220,8 +248,13 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
         }
         catch (Exception exception) when (exception is TimeoutException or PlaywrightException)
         {
-            _logger.LogWarning(
-                "Could not ask EKAP for {PageSize} rows a page; keeping the first {Default} it gave",
+            // Debug: this is EKAP's answer, not a fault of ours. Their grid
+            // serves ten rows and refuses to be asked for more, which D-13
+            // already measured and wrote down as a coverage limit. Logging a
+            // permanent condition 150 times a day at warning level buries the
+            // faults that are worth reading.
+            _logger.LogDebug(
+                "EKAP would not give {PageSize} rows a page; keeping the first {Default}",
                 size,
                 DefaultPageSize);
 
@@ -229,8 +262,15 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
         }
     }
 
+    /// <param name="isFinalAttempt">
+    /// Whether a failure here is the answer or just the first try. Only the
+    /// final one is an error: the retry above succeeds most of the time, and an
+    /// error logged for a search that then worked is an error nobody can read
+    /// the real ones through.
+    /// </param>
     private async Task<FetchResult> RunSearchAsync(
         EkapSearchRequest request,
+        bool isFinalAttempt,
         CancellationToken cancellationToken)
     {
         IBrowserContext? context = null;
@@ -354,7 +394,8 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
             // Either the page never finished booting or the search never
             // answered. Both are ordinary failures for T-15 to count, not a
             // reason to bring the run down.
-            _logger.LogError(
+            _logger.Log(
+                isFinalAttempt ? LogLevel.Error : LogLevel.Debug,
                 exception,
                 "EKAP search for '{SearchText}' timed out at {Url}",
                 request.SearchText,
@@ -364,7 +405,8 @@ public sealed class PlaywrightEkapSearchClient : IEkapSearchClient, IAsyncDispos
         }
         catch (PlaywrightException exception)
         {
-            _logger.LogError(
+            _logger.Log(
+                isFinalAttempt ? LogLevel.Error : LogLevel.Debug,
                 exception,
                 "EKAP search for '{SearchText}' failed in the browser",
                 request.SearchText);

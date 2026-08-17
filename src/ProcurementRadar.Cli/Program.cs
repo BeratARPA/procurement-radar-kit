@@ -45,6 +45,7 @@ try
         "seed" => await SeedCommand.RunAsync(args[1..], shutdown.Token),
         "reparse" => await ReparseCommand.RunAsync(args[1..], shutdown.Token),
         "rescore" => await RescoreCommand.RunAsync(args[1..], shutdown.Token),
+        "remask" => await RemaskCommand.RunAsync(args[1..], shutdown.Token),
         "backup" => await BackupCommand.RunAsync(args[1..], shutdown.Token),
         "check-source" => await CheckSourceCommand.RunAsync(args[1..], shutdown.Token),
         "telegram-check" => await TelegramCheckCommand.RunAsync(args[1..], shutdown.Token),

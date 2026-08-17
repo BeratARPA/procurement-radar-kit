@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using ProcurementRadar.Domain.Entities;
 using ProcurementRadar.Domain.Fetching;
+using ProcurementRadar.Domain.Normalization;
 using ProcurementRadar.Domain.Repositories;
 
 namespace ProcurementRadar.Collector;
@@ -35,6 +36,7 @@ public sealed class DocumentDownloader
     private readonly INoticeDocumentRepository _documents;
     private readonly StoragePathBuilder _paths;
     private readonly DocumentTextExtractor _extractor;
+    private readonly ProcurementRadar.Domain.Settings.ICurrent<PersonalDataMasker> _masker;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<DocumentDownloader> _logger;
 
@@ -43,6 +45,7 @@ public sealed class DocumentDownloader
         INoticeDocumentRepository documents,
         StoragePathBuilder paths,
         DocumentTextExtractor extractor,
+        ProcurementRadar.Domain.Settings.ICurrent<PersonalDataMasker> masker,
         TimeProvider timeProvider,
         ILogger<DocumentDownloader> logger)
     {
@@ -50,6 +53,7 @@ public sealed class DocumentDownloader
         _documents = documents;
         _paths = paths;
         _extractor = extractor;
+        _masker = masker;
         _timeProvider = timeProvider;
         _logger = logger;
     }
@@ -205,7 +209,21 @@ public sealed class DocumentDownloader
                 SizeBytes = result.Body.LongLength,
                 StoragePath = relativePath,
                 DownloadedAt = _timeProvider.GetUtcNow(),
-                ExtractedText = extracted.Text
+                // Masked before it is stored, not after.
+                //
+                // This was missing outright. spec.md Bölüm 12 and CLAUDE.md both
+                // say personal data must never reach the database, and the
+                // announcement path had a masker while this one - the one that
+                // reads whole şartname pdfs - wrote the extracted text through
+                // untouched. Measured before the fix: of 270 stored texts, 188
+                // carried an email address and 17 carried something shaped like
+                // a phone number.
+                //
+                // The bytes on disk are left exactly as downloaded. They are the
+                // archive, and D-11's rule is that the archive holds what
+                // arrived; what is masked is the copy that goes into a column
+                // and gets read by a screen.
+                ExtractedText = _masker.Value.MaskText(extracted.Text)
             },
             cancellationToken).ConfigureAwait(false);
 

@@ -22,8 +22,8 @@ public interface INoticeRepository
     Task<NoticeUpsertResult> UpsertAsync(ProcurementNotice notice, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Writes the procurement type and procedure code onto a notice that has
-    /// neither, and leaves any value already there untouched.
+    /// Writes the procurement type, procedure code and bid deadline onto a
+    /// notice that is missing them, and leaves any value already there alone.
     /// </summary>
     /// <remarks>
     /// The one way a stored notice changes after its first insert, and it is
@@ -34,10 +34,12 @@ public interface INoticeRepository
     /// whole reason the archive is kept.
     /// </remarks>
     /// <returns>True when a row was actually filled.</returns>
-    Task<bool> FillProcedureAsync(
+    Task<bool> FillMissingAsync(
         long noticeId,
         ProcurementType? procurementType,
         string? procedureCode,
+        DateTimeOffset? bidDeadlineAt,
+        bool bidDeadlineTimeAssumed,
         CancellationToken cancellationToken);
 
     /// <summary>Notices in a given state, nearest deadline first.</summary>

@@ -37,6 +37,22 @@ public sealed class TurkishDateParser : ITurkishDateParser
 
     private static readonly Regex CollapseWhitespace = new(@"\s+", RegexOptions.CultureInvariant);
 
+    /// <summary>
+    /// Whether the text has anything date-shaped in it at all.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately looser than any pattern in the config: two numbers with a
+    /// separator between them, or four digits that could be a year beside a
+    /// month name. Its only job is to separate "this was meant to be a date and
+    /// I could not read it" - which is worth a warning and a weekly look - from
+    /// "there is no date here", which is what most rows of some listings are.
+    /// Month names are not checked because the config owns them; a bare year is
+    /// enough to make the text worth reporting.
+    /// </remarks>
+    private static readonly Regex LooksLikeADate = new(
+        @"\d{1,4}\s*[./-]\s*\d{1,4}|(19|20)\d{2}",
+        RegexOptions.CultureInvariant);
+
     private readonly ProcurementRadar.Domain.Settings.ICurrent<TurkishDatePatterns> _patterns;
     private readonly ILogger<TurkishDateParser> _logger;
 
@@ -85,7 +101,24 @@ public sealed class TurkishDateParser : ITurkishDateParser
             return result;
         }
 
-        _logger.LogWarning("Could not read a date out of {Text}", text);
+        // Two different things used to share this line, and only one of them is
+        // worth a warning.
+        //
+        // "12.03.2026 tarihine kadar" that no pattern matches is a format we
+        // should learn - spec.md Bölüm 7 asks for those to be reviewed weekly.
+        // A tender title with no date in it is not a failed parse at all: some
+        // sources put the deadline inside the link text and most of their rows
+        // simply do not carry one, so the same cell is read every time and the
+        // warning fires for the ordinary case. That was 211 of them in three
+        // days, against a handful of real ones.
+        if (LooksLikeADate.IsMatch(normalized))
+        {
+            _logger.LogWarning("Could not read a date out of {Text}", text);
+        }
+        else
+        {
+            _logger.LogDebug("No date in {Text}", text);
+        }
 
         return TurkishDateParseResult.Unreadable;
     }

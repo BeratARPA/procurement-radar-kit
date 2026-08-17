@@ -178,8 +178,17 @@ public sealed class ParsePipeline
             }
         }
 
+        // Asked only when nothing came back, and only the adapter can answer:
+        // an intact page with no rows on it is a quiet week, not a break (012).
+        var listWasEmpty = notices.Count == 0 && adapter.ListWasEmpty(text, source);
+
         await _rawFetches
-            .MarkProcessedAsync(rawFetch.Id, $"{adapter.Key}@{ParserVersion}", notices.Count, cancellationToken)
+            .MarkProcessedAsync(
+                rawFetch.Id,
+                $"{adapter.Key}@{ParserVersion}",
+                notices.Count,
+                listWasEmpty,
+                cancellationToken)
             .ConfigureAwait(false);
 
         if (created > 0)
@@ -243,10 +252,12 @@ public sealed class ParsePipeline
             // So this fills holes and overwrites nothing. Running it twice
             // changes nothing the second time.
             await _notices
-                .FillProcedureAsync(
+                .FillMissingAsync(
                     result.NoticeId,
                     masked.ProcurementType,
                     masked.ProcedureCode,
+                    masked.BidDeadlineAt,
+                    masked.BidDeadlineTimeAssumed,
                     cancellationToken)
                 .ConfigureAwait(false);
 

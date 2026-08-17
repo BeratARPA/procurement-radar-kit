@@ -73,6 +73,44 @@ public sealed class PersonalDataMaskerTests
     }
 
     [Fact]
+    public void The_number_of_the_next_item_survives_the_mask()
+    {
+        // A tender announcement is a numbered list flattened onto one line, and
+        // the mask ran to the end of the sentence - which ended at the full stop
+        // *inside* the next item's number. The stored text read
+        // "Telefon: ***.4. İhale dokümanının", so item 1.4 lost the number it is
+        // found by, in 236 of the 270 documents held. Found by reading a fixture
+        // while making the announcement readable on screen (D-26), not by
+        // reasoning about the pattern.
+        var masked = Masker.MaskText(
+            "1.3. Telefon: 0312 415 30 00 1.4. İhale dokümanının görülebileceği sayfa");
+
+        Assert.DoesNotContain("0312", masked, StringComparison.Ordinal);
+        Assert.Contains("1.4. İhale dokümanının", masked!, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_deeper_item_number_survives_too()
+    {
+        var masked = Masker.MaskText("4.1.2. Teklif vermeye yetkili: Ahmet Yılmaz 4.1.2.1. Tüzel kişilerde");
+
+        Assert.DoesNotContain("Ahmet", masked, StringComparison.Ordinal);
+        Assert.Contains("4.1.2.1. Tüzel", masked!, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_plain_decimal_does_not_cut_the_mask_short()
+    {
+        // The guard needs a trailing dot, so " 2.5 milyon" is not an item number
+        // and does not end the value early. Ending it early is the direction
+        // that leaves a name behind, which is why the guard is the narrow one.
+        var masked = Masker.MaskText("İrtibat: Ahmet Yılmaz 2.5 yıllık sözleşme");
+
+        Assert.DoesNotContain("Ahmet", masked, StringComparison.Ordinal);
+        Assert.DoesNotContain("Yılmaz", masked, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_word_that_merely_ends_in_a_label_is_left_alone()
     {
         // "otel" ends in "tel"; without a word boundary the rest of the sentence
