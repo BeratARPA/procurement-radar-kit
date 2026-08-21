@@ -1,9 +1,15 @@
 /// Every word the interface shows, in one file.
 ///
-/// Turkish, for the same reason the Telegram messages are Turkish: the reader is
-/// the team (spec Bolum 1). The identifiers stay English like everything else in
-/// the codebase, so this file reads as a mapping and not as a second language
+/// Turkish, for the same reason the Telegram messages are Turkish: the reader
+/// reads Turkish. The identifiers stay English like everything else in the
+/// codebase, so this file reads as a mapping and not as a second language
 /// leaking into the code.
+///
+/// Nothing here may name an internal decision record, ticket or source file.
+/// They were in seven of these sentences until 21 August - "(D-14)",
+/// "spec Bölüm 5", "tr-date-patterns.json" - and they read to anybody outside
+/// this repository as leftover scaffolding. The reasoning is worth keeping;
+/// the reference number belongs in the comment above the string, not in it.
 ///
 /// One place rather than scattered literals, for the same reason
 /// `config/messages.json` is one place - a wording is changed by opening one
@@ -11,7 +17,7 @@
 library;
 
 abstract final class Strings {
-  static const String appTitle = 'Procurement Radar';
+  static const String appTitle = 'İhale Radar';
 
   // --- navigation ---
   static const String notices = 'İlanlar';
@@ -217,9 +223,9 @@ abstract final class Strings {
   // --- filter ---
   static const String threshold = 'Bildirim eşiği';
   static const String thresholdHelp =
-      'Bu puanın altındakiler veritabanına yazılır ama bildirim üretmez. '
-      'En ağır tek terim 40, çoğu 30 — eşik 60 olsaydı bir ilanın duyurulması '
-      'için iki ayrı terim tutması gerekirdi (D-14).';
+      'Bu puanın altındakiler kaydedilir ama bildirim üretmez. '
+      'En ağır tek terim 40 puan, çoğu 30 — yani eşiği 60 yaparsanız bir '
+      'ilanın duyurulması için iki ayrı terimin birden tutması gerekir.';
   static const String includeTerms = 'Aranan terimler';
   static const String excludeTerms = 'Elenen terimler';
   static const String excludeHelp =
@@ -292,7 +298,7 @@ abstract final class Strings {
   static const String noAwardsWhy =
       'Sonuç ilanı, teklifler açıldıktan sonra değil, sözleşme imzalandıktan '
       'sonra yayımlanıyor. Bu yüzden yalnızca son teklif tarihinin üzerinden '
-      'iki hafta geçmiş ve gerçek bir İKN taşıyan ihaleler soruluyor (D-15). '
+      'iki hafta geçmiş ve gerçek bir İKN taşıyan ihaleler soruluyor. '
       'Doğrudan teminlerin sonuç ilanı olmuyor, onlar bu listeye hiç girmiyor.';
 
   static String awaitingResult(int count) => count == 0
@@ -339,8 +345,8 @@ abstract final class Strings {
       'Hiç taranmamış bir kaynak için. Tarayıcıda sayfayı açıp kaynağını '
       'kopyalayın — buradan ağa çıkılmıyor.';
   static const String newSourceIsOff =
-      'Yeni kaynak kapalı olarak eklenir. spec Bölüm 5 üç gün gözlem sonrası '
-      'açmayı söylüyor; selector\'ları denemeden açmak o adımı atlamak olur.';
+      'Yeni kaynak kapalı olarak eklenir. Önerilen yol, üç gün izleyip öyle '
+      'açmak; selector\'ları denemeden açmak o adımı atlamak olur.';
   static const String lastNewNotice = 'Son yeni ilan';
   static const String failures = 'Üst üste hata';
 
@@ -400,10 +406,9 @@ abstract final class Strings {
       'Hiçbir satır okunamadı. Ya selector\'lar bu sayfaya uymuyor, ya da '
           'sayfada şu an gerçekten ilan yok. Açmadan önce sayfaya bakın.',
     'no_deadline_read' =>
-      'Tek bir son teklif tarihi okunamadı. Bu, projenin en kritik alanı '
-          '(spec Bölüm 7). date_selector\'ı markup\'a, biçimi de '
-          'tr-date-patterns.json\'a karşı kontrol edin — ya da bu liste '
-          'sayfasında gerçekten tarih yoktur.',
+      'Tek bir son teklif tarihi okunamadı — sistemin en kritik alanı bu. '
+          'Tarih alanının selector\'ını sayfanın yapısına karşı kontrol edin '
+          '— ya da bu liste sayfasında gerçekten tarih yoktur.',
     'few_deadlines_read' => 'Satırların yarısından azında tarih okundu.',
     _ => code,
   };
@@ -426,8 +431,7 @@ abstract final class Strings {
   static const String notOnThisScreenHelp =
       'Telegram anahtarı .env dosyasında ve bilerek burada değil — bir parolayı '
       'ekrana koymak onu tarayıcının deposuna koymak demek. Tarama aralıkları '
-      've süpürme henüz ayar değil, kodda sabit (T-17 bir schedule anahtarı '
-      'planlamıştı, açılmadı).';
+      've süpürme ise henüz ayarlanabilir değil, kodda sabit duruyor.';
 
   // --- failures ---
   static const String unauthorized =

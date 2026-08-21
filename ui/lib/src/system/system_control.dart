@@ -78,7 +78,7 @@ SystemControl createSystemControl() => platform.createSystemControl();
 const List<CliCommand> cliCommands = <CliCommand>[
   CliCommand(
     name: 'preflight',
-    description: 'Her okuma yolunu gerçek veritabanına karşı dener (D-17).',
+    description: 'Her okuma yolunu gerçek veritabanına karşı dener.',
   ),
   CliCommand(
     name: 'telegram-check',
@@ -89,12 +89,12 @@ const List<CliCommand> cliCommands = <CliCommand>[
   CliCommand(
     name: 'backup',
     description:
-        'Veritabanı dökümünü ve dosya arşivini ayarlardaki yere kopyalar (D-24). '
+        'Veritabanı dökümünü ve dosya arşivini ayarlardaki yere kopyalar. '
         'Gece 03:00\'te kendiliğinden de çalışır.',
   ),
   CliCommand(
     name: 'seed',
-    description: 'config/sources.seed.json dosyasını source tablosuna yazar.',
+    description: 'Kaynak listesini dosyadan veritabanına yazar.',
     isSafe: false,
   ),
 ];

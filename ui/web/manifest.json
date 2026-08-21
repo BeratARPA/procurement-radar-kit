@@ -1,11 +1,11 @@
 {
-    "name": "procurement_radar",
-    "short_name": "procurement_radar",
+    "name": "İhale Radar",
+    "short_name": "İhale Radar",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Procurement Radar arayuzu",
+    "description": "Kamu ihale ve doğrudan temin ilanlarını yayınlandıkları anda yakalar.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
