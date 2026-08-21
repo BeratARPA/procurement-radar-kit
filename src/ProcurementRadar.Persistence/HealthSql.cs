@@ -30,8 +30,24 @@ internal static class HealthSql
           AND r.list_was_empty = false
           AND r.http_status = 200
           AND r.fetched_at >= @Since
+          -- Only the empties that come after the last time this source read
+          -- something. A page that parsed 13 notices ninety-six times in a day
+          -- and 0 once is not a broken parser, and source 25 raised the alarm
+          -- for exactly that on 21 August. What a redesign looks like is a run
+          -- of empties that reaches the present and never stops.
+          AND r.fetched_at > coalesce(
+                (SELECT max(ok.fetched_at)
+                 FROM raw_fetch ok
+                 WHERE ok.source_id = s.id
+                   AND ok.is_processed = true
+                   AND ok.notice_count > 0),
+                '-infinity'::timestamptz)
           AND EXISTS (SELECT 1 FROM procurement_notice n WHERE n.source_id = s.id)
         GROUP BY s.id, s.authority_name
+        -- Three in a row, which at a fifteen-minute poll is about three quarters
+        -- of an hour. Still "within hours" the way spec section 11 wants, and no
+        -- longer one blip away from crying wolf.
+        HAVING count(*) >= 3
         ORDER BY count(*) DESC, s.id ASC
         """;
 

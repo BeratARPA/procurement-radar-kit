@@ -1210,6 +1210,22 @@ Düzeltmek arşivi bir kez daha işlemekle değil, kimlik hakkında bir kararla 
 başarı, 31 başarısızlık çıktı — %5. Panel bazen zamanında çizilmiyor. Bir kez
 yeniden deneniyor, mesaj da artık doğru şeyi söylüyor.
 
+**Güncelleme — 21 Ağustos 2026: kural bir kez daha daraltıldı.** Boş liste
+ayrımı (madde 2) `list_was_empty` damgası koyabilen adapter'lar için çalıştı,
+ama tek adımlı satır selector'ı olan kaynaklarda kap yok, dolayısıyla damga da
+yok. Çamlıdere o gün **96 kez 13 ilan okudu ve bir kez 0 döndü**; kural 24
+saatlik pencerede tek bir boş ayrıştırma görünce çaldığı için alarm verdi.
+
+Ölçüt değişti: sayılan şey artık **son başarılı okumadan sonraki** boş
+ayrıştırmalar ve en az **üçü** gerekiyor. Bir sıçrama başarıların arasında
+kalır ve hiç sayılmaz; yeniden tasarlanmış bir site ise şimdiye kadar uzanan
+kesintisiz bir boş dizi üretir. On beş dakikalık tarama aralığında tespit ~45
+dakika, yani spec Bölüm 11'in istediği "saatler içinde" aralığında.
+
+Geçmişe karşı doğrulandı: yeni kural son 24 saatte **hiç** alarm vermiyor (eski
+kural iki tane veriyordu, ikisi de yanlış), ama 16 Ağustos'ta Kahramankazan'ın
+gerçek kırılmasını **63 ardışık boş** ile yakalıyor.
+
 **Ölçüldü ve değiştirilmedi:** Gölbaşı'nın `date_selector: span`'ı denenen
 alternatiflerin en iyisi (8/10, diğerleri 6/10). ODTÜ'nün config'i arşive karşı
 10/10 okuyor. Sanatoryum'un `date_selector: a`'sı doğru — tarih bağlantı
