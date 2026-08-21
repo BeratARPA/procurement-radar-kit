@@ -96,8 +96,12 @@ public sealed class RuleScorerTests
     [Fact]
     public void The_description_counts_as_well_as_the_title()
     {
-        var fromTitleAlone = Scorer.Score("Modül Ekleme İşi");
-        var withDescription = Scorer.Score("Modül Ekleme İşi", "Mevcut personel takip sistemine ek modül");
+        // The title has to be one the list genuinely says nothing about, or this
+        // stops testing the description. "Modül Ekleme İşi" was that title until
+        // 21 August, when `modül` was added as a term of its own - so the title
+        // alone started matching and the test failed for the right reason.
+        var fromTitleAlone = Scorer.Score("Hizmet Alımı İşi");
+        var withDescription = Scorer.Score("Hizmet Alımı İşi", "Mevcut personel takip sistemine ek modül");
 
         Assert.Empty(fromTitleAlone.MatchedTerms);
         Assert.NotEmpty(withDescription.MatchedTerms);

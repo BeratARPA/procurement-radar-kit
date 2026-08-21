@@ -49,7 +49,24 @@
     "klima santrali",
     "soğutma grubu",
     "montaj işi",
-    "pc box"
+    "pc box",
+    "trafo",
+    "fider",
+    "otomasyon panosu",
+    "otomasyon malzeme",
+    "otomasyon anahtar",
+    "sulama sistem",
+    "center pivot",
+    "radar",
+    "hedef takip",
+    "telekontrol",
+    "bilişim malzeme",
+    "bilgi teknolojileri malzeme",
+    "scada malzeme",
+    "scada pano",
+    "scada parça",
+    "scada ekran",
+    "scada uyumlu"
   ],
   "include": [
     {
@@ -243,6 +260,90 @@
     {
       "term": "bulut",
       "weight": 10
+    },
+    {
+      "term": "erp",
+      "weight": 35
+    },
+    {
+      "term": "kurumsal kaynak planlama",
+      "weight": 35
+    },
+    {
+      "term": "geliştirme",
+      "weight": 15
+    },
+    {
+      "term": "güncelleme",
+      "weight": 10
+    },
+    {
+      "term": "modül",
+      "weight": 15
+    },
+    {
+      "term": "hbys",
+      "weight": 35
+    },
+    {
+      "term": "sbys",
+      "weight": 35
+    },
+    {
+      "term": "ebys",
+      "weight": 35
+    },
+    {
+      "term": "dhbs",
+      "weight": 30
+    },
+    {
+      "term": "lbys",
+      "weight": 30
+    },
+    {
+      "term": "bilgi yönetim",
+      "weight": 25
+    },
+    {
+      "term": "web servis",
+      "weight": 30
+    },
+    {
+      "term": "veri aktarım",
+      "weight": 20
+    },
+    {
+      "term": "toplu sms",
+      "weight": 25
+    },
+    {
+      "term": "e-devlet",
+      "weight": 25
+    },
+    {
+      "term": "dijitalleştirme",
+      "weight": 25
+    },
+    {
+      "term": "sayısallaştırma",
+      "weight": 25
+    },
+    {
+      "term": "doküman yönetim",
+      "weight": 30
+    },
+    {
+      "term": "belge yönetim",
+      "weight": 30
+    },
+    {
+      "term": "yazılım kiralama",
+      "weight": 35
+    },
+    {
+      "term": "uzaktan eğitim",
+      "weight": 20
     }
   ],
   "_comment": "Data, not code. Turkish because source text is Turkish. Weights are additive; rule_score is the clamped sum, 0-100. | 9 Agustos 2026: 26 include, 20 exclude eklendi. Arsivde olculdu: 39 -> 45 bildirim. Eklenenler, 0 puan almis gercek yazilim islerinden geriye dogru bulundu (CRM bakim-gelistirme, veri madenciligi ile uygulama gelistirme, ogrenme platformu, sanal asistan, veri ambari). Genis terimler (platform, yapay zeka, yonetim sistemi, bulut, raporlama) bilerek dusuk agirlikli: tek baslarina esigi gecmesinler, baska bir terimle birlikte gecsinler. Chiller/klima terimleri exclude edildi cunku yazilim guncelleme 35 iken DSI klima santrali onarimini yakaladi.",
@@ -251,5 +352,6 @@
   "_thresholds_note": "Üç eşikten yalnızca notify_threshold canlı. rule_score_threshold okunuyor ama hiçbir yerde kullanılmıyor, llm_score_threshold ise koda hiç girmiyor; ikisi de T-13'ün (LLM katmanı) kalıntısı ve D-03 gereği o katman v1'de yok. Buradaki değerleri değiştirmek HİÇBİR ŞEYİ değiştirmez — T-13 açılana kadar öyle kalacaklar. Ayarlamak istediğiniz sayı notify_threshold.",
   "notify_threshold": 30,
   "llm_score_threshold": 60,
-  "rule_score_threshold": 30
+  "rule_score_threshold": 30,
+  "_note_21_agustos": "21 Agustos 2026: 21 include + 14 exclude terim eklendi. Sebep olculdu - bildirim 7,1/gun'den 3,4/gun'e inmisti ve arsiv taraninca HBYS/SBYS/EBYS/ERP/CRM isleri 0 veya 25 puanda takili cikti. Yeni exclude'lar 25 bandini dolduran trafo/scada/sulama otomasyonu gurultusunu kesiyor. Onizleme: 81 -> 88 bildirim, 0 kayip. Esik 30'da birakildi: 25'e inmek 13 ilan daha getiriyor ve cogu kamera veya endustriyel otomasyon."
 }
