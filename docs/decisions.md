@@ -1230,3 +1230,63 @@ gerçek kırılmasını **63 ardışık boş** ile yakalıyor.
 alternatiflerin en iyisi (8/10, diğerleri 6/10). ODTÜ'nün config'i arşive karşı
 10/10 okuyor. Sanatoryum'un `date_selector: a`'sı doğru — tarih bağlantı
 metninin içinde parantezde.
+
+---
+
+## D-28 — Sessizlik alarmı iş gününü sayar, takvim gününü değil
+
+**Karar:** "Son 24 saatte hiç yeni ilan yok" alarmı, penceresini **hafta sonunu
+atlayarak** geriye doğru yürütür. Cumartesi ve pazar bütçeden hiç yemez.
+
+**Sorun.** 23 Ağustos 2026 pazar günü 09:12'de alarm çaldı ve sistemde hiçbir
+şey yoktu:
+
+| Gün | Çekilen sayfa | Yeni ilan |
+|---|---|---|
+| 19-21 Ağustos (Çar-Cum) | ~1.500 / gün | 357 · 387 · 398 |
+| 22 Ağustos **Cumartesi** | 1.488 | **1** |
+| 23 Ağustos **Pazar** | 707 | **0** |
+
+Toplama kusursuz çalışıyordu. Kurumlar hafta sonu ilan yayınlamıyor, o kadar.
+
+Alarmın kendi metni **"Hafta içi bu normal değil"** diyordu — yani varsayımı
+cümlede yazılıydı ve kod o varsayımı hiç kontrol etmiyordu. Bunu bir insan
+telefonuna bakıp fark etti; sistem kendi metnine bakıp fark edemezdi.
+
+**Neden "hafta sonu ise alarmı atla" yetmiyor.** Pazartesi 08:00'de düz bir 24
+saatlik pencere neredeyse tamamen pazardır. Alarm o zaman yanlış ötmeyi pazardan
+pazartesi kahvaltısına taşımış olurdu. Pencereyi hafta sonunun **üzerinden
+yürütmek** ise pazartesi sabahını cuma öğleden sonrasıyla karşılaştırır — bir
+insanın yapacağı karşılaştırma da bu.
+
+Ölçülen davranış:
+
+| Ne zaman sorulursa | Pencere nereye iner |
+|---|---|
+| Pazar 09:12 | Cuma 00:00 → cumanın tamamı |
+| Pazartesi 08:00 | Cuma 08:00 → cuma öğleden sonrası + pazartesi sabahı |
+| Perşembe 12:00 | Çarşamba 12:00 (hafta içi, değişen bir şey yok) |
+
+**Resmî tatiller kapsanmıyor ve bu unutkanlık değil.** Tablo her yıl bakım
+ister; bir tatil ise yılda birkaç kez yanlış ötmek demek ve yanlış yön güvenli
+olan yön: alarm "bak" der, bakılır, takvim boş çıkar.
+
+**Mesaj da düzeltildi.** Artık "son {hours} **iş saatinde** ... Hafta sonu
+sayılmıyor" diyor; pencere hafta sonunu atladığı için "son 24 saatte" demek
+yanlış olurdu.
+
+**Testi yazarken sahtenin kendisi kusurluydu.** `CountNoticesSinceAsync`
+kendisine verilen `since`'i yok sayıp sabit bir sayı döndürüyordu — yani mevcut
+testlerin hiçbiri pencereyi sınamıyordu, yalnızca sayıyı. Alarmın hafta sonu
+ötmesinin bir teste yakalanmamasının sebebi tam olarak bu: **sayı her testte
+doğruydu, sorulan soru yanlıştı.** Sahte artık `since`'i kaydediyor ve verilen
+ilan zamanlarını ona göre sayıyor.
+
+**Uygulama:** `HealthMonitor.WorkingWindowStart`, `config/tr-messages.json`,
+3 test.
+
+**Yan bulgu — Nallıhan (kaynak 23) bizde değil.** Aynı gün art arda alarm verdi
+ve sebebi kurumun sunucusu: `www.nallihan.bel.tr` **76 kez HTTP 503, 3 kez 502**
+döndürdü. On hatadan sonra `health_rule` sebebiyle karantinaya alındı, yani
+D-22'nin günlük yoklaması sunucuları düzelince onu kendiliğinden geri açacak.
+Elle yapılacak bir şey yok.

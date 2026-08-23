@@ -295,7 +295,7 @@ public sealed class HealthMonitor
 
     private async Task<int> CheckCollectionAsync(CancellationToken cancellationToken)
     {
-        var since = _timeProvider.GetUtcNow() - _options.CollectionWindow;
+        var since = WorkingWindowStart(_timeProvider.GetUtcNow(), _options.CollectionWindow);
 
         if (await _health.CountNoticesSinceAsync(since, cancellationToken).ConfigureAwait(false) > 0)
         {
@@ -311,6 +311,73 @@ public sealed class HealthMonitor
             }),
             cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// The instant that is <paramref name="window"/> of *working* time before
+    /// now, counted in Istanbul and skipping Saturdays and Sundays entirely.
+    /// </summary>
+    /// <remarks>
+    /// The alarm this feeds says "hafta içi bu normal değil" and the code never
+    /// checked what day it was. On Sunday 23 August it fired at 09:12: the
+    /// system had collected 1,488 pages the day before and 707 that morning,
+    /// and no authority had published a tender since Friday - because no
+    /// authority publishes on a Saturday. Three weekdays either side of it
+    /// produced 357, 387 and 398 notices, so nothing was wrong at all.
+    ///
+    /// Skipping the check on a weekend would not be enough. At Monday 08:00 a
+    /// plain 24-hour window is almost entirely Sunday, so the alarm would move
+    /// from crying wolf on Sunday to crying wolf on Monday morning. Walking the
+    /// window back over the weekend instead means Monday morning is measured
+    /// against Friday afternoon, which is the comparison a person would make.
+    ///
+    /// Public holidays are not handled, and that is deliberate rather than
+    /// forgotten: the table would need maintaining every year, and a holiday
+    /// costs one alarm that is wrong in the safe direction - it says look, and
+    /// looking shows a quiet calendar.
+    /// </remarks>
+    public DateTimeOffset WorkingWindowStart(DateTimeOffset nowUtc, TimeSpan window)
+    {
+        var local = TimeZoneInfo.ConvertTime(nowUtc, Istanbul);
+        var remaining = window;
+
+        var day = local.Date;
+        var endOfDay = local;
+
+        // At most a fortnight of walking. A guard rather than a real bound: a
+        // 24-hour window is spent in three or four days even across a weekend,
+        // and this only matters if the window is given something absurd.
+        for (var step = 0; step < 14 && remaining > TimeSpan.Zero; step++)
+        {
+            var startOfDay = Midnight(day);
+
+            if (IsWorkingDay(day.DayOfWeek))
+            {
+                var available = endOfDay - startOfDay;
+
+                if (available >= remaining)
+                {
+                    return (endOfDay - remaining).ToUniversalTime();
+                }
+
+                remaining -= available;
+            }
+
+            // The day before, taken whole. Midnight of the following day is the
+            // end of it, which is what makes a full day exactly a day rather
+            // than a day less a tick.
+            day = day.AddDays(-1);
+            endOfDay = Midnight(day.AddDays(1));
+        }
+
+        return endOfDay.ToUniversalTime();
+    }
+
+    /// <summary>Local midnight, with the offset in force on that date.</summary>
+    private static DateTimeOffset Midnight(DateTime date)
+        => new(date, Istanbul.GetUtcOffset(date));
+
+    private static bool IsWorkingDay(DayOfWeek day)
+        => day is not (DayOfWeek.Saturday or DayOfWeek.Sunday);
 
     /// <summary>
     /// Sends the weekly figures if it is time and they have not gone out this

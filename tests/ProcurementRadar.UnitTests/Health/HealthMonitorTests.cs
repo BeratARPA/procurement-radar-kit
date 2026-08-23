@@ -153,6 +153,80 @@ public sealed class HealthMonitorTests
     }
 
     [Fact]
+    public async Task A_quiet_weekend_is_not_a_system_alarm()
+    {
+        // 23 August 2026, a Sunday. This fired at 09:12 that morning and the
+        // system was working perfectly: 1,488 pages fetched on the Saturday, 707
+        // by mid-morning on the Sunday, and not one new notice - because Turkish
+        // authorities do not publish tenders at the weekend. The three weekdays
+        // before it produced 357, 387 and 398.
+        //
+        // The alarm's own words are "Hafta içi bu normal değil" and nothing in
+        // the code had ever looked at the day.
+        _time.SetUtcNow(new DateTimeOffset(2026, 8, 23, 6, 12, 0, TimeSpan.Zero));
+
+        // Friday's 398, standing in for the real ones. Nothing on the Saturday
+        // or the Sunday, exactly as it happened.
+        _health.NoticeTimes.Add(new DateTimeOffset(2026, 8, 21, 11, 0, 0, TimeSpan.Zero));
+
+        await Monitor().RunAsync(CancellationToken.None);
+
+        Assert.Empty(_alerts.Messages);
+
+        // Measured against Friday rather than Saturday: the weekend is stepped
+        // over, not merely skipped.
+        var asked = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+            _health.AskedSince!.Value, "Europe/Istanbul");
+
+        Assert.Equal(DayOfWeek.Friday, asked.DayOfWeek);
+        Assert.Equal(21, asked.Day);
+    }
+
+    [Fact]
+    public async Task A_monday_morning_is_measured_against_friday()
+    {
+        // The half that skipping weekends would have got wrong. At 08:00 on a
+        // Monday a plain 24-hour window is almost all Sunday, so an alarm that
+        // only stood down at weekends would simply have moved its false positive
+        // to Monday breakfast.
+        _time.SetUtcNow(new DateTimeOffset(2026, 8, 24, 5, 0, 0, TimeSpan.Zero));
+        _health.NoticesSinceWindow = 0;
+
+        await Monitor().RunAsync(CancellationToken.None);
+
+        var asked = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+            _health.AskedSince!.Value, "Europe/Istanbul");
+
+        Assert.Equal(DayOfWeek.Friday, asked.DayOfWeek);
+
+        // Monday has contributed eight hours, so sixteen come off the Friday.
+        Assert.Equal(8, asked.Hour);
+
+        // And it still says something: nothing published on Friday afternoon or
+        // Monday morning is a real silence.
+        Assert.NotEmpty(_alerts.Messages);
+    }
+
+    [Fact]
+    public async Task A_weekday_silence_is_still_an_alarm()
+    {
+        // Thursday. Nothing about the weekend rule may make the alarm the system
+        // was built around go quiet - a stopped collector is the failure spec
+        // Bölüm 11 opens with.
+        _time.SetUtcNow(new DateTimeOffset(2026, 8, 20, 9, 0, 0, TimeSpan.Zero));
+        _health.NoticesSinceWindow = 0;
+
+        await Monitor().RunAsync(CancellationToken.None);
+
+        Assert.Contains("KRİTİK", Assert.Single(_alerts.Messages), StringComparison.Ordinal);
+
+        var asked = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+            _health.AskedSince!.Value, "Europe/Istanbul");
+
+        Assert.Equal(DayOfWeek.Wednesday, asked.DayOfWeek);
+    }
+
+    [Fact]
     public async Task A_system_that_is_collecting_says_nothing()
     {
         _health.NoticesSinceWindow = 4;
@@ -296,8 +370,33 @@ public sealed class HealthMonitorTests
             => Task.FromResult<IReadOnlyList<SilentSource>>(
                 SilentSources.Where(source => source.LastNewNoticeAt < olderThan).ToList());
 
+        /// <summary>The instant the monitor actually asked about.</summary>
+        /// <remarks>
+        /// Recorded because the window is now the thing under test. Ignoring it
+        /// and answering a fixed number is what let the weekend alarm ship: the
+        /// count was right in every test and the question was wrong.
+        /// </remarks>
+        public DateTimeOffset? AskedSince { get; private set; }
+
+        /// <summary>
+        /// When notices were actually first seen, for the tests that care which
+        /// window is being asked about.
+        /// </summary>
+        /// <remarks>
+        /// Left empty, <see cref="NoticesSinceWindow"/> answers whatever it was
+        /// set to and the window is ignored - which is what the older tests
+        /// want, because they are about the alarm and not about the clock.
+        /// </remarks>
+        public List<DateTimeOffset> NoticeTimes { get; } = [];
+
         public Task<int> CountNoticesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
-            => Task.FromResult(NoticesSinceWindow);
+        {
+            AskedSince = since;
+
+            return Task.FromResult(NoticeTimes.Count == 0
+                ? NoticesSinceWindow
+                : NoticeTimes.Count(at => at >= since));
+        }
 
         public int UnparsedBacklog { get; set; }
 
