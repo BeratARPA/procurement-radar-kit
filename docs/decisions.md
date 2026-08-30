@@ -1290,3 +1290,49 @@ ve sebebi kurumun sunucusu: `www.nallihan.bel.tr` **76 kez HTTP 503, 3 kez 502**
 döndürdü. On hatadan sonra `health_rule` sebebiyle karantinaya alındı, yani
 D-22'nin günlük yoklaması sunucuları düzelince onu kendiliğinden geri açacak.
 Elle yapılacak bir şey yok.
+
+---
+
+## D-29 — İki konsol penceresi masaüstünde durmayacak
+
+**Karar:** Worker, api ve yedek görevleri `deploy/run-hidden.vbs` üzerinden
+başlatılır. Sarmalayıcı programı penceresiz açar, **bekler** ve çıkış kodunu
+Task Scheduler'a geri verir.
+
+**Sorun.** Worker ve api konsol uygulaması ve D-10 gereği oturum içinde
+çalışmak zorundalar — veritabanı Docker Desktop'ın içinde, o da oturum istiyor.
+Oturumda çalışan konsol uygulaması pencere açar, dolayısıyla masaüstünde
+kalıcı olarak iki pencere duruyordu.
+
+Bunlar süs değil: **pencereyi kapatmak o programı öldürüyor.** Yani toplama,
+yanlışlıkla atılan bir tıklama uzaklıktaydı. Watchdog (D-27) beş dakika içinde
+geri getiriyordu, ama beş dakika da kayıp ve pencere yine açılıyordu — yani
+kapatarak kurtulmak da mümkün değildi.
+
+**Denenmeyen iki yol ve sebepleri:**
+
+| Yol | Neden olmaz |
+|---|---|
+| S4U (etkileşimsiz oturum) | Pencereyi gizler ama süreci Docker Desktop'ın olmadığı oturuma atar; worker veritabanını hiç bulamaz. D-10'un argümanı, tersinden. |
+| `OutputType=WinExe` | Gizler, ama kalıcı olarak: exe'yi elle terminalden çalıştırınca da hiçbir şey yazmaz. Sarmalayıcı ikisini de normal konsol uygulaması bırakıyor, o yol açık kalıyor. |
+
+**Beklemesi tesadüf değil, taşıyıcı unsur.** `Run(cmd, 0, True)` komut dönene
+kadar bloke olur, dolayısıyla görev örneği worker yaşadığı sürece ayakta kalır —
+`MultipleInstances = IgnoreNew`'in beş dakikalık tiki bastırmak için ihtiyaç
+duyduğu şey tam olarak bu. Başlat-ve-bırak tipi bir sarmalayıcı (`Start-Process`,
+`-Wait` olmadan) görevi hemen tamamlar ve sonraki tik **ikinci bir worker**
+başlatırdı: tek nezaket kapısını paylaşan iki koleksiyoncu.
+
+**Çıkış kodu da korunuyor.** Kendi başarısını bildiren bir sarmalayıcı, başarısız
+her turu temiz gösterirdi — ve `LastTaskResult`, watchdog'un görev geçmişinde
+bıraktığı tek kanıt.
+
+**Doğrulama ayarı okuyarak değil, öldürerek yapıldı** (CLAUDE.md 6. kural):
+worker öldürüldü, sarmalayıcı da onunla çıktı, görev `Ready`'ye döndü ve bir
+sonraki tikte worker penceresiz olarak geri geldi.
+
+**Kaynağı kardeş proje.** `job-radar-kit` bu sarmalayıcıyı önce yazdı, çünkü
+orada tur on beş dakikada bir çalışıp çıkıyor — pencere günde doksan altı kez
+açılıp kapanıyordu. Buradaki şekil farklı (süreç sürekli çalışıyor, pencere bir
+kez açılıp duruyor) ama çözüm aynı. Aradaki tek fark: orada `//B` bayrağı
+betiğin kendi hata kutusunu bastırıyor, burada da öyle.

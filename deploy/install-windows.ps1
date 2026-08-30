@@ -143,8 +143,37 @@ if (Test-Path $envPath) {
 }
 
 # --- the task -----------------------------------------------------------------
-$action = New-ScheduledTaskAction `
-    -Execute (Join-Path $publish 'ProcurementRadar.Worker.exe') `
+# Everything is launched through run-hidden.vbs rather than directly, and the
+# only reason is the desktop: these are console applications running in the
+# logged-on session (D-10), so each one owned a console window that sat there
+# permanently. Closing one killed that program - a collector one stray click
+# from stopping.
+#
+# The wrapper waits for what it starts and returns its exit code, so the task
+# instance stays alive exactly as long as it did before. That is what
+# MultipleInstances=IgnoreNew needs; a wrapper that returned immediately would
+# let the five-minute tick start a second worker.
+$wrapper = Join-Path $PSScriptRoot 'run-hidden.vbs'
+
+if (-not (Test-Path $wrapper)) {
+    throw "Pencere sarmalayicisi eksik: $wrapper"
+}
+
+$wscript = Join-Path $env:SystemRoot 'System32\wscript.exe'
+
+# //B suppresses the script-host's own dialogs: without it a syntax error in the
+# wrapper would pop a modal box on the desktop and the task would hang on it.
+function New-HiddenAction {
+    param([string] $Command, [string] $Arguments = '', [string] $WorkingDirectory)
+
+    $line = '//B //Nologo "{0}" "{1}"' -f $wrapper, $Command
+    if ($Arguments) { $line = '{0} {1}' -f $line, $Arguments }
+
+    return New-ScheduledTaskAction -Execute $wscript -Argument $line -WorkingDirectory $WorkingDirectory
+}
+
+$action = New-HiddenAction `
+    -Command (Join-Path $publish 'ProcurementRadar.Worker.exe') `
     -WorkingDirectory $publish
 
 # At logon, because that is when Docker Desktop starts. The delay gives the
@@ -223,8 +252,8 @@ Write-Host "Registered '$TaskName' to start at logon."
 # while somebody had a terminal open, which is how /swagger was unreachable the
 # first time it was opened.
 $apiTaskName = "$TaskName" + 'Api'
-$apiAction = New-ScheduledTaskAction `
-    -Execute (Join-Path $publish 'ProcurementRadar.Api.exe') `
+$apiAction = New-HiddenAction `
+    -Command (Join-Path $publish 'ProcurementRadar.Api.exe') `
     -WorkingDirectory $publish
 
 Register-ScheduledTask -TaskName $apiTaskName -Action $apiAction -Trigger $triggers `
@@ -245,9 +274,12 @@ Write-Host "Registered '$apiTaskName' to start at logon (http://localhost:60080/
 # only the worker and the api in publish/), and a backup that needs a build step
 # is a backup that stops working the first time somebody cleans the repository.
 $backupTaskName = "$TaskName" + 'Backup'
-$backupAction = New-ScheduledTaskAction `
-    -Execute 'dotnet' `
-    -Argument "run --project `"$(Join-Path $repo 'src\ProcurementRadar.Cli')`" -c Release -- backup" `
+# The backup blinks a window once a night rather than holding one open, but it
+# goes through the same wrapper: one way of launching things is easier to reason
+# about than two, and 03:00 is exactly when nobody is there to see it fail.
+$backupAction = New-HiddenAction `
+    -Command 'dotnet' `
+    -Arguments "run --project `"$(Join-Path $repo 'src\ProcurementRadar.Cli')`" -c Release -- backup" `
     -WorkingDirectory $repo
 
 $backupTrigger = New-ScheduledTaskTrigger -Daily -At 3am
