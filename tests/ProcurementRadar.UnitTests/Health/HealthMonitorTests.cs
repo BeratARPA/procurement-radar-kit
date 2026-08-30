@@ -155,75 +155,65 @@ public sealed class HealthMonitorTests
     [Fact]
     public async Task A_quiet_weekend_is_not_a_system_alarm()
     {
-        // 23 August 2026, a Sunday. This fired at 09:12 that morning and the
-        // system was working perfectly: 1,488 pages fetched on the Saturday, 707
-        // by mid-morning on the Sunday, and not one new notice - because Turkish
-        // authorities do not publish tenders at the weekend. The three weekdays
-        // before it produced 357, 387 and 398.
+        // 23 August 2026, a Sunday, and this fired at 09:12 with nothing wrong:
+        // 1,488 pages fetched the day before, 707 that morning, and no new
+        // notice since Friday.
         //
-        // The alarm's own words are "Hafta içi bu normal değil" and nothing in
-        // the code had ever looked at the day.
+        // The first fix stepped the window over Saturdays and Sundays, and that
+        // was wrong for a reason only more data showed. Measured across the whole
+        // archive, authorities publish 79 notices on an average Saturday and 22
+        // on a Sunday against 283-425 on a weekday: quieter, not silent. A window
+        // that skips the weekend cannot report a collector that died on Saturday
+        // morning until Monday.
+        //
+        // So the window knows nothing about days and is simply long enough. The
+        // longest silence this system has ever had while working is 39 hours -
+        // this weekend - and 48 clears it.
         _time.SetUtcNow(new DateTimeOffset(2026, 8, 23, 6, 12, 0, TimeSpan.Zero));
 
-        // Friday's 398, standing in for the real ones. Nothing on the Saturday
-        // or the Sunday, exactly as it happened.
+        // Friday's notices, the last before the quiet stretch.
         _health.NoticeTimes.Add(new DateTimeOffset(2026, 8, 21, 11, 0, 0, TimeSpan.Zero));
 
         await Monitor().RunAsync(CancellationToken.None);
 
         Assert.Empty(_alerts.Messages);
-
-        // Measured against Friday rather than Saturday: the weekend is stepped
-        // over, not merely skipped.
-        var asked = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
-            _health.AskedSince!.Value, "Europe/Istanbul");
-
-        Assert.Equal(DayOfWeek.Friday, asked.DayOfWeek);
-        Assert.Equal(21, asked.Day);
     }
 
     [Fact]
-    public async Task A_monday_morning_is_measured_against_friday()
+    public async Task A_weekend_that_collects_nothing_at_all_is_still_heard()
     {
-        // The half that skipping weekends would have got wrong. At 08:00 on a
-        // Monday a plain 24-hour window is almost all Sunday, so an alarm that
-        // only stood down at weekends would simply have moved its false positive
-        // to Monday breakfast.
-        _time.SetUtcNow(new DateTimeOffset(2026, 8, 24, 5, 0, 0, TimeSpan.Zero));
-        _health.NoticesSinceWindow = 0;
+        // The half the business-day window silenced. A collector that stops on
+        // Saturday morning produces exactly this: nothing anywhere for two days,
+        // on days that normally bring 79 and 22. Under the old rule the window
+        // stepped back to Friday, found Friday's notices and said nothing until
+        // Monday.
+        _time.SetUtcNow(new DateTimeOffset(2026, 8, 23, 15, 0, 0, TimeSpan.Zero));
 
-        await Monitor().RunAsync(CancellationToken.None);
-
-        var asked = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
-            _health.AskedSince!.Value, "Europe/Istanbul");
-
-        Assert.Equal(DayOfWeek.Friday, asked.DayOfWeek);
-
-        // Monday has contributed eight hours, so sixteen come off the Friday.
-        Assert.Equal(8, asked.Hour);
-
-        // And it still says something: nothing published on Friday afternoon or
-        // Monday morning is a real silence.
-        Assert.NotEmpty(_alerts.Messages);
-    }
-
-    [Fact]
-    public async Task A_weekday_silence_is_still_an_alarm()
-    {
-        // Thursday. Nothing about the weekend rule may make the alarm the system
-        // was built around go quiet - a stopped collector is the failure spec
-        // Bölüm 11 opens with.
-        _time.SetUtcNow(new DateTimeOffset(2026, 8, 20, 9, 0, 0, TimeSpan.Zero));
-        _health.NoticesSinceWindow = 0;
+        // The last notice arrived on Friday morning, more than 48 hours ago.
+        _health.NoticeTimes.Add(new DateTimeOffset(2026, 8, 21, 6, 0, 0, TimeSpan.Zero));
 
         await Monitor().RunAsync(CancellationToken.None);
 
         Assert.Contains("KRİTİK", Assert.Single(_alerts.Messages), StringComparison.Ordinal);
+    }
 
-        var asked = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
-            _health.AskedSince!.Value, "Europe/Istanbul");
+    [Fact]
+    public async Task The_window_is_the_same_length_whatever_day_it_is()
+    {
+        // No calendar arithmetic left to get wrong. Asked on a Thursday and asked
+        // on a Sunday, the question is the same one.
+        foreach (var day in new[] { 20, 23 })
+        {
+            _alerts.Messages.Clear();
+            _health.NoticeTimes.Clear();
+            _time.SetUtcNow(new DateTimeOffset(2026, 8, day, 9, 0, 0, TimeSpan.Zero));
 
-        Assert.Equal(DayOfWeek.Wednesday, asked.DayOfWeek);
+            await Monitor().RunAsync(CancellationToken.None);
+
+            var asked = _health.AskedSince!.Value;
+
+            Assert.Equal(TimeSpan.FromHours(48), _time.GetUtcNow() - asked);
+        }
     }
 
     [Fact]

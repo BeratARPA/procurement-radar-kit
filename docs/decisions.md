@@ -1285,6 +1285,46 @@ ilan zamanlarını ona göre sayıyor.
 **Uygulama:** `HealthMonitor.WorkingWindowStart`, `config/tr-messages.json`,
 3 test.
 
+**Güncelleme — 30 Ağustos 2026: gün ayrımı tamamen kaldırıldı, pencere 48 saat.**
+Yukarıdaki karar üç günlük veriye dayanıyordu ve fazla ölçüde yanlıştı. Tüm
+arşiv üzerinden gün bazında bakınca hafta sonu **sessiz değil, sadece sakin**:
+
+| Gün | Günlük ortalama yeni ilan |
+|---|---|
+| Pazartesi–Cuma | 283 – 425 |
+| Cumartesi | **79** |
+| Pazar | **22** |
+
+23 Ağustos'ta baktığım hafta sonu (1 ve 0 ilan) olağandışı sessiz bir hafta
+sonuymuş; ondan genelleme yapmışım.
+
+Bu, hafta sonunu atlamayı yalnızca gereksiz değil **zararlı** yapıyor: cumartesi
+sabahı ölen bir koleksiyoncu, pazar günü pencere cumaya baktığı için pazartesiye
+kadar görünmez kalır. Alarmın var olma sebebi tam olarak o kesintiyi görmek.
+
+Doğru ölçüt takvim değil, uzunluk. Sistem **çalışırken** yaşanan en uzun gerçek
+sessizlikler ölçüldü:
+
+```
+39,0 saat  —  22.08 Cumartesi 09:11'den  (sessiz bir hafta sonu)
+22,7 saat  —  08.08 Cumartesi
+21,6 saat  —  05.08 Çarşamba
+```
+
+24 saat bunların altında kalıyor, dolayısıyla sessiz bir hafta sonunda kaçınılmaz
+olarak yanlış ötüyordu. **48 saat** en uzun gerçek sessizliği aşıyor ve hiçbir
+gün varsayımı taşımıyor. Tespit süresi de kötüleşmiyor, iyileşiyor: eski kural
+cumartesi kesintisini pazartesiye kadar söyleyemiyordu, yenisi en geç pazartesi
+sabahı — çoğu zaman pazar — söylüyor.
+
+`WorkingWindowStart` ve yardımcıları silindi. Kardeş projede de aynısı yapıldı
+(`BusinessDayWindow` kaldırıldı, `SilenceWindow = 48 saat`), çünkü aynı varsayım
+oraya kopyalanmıştı ve iş ilanı siteleri hafta sonu hafta içinden az yayınlamıyor.
+
+**Ders, ölçünün kendisinden çok ne kadar ölçüldüğü:** bir hafta sonuna bakıp
+kural yazdım, üç hafta sonu bakınca kural yanlış çıktı.
+
+
 **Yan bulgu — Nallıhan (kaynak 23) bizde değil.** Aynı gün art arda alarm verdi
 ve sebebi kurumun sunucusu: `www.nallihan.bel.tr` **76 kez HTTP 503, 3 kez 502**
 döndürdü. On hatadan sonra `health_rule` sebebiyle karantinaya alındı, yani
