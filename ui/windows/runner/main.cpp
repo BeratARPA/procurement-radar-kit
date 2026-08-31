@@ -27,7 +27,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
-  if (!window.Create(L"Ihale Radar", origin, size)) {
+  // \u0130 rather than the letter itself. This file is ascii with no BOM and
+  // the build does not pass /utf-8, so a literal dotted I would be read in
+  // whatever code page the machine happens to have - it would work here and
+  // not on the next machine. The escape says the same thing to every compiler.
+  // The title is what the taskbar shows, and it was the last place the name
+  // was still spelled without the dot.
+  if (!window.Create(L"\u0130hale Radar", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
