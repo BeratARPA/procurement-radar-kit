@@ -1376,3 +1376,100 @@ orada tur on beş dakikada bir çalışıp çıkıyor — pencere günde doksan 
 açılıp kapanıyordu. Buradaki şekil farklı (süreç sürekli çalışıyor, pencere bir
 kez açılıp duruyor) ama çözüm aynı. Aradaki tek fark: orada `//B` bayrağı
 betiğin kendi hata kutusunu bastırıyor, burada da öyle.
+
+---
+
+## D-30 — Kendi ağımızın düşmesi kaynağın hatası değil
+
+**Karar:** Adı çözülemeyen bir istek, aynı anda başka hostlar da çözülemiyorsa
+**bu makinenin kesintisi** sayılır: `source.consecutive_failures` artmaz ve
+`robots.txt` verdiği hüküm on beş dakika saklanmaz. Tek başına çözülemeyen bir
+host hâlâ o host'un hatasıdır.
+
+**Bulgu — üç haftadır logda duruyordu.** Bir dönemdeki 1769 çekim hatasının
+**1672'si ad çözümleme** hatasıydı ("Bilinen böyle bir ana bilgisayar yok"), ve
+1676'sı **üç veya daha fazla alakasız host'un aynı dakikada** düştüğü anlara
+denk geliyordu. Bir il sağlık müdürlüğü, bir belediye, bir üniversite ve bir
+doğalgaz şirketi aynı saniyede çökmez.
+
+Zamanlaması da bunu söylüyor:
+
+| Saat | DNS hatası |
+|---|---|
+| 00:00 – 05:00 | **0** |
+| 06:00 – 07:00 | 819 |
+| 13:00 – 14:00 | 1452 |
+
+Gece hiç yok. On iki pencere, toplam 244 dakika, en uzunu 98 dakika. Kaynağı bu
+makinenin ağı — D-10 makinenin gün içinde kullanıldığını, uyuduğunu, kapandığını
+zaten yazıyor. Buradan düzeltilecek bir şey yok; **düzeltilecek olan sistemin
+buna verdiği tepki.**
+
+**İki bedel, ikisi de ölçüldü.**
+
+1. **robots.txt kendi kesintimizi host'un hükmü sanıp saklıyordu.** Ulaşılamayan
+   robots için `RobotsRetryDuration` on beş dakika, yoklama aralığı da on beş
+   dakika — yani saniyeler süren bir kopma, kaynağa **bütün bir turunu**
+   kaybettiriyordu. 372 yoklama bu yüzden hiç çekilmedi; **112'sinde o sırada
+   başka hostlar sorunsuz cevap veriyordu.**
+
+2. **Kesinti kaynağın sağlık sayacına yazılıyordu.** `FetchOutcome.Failed`
+   → `consecutive_failures++` → onda kaynak pasife alınıyor (D-22). 98 dakikalık
+   bir kesinti, her kaynak için **art arda ~6 hata** demek. Biraz daha uzunu
+   **90 kaynağın hepsini birden** kapatırdı. Bu teorik değil: eşiğin %60'ına
+   gelinmiş.
+
+**Ayrım neye dayanıyor: eşzamanlılık.** Sorunun cevabını veren şey, teşhisi
+koyarken kullanılan şeyin aynısı — bir insanın logdan okuduğu şey. Aralarına
+başarı girmeden, birden fazla farklı host'un adı çözülemiyorsa bu makine
+kopmuştur; diğerleri cevap verirken tek bir host çözülemiyorsa o host gitmiştir.
+Gerçekten ölen bir alan adı (burada bir kez oldu, Beypazarı) hâlâ tek başına
+düşer, hâlâ sayılır, hâlâ karantinaya gider.
+
+**Bir kesintinin ilk host'u host'un hatası sayılır**, çünkü o anda
+karşılaştırılacak bir şey yok. Bunun bedeli kesinti başına **bir** yanlış hata;
+eskisi kaynak başına, yoklama başına birdi.
+
+**Bağlantı reddi kapsam dışı.** Ad çözüldüyse DNS çalışmış ve karşıda gerçek bir
+adres "hayır" demiş demektir. O, host hakkında bir cevaptır ve sayılmaya devam
+eder. Yalnızca `NameResolutionError` "bu makineden tek bayt çıkmadı" anlamına
+gelir.
+
+**Ulaşılamayan robots artık 30 saniye tutuluyor**, on beş dakika değil. Yalnızca
+aynı çekim hakkında sorulan ikinci soruyu (`IsRefusedByPolicyAsync`)
+cevaplayacak kadar; bir sonraki yoklamadan çok önce ölüyor. On beş dakika,
+**kötü cevap veren bir sunucuya** borçlu olunan geri çekilmedir; çözülmeyen bir
+ad kimseye bir şey borçlu değildir, çünkü kimse rahatsız edilmemiştir.
+
+**Uygulama:** `NameResolutionWatch`, `FetchOutcome.Unreachable`,
+`HttpFetcherOptions.RobotsOutageRetryDuration`, `RawFetchRecorder`'da
+`SkippedByRobots` ile aynı muamele. 7 test.
+
+---
+
+### D-30'un yan bulguları
+
+**1. Tarih uyarısı ilan başlıklarına takılıyordu.** `LooksLikeADate` çıplak bir
+yılı tarih sayıyordu, dolayısıyla *"2026-2027 YILLARI SONUÇ KARŞILIĞI TÜBERKÜLOZ
+LABORATUVARI HİZMET ALIMI"* üç günde **38 kez** uyarı bastı. Bu bir sözleşme
+dönemi, kimsenin okuyamadığı bir tarih değil. D-27'nin kuralı: beklenen durum
+uyarı değildir.
+
+Ölçüt artık **gün-ay çifti** (iki sayıdan en az biri kısa) veya config'in
+bildiği bir **ay adı**. Gerçekten okunamayan tarih hâlâ Warning ve spec Bölüm
+7'nin haftalık gözden geçirmesine düşüyor — testi var, log seviyesini yakalayan
+bir logger ile, çünkü dönen değer iki durumda da `Unreadable` ve **ikisini
+ayıran tek şey log**.
+
+**2. Aynı satırda iki gerçek backspace baytı vardı.** `\b` yazılmak istenmiş,
+dosyaya `0x08` düşmüş. Terminalde görünmüyor, derleyici şikâyet etmiyor, ve
+verbatim string olduğu için regex gerçekten backspace karakteri arıyordu — yani
+o alternatif **hiç eşleşmemişti.** Depoda başka kontrol karakteri yok, tarandı.
+
+**3. `messages` ayarı koddan geri kalmıştı.** D-28 hafta sonu mantığını 30
+Ağustos'ta kaldırdı ve `config/tr-messages.json`'ı güncelledi, ama `setting`
+tablosuna pushlanmadı. Çalışan sistem hâlâ *"son {hours} **iş saatinde** ...
+Hafta sonu sayılmıyor"* diyordu — kod 48 saati düz sayarken. Alarm ötse
+**metniyle çelişecekti.** CLAUDE.md'nin 2. kuralının tarif ettiği durumun
+kendisi. Api üzerinden pushlandı (204), `setting_history`'ye yazıldı, worker
+yeniden başlatılmadan 30 saniye içinde aldı, `publish/config` de eşitlendi.

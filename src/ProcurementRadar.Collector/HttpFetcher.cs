@@ -21,6 +21,7 @@ public sealed class HttpFetcher : IHttpFetcher, IDisposable
     private readonly HostPolitenessGate _gate;
     private readonly RobotsGuard _robots;
     private readonly ResiliencePipeline<FetchResult> _pipeline;
+    private readonly NameResolutionWatch _network = new();
 
     public HttpFetcher(
         HttpClient httpClient,
@@ -37,7 +38,10 @@ public sealed class HttpFetcher : IHttpFetcher, IDisposable
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(options.UserAgent);
 
         _gate = new HostPolitenessGate(timeProvider, options, nextJitter);
-        _robots = new RobotsGuard(httpClient, _gate, timeProvider, options, logger);
+        // One watch for both: robots.txt and the page itself are requests to the
+        // same host in the same poll, and a failure of either is evidence about
+        // the same network.
+        _robots = new RobotsGuard(httpClient, _gate, timeProvider, options, logger, _network);
         _pipeline = BuildPipeline(options, logger);
     }
 
@@ -103,6 +107,9 @@ public sealed class HttpFetcher : IHttpFetcher, IDisposable
                 .SendAsync(message, HttpCompletionOption.ResponseHeadersRead, linked.Token)
                 .ConfigureAwait(false);
 
+            // Reached, whatever it answered. A 500 still proves the packets flowed.
+            _network.Reached();
+
             var status = (int)response.StatusCode;
             var etag = response.Headers.ETag?.ToString();
             var lastModified = response.Content.Headers.LastModified?.ToString("R", CultureInfo.InvariantCulture);
@@ -142,6 +149,17 @@ public sealed class HttpFetcher : IHttpFetcher, IDisposable
         }
         catch (HttpRequestException exception)
         {
+            if (NameResolutionWatch.IsNameResolutionFailure(exception)
+                && _network.LooksLikeOurNetwork(uri.Host))
+            {
+                // Not the source's failure to own. It was never asked.
+                _logger.LogWarning(
+                    "Could not look up {Url} and other hosts are failing too; this machine looks to be off the network, so this is not counted against the source",
+                    uri);
+
+                return FetchResult.Unreachable();
+            }
+
             _logger.LogWarning(exception, "{Url} could not be reached", uri);
             return FetchResult.Failed(0);
         }

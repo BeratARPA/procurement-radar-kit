@@ -14,19 +14,26 @@ public sealed class RobotsGuard
     private readonly TimeProvider _timeProvider;
     private readonly HttpFetcherOptions _options;
     private readonly ILogger _logger;
+    private readonly NameResolutionWatch _network;
 
     public RobotsGuard(
         HttpClient httpClient,
         HostPolitenessGate gate,
         TimeProvider timeProvider,
         HttpFetcherOptions options,
-        ILogger logger)
+        ILogger logger,
+        NameResolutionWatch? network = null)
     {
         _httpClient = httpClient;
         _gate = gate;
         _timeProvider = timeProvider;
         _options = options;
         _logger = logger;
+
+        // The fetcher shares its own, so a failure seen here counts towards the
+        // same verdict as one seen there. A guard built on its own still works,
+        // it just judges on less.
+        _network = network ?? new NameResolutionWatch();
     }
 
     public async Task<bool> IsAllowedAsync(Uri uri, CancellationToken cancellationToken)
@@ -77,6 +84,10 @@ public sealed class RobotsGuard
                 .GetAsync(robotsUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
 
+            // Any answer at all, including the 4xx and 5xx below, proves this
+            // machine can reach the network.
+            _network.Reached();
+
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -109,6 +120,21 @@ public sealed class RobotsGuard
         }
         catch (HttpRequestException exception)
         {
+            if (NameResolutionWatch.IsNameResolutionFailure(exception)
+                && _network.LooksLikeOurNetwork(new Uri(origin).Host))
+            {
+                // Nothing was asked of this host, so there is no back-off to
+                // serve and nothing was learned to remember. Held only long
+                // enough to answer the follow-up question about this same
+                // fetch, then tried again on the next poll.
+                _logger.LogWarning(
+                    "Could not look up {Origin} and other hosts are failing too; this machine looks to be off the network, retrying in {Retry}",
+                    origin,
+                    _options.RobotsOutageRetryDuration);
+
+                return (RobotsRules.Unreadable, _options.RobotsOutageRetryDuration);
+            }
+
             // Erring towards not crawling: an unreachable robots.txt is exactly
             // the situation where a site is least able to cope with us.
             _logger.LogWarning(

@@ -12,7 +12,18 @@ public enum FetchOutcome
     SkippedByRobots,
 
     /// <summary>Every attempt failed. <see cref="FetchResult.HttpStatus"/> holds the last status, or 0.</summary>
-    Failed
+    Failed,
+
+    /// <summary>
+    /// The host's name did not resolve while other hosts were also failing to
+    /// resolve, so this machine was off the network and nothing was requested.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from <see cref="Failed"/> because it says nothing about the
+    /// source: we never asked it anything. Counting it would let one outage on
+    /// this side push every source towards deactivation at the same moment.
+    /// </remarks>
+    Unreachable
 }
 
 /// <summary>What to ask for. The conditional headers come from the previous
@@ -40,4 +51,7 @@ public sealed record FetchResult(
 
     public static FetchResult Failed(int httpStatus)
         => new(FetchOutcome.Failed, httpStatus, null, null, null, null);
+
+    public static FetchResult Unreachable()
+        => new(FetchOutcome.Unreachable, 0, null, null, null, null);
 }

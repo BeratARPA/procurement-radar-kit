@@ -25,6 +25,19 @@ public sealed record HttpFetcherOptions
     /// </summary>
     public TimeSpan RobotsRetryDuration { get; init; } = TimeSpan.FromMinutes(15);
 
+    /// <summary>
+    /// How long a robots.txt is held closed when the failure was this machine's
+    /// own network rather than the host.
+    /// </summary>
+    /// <remarks>
+    /// Only long enough to answer the follow-up question asked about the same
+    /// fetch, and gone well before the next poll. The fifteen minutes above is
+    /// a back-off owed to a server that answered badly; a name that did not
+    /// resolve owes nobody anything, and keeping that verdict cost 112 polls
+    /// while other hosts were answering normally.
+    /// </remarks>
+    public TimeSpan RobotsOutageRetryDuration { get; init; } = TimeSpan.FromSeconds(30);
+
     /// <summary>Total tries, not retries. Three means one attempt plus two retries.</summary>
     public int MaximumAttempts { get; init; } = 3;
 

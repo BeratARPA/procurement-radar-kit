@@ -163,6 +163,29 @@ public sealed class RawFetchRecorderTests : IDisposable
     }
 
     [Fact]
+    public async Task An_outage_on_this_side_is_not_the_sources_failure()
+    {
+        // The source was never asked, so it cannot have failed. Counting it let
+        // one outage here walk every source towards the ten that deactivate it:
+        // the longest measured was 98 minutes, about six in a row for all
+        // ninety at once.
+        var source = TestSources.Municipality();
+
+        var record = await _recorder.RecordAsync(
+            source,
+            FetchResult.Unreachable(),
+            CancellationToken.None);
+
+        Assert.Equal(ArchiveOutcome.Skipped, record.Outcome);
+        Assert.Empty(_rawFetches.Rows);
+        Assert.Equal(0, _sources.FailureCount);
+
+        // Not a success either: pretending we visited would clear a real streak
+        // that a genuinely broken source had built up.
+        Assert.Equal(0, _sources.SuccessCount);
+    }
+
+    [Fact]
     public async Task A_failed_fetch_moves_the_failure_counter_and_writes_nothing()
     {
         var source = TestSources.Municipality();

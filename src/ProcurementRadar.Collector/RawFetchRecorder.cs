@@ -63,6 +63,13 @@ public sealed class RawFetchRecorder
                 // would either reset a real failure streak or invent one.
                 return new ArchiveRecord(ArchiveOutcome.Skipped);
 
+            case FetchOutcome.Unreachable:
+                // Same reasoning, different absence: this machine was off the
+                // network, so the source was never asked and cannot have failed.
+                // Counting it would let one outage here walk every source
+                // towards the ten that deactivate it.
+                return new ArchiveRecord(ArchiveOutcome.Skipped);
+
             case FetchOutcome.Failed:
                 await _sources.RecordFetchFailureAsync(source.Id, cancellationToken).ConfigureAwait(false);
                 return new ArchiveRecord(ArchiveOutcome.Failed);

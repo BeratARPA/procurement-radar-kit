@@ -41,16 +41,27 @@ public sealed class TurkishDateParser : ITurkishDateParser
     /// Whether the text has anything date-shaped in it at all.
     /// </summary>
     /// <remarks>
-    /// Deliberately looser than any pattern in the config: two numbers with a
-    /// separator between them, or four digits that could be a year beside a
-    /// month name. Its only job is to separate "this was meant to be a date and
-    /// I could not read it" - which is worth a warning and a weekly look - from
+    /// Deliberately looser than any pattern in the config. Its only job is to
+    /// separate "this was meant to be a date and I could not read it" - which is
+    /// worth a warning and the weekly look spec.md Bölüm 7 asks for - from
     /// "there is no date here", which is what most rows of some listings are.
-    /// Month names are not checked because the config owns them; a bare year is
-    /// enough to make the text worth reporting.
+    ///
+    /// A day beside a month is the shape, so at least one of the two numbers
+    /// has to be short. The lookarounds are what make that true and they are
+    /// the whole point: without them "2026-2027" matches on the "26-20" inside
+    /// it. A bare year used to be enough on its own, which is why "2026-2027
+    /// YILLARI SONUÇ KARŞILIĞI TÜBERKÜLOZ LABORATUVARI HİZMET ALIMI" warned 38
+    /// times in three days. That is a contract period in a tender title, not a
+    /// date anybody failed to read.
+    ///
+    /// The year branch that used to sit here carried two literal backspace
+    /// characters where a word boundary was meant, so it never matched.
+    ///
+    /// Month names are checked separately, against the config that owns them,
+    /// because "12 Mart 2026" has no separator to find.
     /// </remarks>
     private static readonly Regex LooksLikeADate = new(
-        @"\d{1,4}\s*[./-]\s*\d{1,4}|(19|20)\d{2}",
+        @"(?<!\d)\d{1,2}\s*[./-]\s*\d{1,2}(?!\d)",
         RegexOptions.CultureInvariant);
 
     private readonly ProcurementRadar.Domain.Settings.ICurrent<TurkishDatePatterns> _patterns;
@@ -111,7 +122,7 @@ public sealed class TurkishDateParser : ITurkishDateParser
         // simply do not carry one, so the same cell is read every time and the
         // warning fires for the ordinary case. That was 211 of them in three
         // days, against a handful of real ones.
-        if (LooksLikeADate.IsMatch(normalized))
+        if (LooksLikeADate.IsMatch(normalized) || NamesAMonth(normalized))
         {
             _logger.LogWarning("Could not read a date out of {Text}", text);
         }
@@ -121,6 +132,26 @@ public sealed class TurkishDateParser : ITurkishDateParser
         }
 
         return TurkishDateParseResult.Unreadable;
+    }
+
+    /// <summary>
+    /// Whether a month the config knows is written out in the text.
+    /// </summary>
+    /// <remarks>
+    /// Asked of the normalized text, which is already lower-cased the Turkish
+    /// way, so the keys match as the file writes them.
+    /// </remarks>
+    private bool NamesAMonth(string normalized)
+    {
+        foreach (var month in _patterns.Value.Months.Keys)
+        {
+            if (normalized.Contains(month, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private string Normalize(string text)
