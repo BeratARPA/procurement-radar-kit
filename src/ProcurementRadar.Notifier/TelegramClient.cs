@@ -46,6 +46,7 @@ public sealed class TelegramClient
     private readonly HttpClient _httpClient;
     private readonly TelegramOptions _options;
     private readonly ILogger<TelegramClient> _logger;
+    private readonly ProcurementRadar.Collector.NameResolutionWatch _network;
 
     /// <summary>
     /// Telegram treats asking for updates past an id as confirmation of
@@ -54,11 +55,19 @@ public sealed class TelegramClient
     /// </summary>
     private long _offset;
 
-    public TelegramClient(HttpClient httpClient, TelegramOptions options, ILogger<TelegramClient> logger)
+    public TelegramClient(
+        HttpClient httpClient,
+        TelegramOptions options,
+        ILogger<TelegramClient> logger,
+        ProcurementRadar.Collector.NameResolutionWatch? network = null)
     {
         _httpClient = httpClient;
         _options = options;
         _logger = logger;
+
+        // The collector's watch when the host supplies it, so a minute where
+        // this machine had no network is one verdict rather than two opinions.
+        _network = network ?? new ProcurementRadar.Collector.NameResolutionWatch();
     }
 
     public async Task<bool> SendAsync(
@@ -255,12 +264,27 @@ public sealed class TelegramClient
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
+            // Telegram is not down when this machine is. D-30 drew that line
+            // for the collector and stopped there, so the same outage went on
+            // being reported here - and D-07 counts these in the weekly report.
+            if (_network.IsOurOutage(exception, TelegramHost))
+            {
+                _logger.LogDebug(
+                    "Could not look up {Host} for {Method} and other hosts are failing too; this machine looks to be off the network",
+                    TelegramHost,
+                    method);
+
+                return false;
+            }
+
             _logger.LogError(exception, "Telegram {Method} could not be reached", method);
             return false;
         }
     }
 
-    private string Endpoint(string method) => $"https://api.telegram.org/bot{_options.BotToken}/{method}";
+    private const string TelegramHost = "api.telegram.org";
+
+    private string Endpoint(string method) => $"https://{TelegramHost}/bot{_options.BotToken}/{method}";
 
     private static string Shorten(string text) => text.Length <= 300 ? text : text[..300];
 

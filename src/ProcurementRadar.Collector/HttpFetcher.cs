@@ -21,15 +21,21 @@ public sealed class HttpFetcher : IHttpFetcher, IDisposable
     private readonly HostPolitenessGate _gate;
     private readonly RobotsGuard _robots;
     private readonly ResiliencePipeline<FetchResult> _pipeline;
-    private readonly NameResolutionWatch _network = new();
+    private readonly NameResolutionWatch _network;
 
     public HttpFetcher(
         HttpClient httpClient,
         HttpFetcherOptions options,
         TimeProvider timeProvider,
         ILogger<HttpFetcher> logger,
-        Func<TimeSpan>? nextJitter = null)
+        Func<TimeSpan>? nextJitter = null,
+        NameResolutionWatch? network = null)
     {
+        // Shared with the notifier when the host container supplies it. The
+        // verdict is about this machine, so it has to be one verdict:
+        // an instance that only ever sees one host can never reach the two
+        // distinct names that separate an outage from a dead domain.
+        _network = network ?? new NameResolutionWatch();
         _httpClient = httpClient;
         _options = options;
         _timeProvider = timeProvider;
@@ -149,8 +155,7 @@ public sealed class HttpFetcher : IHttpFetcher, IDisposable
         }
         catch (HttpRequestException exception)
         {
-            if (NameResolutionWatch.IsNameResolutionFailure(exception)
-                && _network.LooksLikeOurNetwork(uri.Host))
+            if (_network.IsOurOutage(exception, uri.Host))
             {
                 // Not the source's failure to own. It was never asked.
                 _logger.LogWarning(

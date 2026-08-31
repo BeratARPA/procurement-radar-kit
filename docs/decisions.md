@@ -1445,6 +1445,29 @@ ad kimseye bir şey borçlu değildir, çünkü kimse rahatsız edilmemiştir.
 `HttpFetcherOptions.RobotsOutageRetryDuration`, `RawFetchRecorder`'da
 `SkippedByRobots` ile aynı muamele. 7 test.
 
+**Güncelleme — aynı gün: kural Telegram'a da uzatıldı.** İlk hâli yalnızca
+toplayıcıyı kapsıyordu, dolayısıyla aynı kesinti bildirim tarafında **hâlâ**
+Error basıyordu: yayın sonrası ilk turda 24, üç haftada 628, hepsi
+`api.telegram.org` adını çözemediği için — yani bu makineden hiçbir host'a
+ulaşılamayan dakikalarda. D-07 bu hataları haftalık raporda sayıyor, o yüzden
+seviye süs değil.
+
+Karar noktası tek yere alındı (`NameResolutionWatch.IsOurOutage`) ve dört yerden
+çağrılıyor: çekici, robots muhafızı, Telegram istemcisi, buton döngüsü. Dört
+ayrı soru değiller.
+
+**Watch'ın paylaşılması şart, ve bu sessizce bozulabilecek türden.** Yalnızca
+`api.telegram.org`'u gören bir örnek, kesintiyi ölü bir alan adından ayıran
+**iki farklı addan** hiçbir zaman ikisine birden ulaşamaz — yani kural derlenir,
+kendi başına yazılmış bir testi geçer ve bir kez bile ateşlemez. Bu yüzden
+`Program.cs`'te tek bir singleton ve testi var: *"One host cannot decide this on
+its own."*
+
+**Dönen değer değişmedi.** `SendAsync` hâlâ `false` dönüyor ve yoklama hâlâ
+fırlatıyor — o fırlatma, `CallbackWorker`'ın otuz saniyelik duraklamasına ulaşan
+tek şey ve 318 MB'lık log fırtınasının çözümüydü. Değişen yalnızca kimin
+suçlandığı. 4 test daha.
+
 ---
 
 ### D-30'un yan bulguları

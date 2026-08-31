@@ -74,6 +74,21 @@ public sealed class NameResolutionWatch
     }
 
     /// <summary>
+    /// Whether this failure is this machine being off the network rather than
+    /// anything about <paramref name="host"/>.
+    /// </summary>
+    /// <remarks>
+    /// The one place the question is answered, because it is asked from four:
+    /// the fetcher, the robots guard, the telegram client and the callback
+    /// loop. They are not four questions. The callback loop was still reporting
+    /// 24 errors an outage about api.telegram.org being unreachable while the
+    /// collector had already stopped blaming anybody for the same minutes, and
+    /// D-07 counts those errors in the weekly report.
+    /// </remarks>
+    public bool IsOurOutage(Exception exception, string host)
+        => IsNameResolutionFailure(exception) && LooksLikeOurNetwork(host);
+
+    /// <summary>
     /// Whether this exception means the name never resolved, so no byte left
     /// this machine.
     /// </summary>

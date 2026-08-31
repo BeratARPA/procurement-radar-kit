@@ -83,6 +83,12 @@ builder.Services.AddSingleton(_ => new HttpClient(new SocketsHttpHandler
     PooledConnectionLifetime = TimeSpan.FromMinutes(15),
     AutomaticDecompression = DecompressionMethods.All
 }));
+// One verdict about this machine's network, shared by everything that can
+// discover it: the fetcher, the robots guard behind it, the telegram client
+// and the callback loop. Separate instances would each see a single host,
+// and a single host can never be the two distinct names that tell an outage
+// apart from a domain that has actually died (D-30).
+builder.Services.AddSingleton<NameResolutionWatch>();
 builder.Services.AddSingleton<IHttpFetcher, HttpFetcher>();
 
 builder.Services.AddSingleton(new StoragePathBuilder(dataDirectory));

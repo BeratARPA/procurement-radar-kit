@@ -120,8 +120,7 @@ public sealed class RobotsGuard
         }
         catch (HttpRequestException exception)
         {
-            if (NameResolutionWatch.IsNameResolutionFailure(exception)
-                && _network.LooksLikeOurNetwork(new Uri(origin).Host))
+            if (_network.IsOurOutage(exception, new Uri(origin).Host))
             {
                 // Nothing was asked of this host, so there is no back-off to
                 // serve and nothing was learned to remember. Held only long

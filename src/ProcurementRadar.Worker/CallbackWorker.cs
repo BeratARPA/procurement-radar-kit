@@ -18,15 +18,18 @@ internal sealed class CallbackWorker : BackgroundService
     private readonly CallbackProcessor _callbacks;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<CallbackWorker> _logger;
+    private readonly ProcurementRadar.Collector.NameResolutionWatch _network;
 
     public CallbackWorker(
         CallbackProcessor callbacks,
         TimeProvider timeProvider,
-        ILogger<CallbackWorker> logger)
+        ILogger<CallbackWorker> logger,
+        ProcurementRadar.Collector.NameResolutionWatch network)
     {
         _callbacks = callbacks;
         _timeProvider = timeProvider;
         _logger = logger;
+        _network = network;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,6 +46,15 @@ internal sealed class CallbackWorker : BackgroundService
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
                 break;
+            }
+            catch (Exception exception) when (_network.IsOurOutage(exception, "api.telegram.org"))
+            {
+                // Not telegram failing, this machine having no network. The
+                // same minutes the collector already stopped blaming anybody
+                // for; 24 errors an outage were arriving here alone.
+                _logger.LogDebug(
+                    exception,
+                    "Could not look up api.telegram.org and other hosts are failing too; button presses will be read on the next pass");
             }
             catch (Exception exception)
             {
