@@ -1496,3 +1496,64 @@ Hafta sonu sayılmıyor"* diyordu — kod 48 saati düz sayarken. Alarm ötse
 **metniyle çelişecekti.** CLAUDE.md'nin 2. kuralının tarif ettiği durumun
 kendisi. Api üzerinden pushlandı (204), `setting_history`'ye yazıldı, worker
 yeniden başlatılmadan 30 saniye içinde aldı, `publish/config` de eşitlendi.
+
+---
+
+## D-31 — Yaklaşık maliyet toplanamıyor: sayfalarda yok, metinlerde yok
+
+**Karar:** `procurement_notice.estimated_cost` boş kalmaya devam edecek ve
+`amount_selector` yazılmayacak. spec Bölüm 10'un mesaj biçimindeki
+`💰 ~180.000 TL` satırı koşullu duruyor, doluysa basılıyor — ve doldurulamıyor.
+
+**Neden bakıldı.** D-25 dört alanı ölçüp ikisini doldurmuş, `estimated_cost` için
+*"amount_selector 90 aktif kaynağın sıfırında ayarlı; tablosunda tutar sütunu
+olan kaynaklar için kaynak kaynak yazılabilir, bu ayrı bir iş"* demişti. O ayrı
+iş burada yapıldı ve sonucu hayır çıktı. Son teklif tarihinden sonra teklif
+verip vermemeye karar verdiren ikinci alan bu, yani sormaya değerdi.
+
+**Önce koda bakıldı, hata yoktu.** 43 kaynağın config'inde `amount_selector`
+anahtarı **var** ve üçünde de değeri JSON `null`; boş string değil, yanlış
+selector değil. `GenericTableAdapter` onu doğru şekilde atlıyor. Yani ortada
+bozuk bir şey yok, yazılmamış bir şey var.
+
+**Sayfalarda tutar yok — 46 kaynağın sıfırında.** Aktif her `generic_table`
+kaynağının **kendi arşivlenmiş son sayfasına** karşı ölçüldü (ağa çıkmadan,
+D-20'nin yöntemi):
+
+| Ölçüm | Sonuç |
+|---|---|
+| Para deseni (`1.234.567,89 TL`, `₺`, `TRY`) eşleşen sayfa | **0 / 46** |
+| Desen gevşetilip ayraçsız sayı da kabul edildiğinde | **0 / 46** |
+| Sayfasında "TL" veya `₺` **herhangi bir yerde** geçen | **1 / 46** |
+| Binlik ayraçlı sayı geçen | 28 / 46 |
+
+Tek "TL" EGO'nun menüsündeki *"TL ve Abonman Yükleme"* bağlantısı — ulaşım kartı
+yükleme, ihale değil. 28 sayfadaki binlik ayraçlı sayılar tarih ve numara;
+hiçbirinin yanında para birimi yok.
+
+**Sakladığımız ilan metinlerinde de yok.** 336 `extracted_text` üzerinde:
+12'sinde para deseni geçiyor, 5'inde "yaklaşık maliyet" ifadesi. Tek tek
+okundu ve **hiçbiri ihalenin yaklaşık maliyeti değil**:
+
+- Konut ve arsa **satış** ilanlarının fiyatları (`1.150.000,00 TL`, `₺9.418.010,00`)
+- *"ciro tutarı 300.000.000,00 TL"* — yeterlik şartı, ihalenin bedeli değil
+- "yaklaşık maliyet" geçen beşin dördü ilan **başlığı**, biri
+  *"teklifin yaklaşık maliyetin üzerinde olması"* diye bir gerekçe cümlesi
+
+**EKAP da vermiyor.** İki arama yanıtında alan yok (D-25 ölçtü). Sonuç ilanında
+**var** — D-15 `Yaklaşık maliyet: 3.405.000,00 TRY` diye okumuştu — ama o
+sözleşme imzalandıktan sonra yayımlanıyor, yani teklif kararı verilirken değil,
+verildikten sonra. `award` tablosunda bugün 24 satır var ve **hiçbiri
+sonuçlanmamış**.
+
+**Sonuç:** tutar, bugün indirdiğimiz hiçbir şeyin içinde değil. Yazılabilecek
+bir selector yok, çünkü seçilecek bir şey yok.
+
+**Ne zaman yeniden bakılır.** Bir kurum liste sayfasına tutar sütunu eklerse tek
+satırlık config işi — mekanizma hazır, `AmountSelector` ile `TurkishMoneyParser`
+duruyor ve testleri var. EKAP tarafında ise D-20'nin cevabı geçerli: ilan başına
+ayrı bir detay isteği, nezaket bütçesini bir alan için harcamak demek.
+
+**Ölçümün kendi sınırı yazılıyor:** kullanılan desen ayraçsız `4500 TL` biçimini
+kaçırıyor. Gevşetilmiş desen de 0/46 verdiği için sonucu değiştirmiyor, ama bir
+sonraki ölçen bunu bilsin.
