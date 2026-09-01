@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The same deep slate the mark is drawn on, so the adaptive icon and the
+         web and desktop icons are one colour rather than nearly one. -->
+    <color name="ic_launcher_background">#0B1F2A</color>
+</resources>

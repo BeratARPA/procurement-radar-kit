@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The adaptive icon. Without this file every launcher on Android 8 and later
+  takes the square ic_launcher.png, shrinks it and drops it on a white plate,
+  which is why the mark used to look pasted on rather than drawn for the phone.
+
+  The background is a flat colour rather than the drawn one because the launcher
+  parallaxes the two layers against each other; a gradient that slides behind
+  the mark reads as a rendering fault.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>
