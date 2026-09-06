@@ -120,7 +120,7 @@ internal static class PreflightCommand
         await CheckAsync(problems, "health.counts", async () =>
         {
             var health = new HealthRepository(connectionFactory, TimeProvider.System);
-            var since = DateTimeOffset.UtcNow - TimeSpan.FromHours(48);
+            var since = TimeProvider.System.GetUtcNow() - TimeSpan.FromHours(48);
 
             await health.CountNoticesSinceAsync(since, cancellationToken).ConfigureAwait(false);
             await health.CountFetchesSinceAsync(since, cancellationToken).ConfigureAwait(false);
