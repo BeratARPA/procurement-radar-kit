@@ -26,6 +26,83 @@ public sealed class AwardParserTests
 
     private static string Announcement() => EkapAnnouncementEnricher.PlainText(File.ReadAllText(FixturePath));
 
+    /// <summary>
+    /// The same announcement EKAP served on 6 September 2026 for 2026/1360913,
+    /// after it renamed the contract row.
+    /// </summary>
+    private static readonly string RenamedFixturePath = Path.Combine(
+        AppContext.BaseDirectory, "fixtures", "ekap_award", "2026-1360913-sonuc.json");
+
+    private static string RenamedAnnouncement() =>
+        EkapAnnouncementEnricher.PlainText(File.ReadAllText(RenamedFixturePath));
+
+    [Fact]
+    public void The_settings_table_can_still_be_holding_the_older_single_label()
+    {
+        // D-16: the seeder fills a key it does not find and leaves the ones it
+        // does. So on every machine that has run before, the stored award_labels
+        // is the one-string version until somebody pushes a new one - and a
+        // loader that refused it would turn the deploy that fixes this into the
+        // deploy that will not start.
+        var older = AwardLabels.Load("""
+            {
+              "result_marker": "SONUÇ İLANI",
+              "contract_section": "Sözleşmenin",
+              "winner_label": "Yüklenici",
+              "amount_label": "Bedeli",
+              "date_label": "Tarihi",
+              "bid_count_label": "Toplam Teklif Sayısı",
+              "valid_bid_count_label": "Toplam Geçerli Teklif Sayısı",
+              "item_letters": "abcçdefgğhıijklmnoöprsştuüvyz"
+            }
+            """);
+
+        Assert.Equal(["Yüklenici"], older.WinnerLabels);
+
+        var parser = new AwardParser(
+            new Fixed<AwardLabels>(older),
+            new TurkishDateParser(new Fixed<TurkishDatePatterns>(DatePatterns), NullLogger<TurkishDateParser>.Instance));
+
+        // It reads the July announcement, which is what it was written for, and
+        // reads no winner out of the renamed one. That second half is the bug
+        // this whole change is about, stated as a test.
+        Assert.Equal(
+            "PROMETUS BİLGİSAYAR SİSTEMLERİ SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
+            parser.Parse(Announcement())!.WinnerName);
+
+        Assert.Null(parser.Parse(RenamedAnnouncement())!.WinnerName);
+    }
+
+    [Fact]
+    public void The_row_EKAP_renamed_is_still_read()
+    {
+        // "d) Yüklenici" became "d) Yüklenicisi". The colon has to follow the
+        // label immediately - that is what keeps "Yüklenicinin uyruğu" out - so
+        // the old single label stopped matching entirely and every award since
+        // the rename was written with a null winner. Nothing failed: the sweeper
+        // reads a null winner as "no result yet", so 44 tenders were asked about
+        // 186 times and 21 of them used up all six attempts on an answer that was
+        // sitting in the text.
+        var award = Parser().Parse(RenamedAnnouncement());
+
+        Assert.NotNull(award);
+        Assert.Equal(
+            "DİJİTAL ARŞİV BELGE BİLGİ TEKNOLOJİLERİ SANAYİ VE TİCARET ANONİM ŞİRKETİ",
+            award.WinnerName);
+    }
+
+    [Fact]
+    public void The_rest_of_the_renamed_announcement_reads_the_same_way()
+    {
+        // The other four labels were checked against this announcement and all
+        // of them still match, so the rename was one row and not a redesign.
+        var award = Parser().Parse(RenamedAnnouncement());
+
+        Assert.NotNull(award);
+        Assert.Equal(800000m, award.ContractAmount);
+        Assert.Equal(2, award.BidCount);
+    }
+
     [Fact]
     public void The_winner_is_the_firm_and_not_the_row_below_it()
     {

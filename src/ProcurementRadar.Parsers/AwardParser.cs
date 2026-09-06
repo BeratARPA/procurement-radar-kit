@@ -99,13 +99,33 @@ public sealed class AwardParser
             // nothing. Only these four fields are taken; the rest of the text,
             // which does carry an officer and a switchboard number, is not stored
             // by this path at all.
-            WinnerName = Value(contract, terminator, labels.WinnerLabel),
+            WinnerName = FirstValue(contract, terminator, labels.WinnerLabels),
             ContractAmount = TurkishMoneyParser.TryParse(Value(contract, terminator, labels.AmountLabel)),
             BidCount = Count(announcementText, terminator),
             AwardedAt = _dates.TryParse(Value(contract, terminator, labels.DateLabel))
         };
 
         return award.IsEmpty ? null : award;
+    }
+
+    /// <summary>The first of the wordings that matches, in the order given.</summary>
+    /// <remarks>
+    /// Order is the config's, and it puts the current spelling first so the
+    /// common case is one regex. The older ones stay because announcements
+    /// published before the rename are still out there in the archive, and
+    /// reprocessing them is the whole reason the archive exists.
+    /// </remarks>
+    private static string? FirstValue(string text, string terminator, IReadOnlyList<string> labels)
+    {
+        foreach (var label in labels)
+        {
+            if (Value(text, terminator, label) is { Length: > 0 } value)
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 
     private static string? Value(string text, string terminator, string label)

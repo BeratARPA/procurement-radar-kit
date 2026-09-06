@@ -30,7 +30,7 @@ internal static class AwardProbeCommand
 
         if (string.IsNullOrWhiteSpace(ikn))
         {
-            Log.Error("Usage: award-probe --ikn 2026/1166872 [--config-dir <path>]");
+            Log.Error("Usage: award-probe --ikn 2026/1166872 [--save <path>] [--config-dir <path>]");
             return 1;
         }
 
@@ -71,6 +71,29 @@ internal static class AwardProbeCommand
         var text = EkapAnnouncementEnricher.PlainText(Encoding.UTF8.GetString(result.Body));
 
         Log.Information("{Characters} characters of announcement came back", text.Length);
+
+        // --save, because the first thing anybody wants after "won by None" is
+        // the announcement the parser was reading, and fetching it again to look
+        // costs another trip through the politeness gate. It is also how a result
+        // announcement becomes a fixture without a second request, and D-09 will
+        // not take a hand-written one.
+        //
+        // The body as it arrived, not the plain text: that is what the existing
+        // fixtures hold and what the tests run PlainText over, so a file saved
+        // here can be dropped straight into fixtures/ekap_award. Storing the
+        // derived form would bake today's flattening into tomorrow's fixture.
+        if (ReadOption(args, "--save") is { Length: > 0 } path)
+        {
+            var directory = Path.GetDirectoryName(Path.GetFullPath(path));
+
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            await File.WriteAllBytesAsync(path, result.Body, cancellationToken).ConfigureAwait(false);
+            Log.Information("Announcement body written to {Path}: {Bytes} bytes", path, result.Body.Length);
+        }
 
         var parser = new AwardParser(new Fixed<AwardLabels>(config.AwardLabels),
             new TurkishDateParser(new Fixed<TurkishDatePatterns>(config.DatePatterns), loggerFactory.CreateLogger<TurkishDateParser>()));

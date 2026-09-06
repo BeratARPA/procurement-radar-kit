@@ -1620,3 +1620,76 @@ olduğunu söylüyor: yeni ilan da yok, indirilen sayfa da yok.
 **Uygulama:** `IHealthRepository.CountFetchesSinceAsync`, `HealthSql.CountFetchesSince`,
 `HealthOptions.CollectorPulse` (2 saat), `CheckCollectionAsync`'te ikinci soru,
 `config/tr-messages.json`. 2 yeni test; biri bu hafta sonunun kendisi.
+
+---
+
+## D-33 — EKAP bir satırı yeniden adlandırdı, sonuç takibi sessizce durdu
+
+**Karar:** `winner_label` tek bir string olmaktan çıkıp **liste** oldu
+(`winner_labels`), yenisi başta. Yükleyici eski tek-string biçimini de kabul
+etmeye devam ediyor.
+
+**Bulgu.** Sonuç ekranı aylardır boştu. `award` tablosunda 44 satır, **186
+deneme**, sıfır kazanan; 21 ilan altı denemesini de tüketip sıradan düşmüştü.
+D-15 "winner_name boş bir satır *baktık, henüz yok* demektir" diyor, dolayısıyla
+sistem her turda aynı ilanları tekrar soruyor ve her turda aynı cevabı alıyordu.
+
+Sebep tek bir kelimeydi. İlan artık şöyle yazıyor:
+
+```
+d) Yüklenicisi : DİJİTAL ARŞİV BELGE BİLGİ TEKNOLOJİLERİ ... ANONİM ŞİRKETİ
+```
+
+Config'te ise `"winner_label": "Yüklenici"` duruyordu. `AwardParser.Value`
+iki noktanın **etiketin hemen ardından** gelmesini şart koşuyor — ve bu şart
+kasıtlı: iki satır aşağıdaki `Yüklenicinin uyruğu`'nu elemek için konmuş. Aynı
+şart, EKAP kelimeyi `Yüklenicisi` yapınca gerçek satırı da eledi.
+
+**Testler bunu göremezdi ve sebebi CLAUDE.md'nin tablosunda yazılı.** Fixture
+temmuzda yakalanmış (`2026-1166872-sonuc.json`) ve eski kelimeyi taşıyor, yani
+63 parser testi yemyeşil geçerken canlı parser haftalardır her ödüle `null`
+yazıyordu. *Testin gördüğü ile worker'ın aldığı aynı değil.*
+
+**Nasıl bulundu.** `award-probe` ile üç İKN sorularak:
+
+| İKN | Sonuç |
+|---|---|
+| 2026/1166872 (temmuz, D-15'in doğruladığı) | ilan hiç gelmedi — kart aramada çıkmıyor |
+| 2026/1332681 (yeni) | ilan geldi, "henüz sonuç ilanı yok" — doğru |
+| 2026/1360913 (~4 hafta) | ilan geldi, bedel ve teklif sayısı okundu, **`won by None`** |
+
+Üçüncüsü teşhisi verdi: mekanizma çalışıyor, ayrıştırma çalışıyor, yalnızca
+kazanan alanı boş dönüyor. Diğer altı etiket aynı metne karşı tek tek sınandı;
+hepsi iki noktasıyla tutuyor, yalnızca bu tutmuyordu.
+
+**Neden liste.** `AwardLabels`'ın kendi yorumu şunu vaat ediyordu: *"EKAP bir
+satırı yeniden adlandırdığında — ki adlandırır — düzeltme config değişikliğidir,
+yeniden derleme değil."* Adlandırdı, ve tek bir string iki yazımı birden
+taşıyamadığı için vaat tutulamadı. Eski yazım listede kalıyor, çünkü arşivdeki
+eski ilanlar hâlâ onu taşıyor ve mimari kural 2 arşivin yeniden işlenebilmesini
+istiyor.
+
+**Yükleyici eski biçimi de okuyor, ve bu bir incelik değil zorunluluk.** D-16
+gereği seeder tabloda var olan anahtara dokunmuyor; yani daha önce çalışmış her
+makinede `setting` tablosundaki değer, biri yenisini pushlayana kadar eski
+tek-string biçimidir. Bunu reddeden bir yükleyici, parser'ı düzelten dağıtımı
+**başlayamayan** dağıtım yapardı. Testi var.
+
+**Tükenmiş denemeler geri alındı.** Kazananı olmayan 44 satırın `attempts`
+değeri sıfırlandı. O denemeler bizim hatamıza harcanmıştı; D-15'in altı deneme
+sınırı "EKAP'ta gerçekten sonuç yok" içindir, "biz okuyamıyoruz" için değil.
+
+**Yan iş:** `award-probe --save <path>` eklendi ve **ham gövdeyi** yazıyor,
+düz metni değil — mevcut fixture'lar ham JSON tutuyor ve testler `PlainText`'i
+kendileri uyguluyor, dolayısıyla kaydedilen dosya doğrudan
+`fixtures/ekap_award` altına düşebiliyor. D-09 elle yazılmış fixture kabul
+etmiyor; `2026-1360913-sonuc.json` böyle alındı.
+
+**Doğrulama.** Aynı probe, düzeltmeden sonra:
+`2026/1360913: won by DİJİTAL ARŞİV BELGE BİLGİ TEKNOLOJİLERİ SANAYİ VE TİCARET
+ANONİM ŞİRKETİ for 800000.0 against 2 bid(s)`.
+
+**Açık kalan:** temmuz tarihli İKN'nin kartı EKAP aramasında hiç çıkmıyor. Yani
+sonuç takibinin bir de zaman penceresi var: çok eskiyen ihale bulunamıyor. D-15
+son teklif tarihinden 14 gün sonra sormaya başlıyor ve bu pencere içinde
+çalışıyor; ne kadar sonra kapandığı ölçülmedi.
