@@ -61,6 +61,20 @@ public sealed class HealthRepository : IHealthRepository
             .ConfigureAwait(false);
     }
 
+    public async Task<int> CountFetchesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
+    {
+        await using var connection = await _connectionFactory
+            .OpenConnectionAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return await connection.ExecuteScalarAsync<int>(
+            new CommandDefinition(
+                HealthSql.CountFetchesSince,
+                new { Since = since.ToUniversalTime() },
+                cancellationToken: cancellationToken))
+            .ConfigureAwait(false);
+    }
+
     public async Task<int> CountUnparsedSinceAsync(DateTimeOffset olderThan, CancellationToken cancellationToken)
     {
         await using var connection = await _connectionFactory

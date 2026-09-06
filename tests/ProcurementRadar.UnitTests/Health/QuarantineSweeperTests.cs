@@ -298,6 +298,9 @@ public sealed class QuarantineSweeperTests
         public Task<int> CountNoticesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
             => Task.FromResult(1);
 
+        public Task<int> CountFetchesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
+            => Task.FromResult(1);
+
         public Task<int> CountUnparsedSinceAsync(DateTimeOffset olderThan, CancellationToken cancellationToken)
             => Task.FromResult(0);
 

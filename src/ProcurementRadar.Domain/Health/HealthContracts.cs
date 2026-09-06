@@ -160,6 +160,19 @@ public interface IHealthRepository
     Task<int> CountNoticesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken);
 
     /// <summary>
+    /// How many pages were archived since a moment: the collector's own pulse.
+    /// </summary>
+    /// <remarks>
+    /// Asked because "no new notices" and "nothing is happening" are different
+    /// states and only the second one is an emergency. On a weekend the
+    /// authorities publish nothing and the collector still reads every page it
+    /// is asked to; over one measured month the only two-hour stretches with no
+    /// archived page at all were a worker that had been dead for a day and a
+    /// machine that was asleep.
+    /// </remarks>
+    Task<int> CountFetchesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Archived pages older than the cutoff that nothing has parsed yet.
     /// </summary>
     Task<int> CountUnparsedSinceAsync(DateTimeOffset olderThan, CancellationToken cancellationToken);

@@ -1557,3 +1557,66 @@ ayrı bir detay isteği, nezaket bütçesini bir alan için harcamak demek.
 **Ölçümün kendi sınırı yazılıyor:** kullanılan desen ayraçsız `4500 TL` biçimini
 kaçırıyor. Gevşetilmiş desen de 0/46 verdiği için sonucu değiştirmiyor, ama bir
 sonraki ölçen bunu bilsin.
+
+---
+
+## D-32 — Sessizlik alarmı iki soru sorar: yeni ilan var mı, ve koleksiyoncu çalışıyor mu
+
+**Karar:** `NothingCollected` alarmı yalnızca **hem** pencerede yeni ilan yoksa
+**hem de** koleksiyoncu son iki saatte tek bir sayfa arşivlememişse çalar. Tek
+başına "yeni ilan yok" alarm değildir.
+
+**Nasıl bulundu.** 6 Eylül 2026 pazar: *"hiçbir ihale gelmiyor"*. Ölçüldü:
+
+| Gün | Parse turu | Okunan ilan | Yeni |
+|---|---|---|---|
+| 3 Eylül Perşembe | 1427 | 22.764 | 471 |
+| 4 Eylül Cuma | 1434 | 22.476 | 324 |
+| 5 Eylül **Cumartesi** | 1436 | **20.463** | **0** |
+| 6 Eylül **Pazar** | 852 | **11.448** | **0** |
+
+Hiçbir şey bozuk değildi. Parser hafta içiyle aynı hacmi okuyordu ve okuduğu her
+ilan zaten tanınıyordu — kurumlar hafta sonu ilan yayınlamamıştı. Geçmiş hafta
+sonları da bunu söylüyor: 22-23 Ağustos'ta 1 ve 4 ilan.
+
+**D-28'in sayısı yanlıştı ve bu ölçülebilir.** D-28 *"sistem çalışırken yaşanan
+en uzun sessizlik 39 saat, 48 onu aşıyor"* diyerek pencereyi 48 saate koymuştu.
+Tüm arşive bakınca en uzunu **48,8 saat** (14 Ağustos Cuma). Yani eşik, tolere
+etmesi gereken sessizliğin altındaydı — bu hafta sonu 60 saati geçecekti ve
+alarm o akşam **yanlış çalacaktı.**
+
+**Pencereyi yükseltmek çözüm değil.** Ne kadar uzatılırsa gerçek bir çöküşün
+görülmesi o kadar gecikir, ve bir sonraki sakin hafta sonu yine aşabilir. Sorun
+uzunlukta değil, sorulan soruda: *"yeni ilan yok"* ile *"hiçbir şey olmuyor"*
+aynı şey değil ve alarmın var olma sebebi (spec Bölüm 11) ikincisi.
+
+**Nabız olarak `raw_fetch` seçildi, çünkü ölçüldü.** Önce "son bir saatte
+görülen ilan" denendi ve **çürüdü**: `last_seen_at` yalnızca sayfa değiştiğinde
+güncelleniyor, dolayısıyla 495 saatin 292'sinde sıfır — sağlıklı günlerde bile
+7-11 saatlik boşluklar var. Arşiv satırı ise koleksiyoncunun kendi nabzı:
+
+| | 30 dakikalık pencerede çekim |
+|---|---|
+| 15-16 Ağustos (worker ölü, D-27) | **0** — 23,5 saat kesintisiz |
+| 6 Eylül (sakin hafta sonu, sağlıklı) | en düşük 4, medyan 29, sıfır saat yok |
+
+Bir ay boyunca iki saatten uzun sıfır-çekim aralığı **yalnızca iki kez** oldu:
+worker'ın öldüğü gün ve makinenin uyuduğu bir öğleden sonra. İkisi de tam olarak
+bu alarmın haber vermesi gereken şey.
+
+**İki saat, oran değil evet-hayır.** Yoklama aralığı 15 dakika, gece üçe
+katlanıyor (45 dakika). İki saat ikisini de rahatça aşıyor. Sayıya eşik koymak
+yanlış ayarlanacak ikinci bir sayı olurdu; bu maddenin tamamı birincisi yüzünden
+yazıldı.
+
+**Neyden vazgeçildi.** Bütün kaynaklar sorunsuz çekilirken bütün parser'ların
+boş dönmesi artık bu alarmı çaldırmaz. O durumun kendi alarmı var (D-27, kaynak
+bazında) ve o daha bilgilendirici: hangi kaynak olduğunu söylüyor.
+
+**Mesaj da değişti**, çünkü alarmın anlamı değişti. Eskisi *"Sessiz bir hafta
+sonu bile bu kadar sürmüyor"* diyordu — bu cümle artık yanlış. Yenisi ne
+olduğunu söylüyor: yeni ilan da yok, indirilen sayfa da yok.
+
+**Uygulama:** `IHealthRepository.CountFetchesSinceAsync`, `HealthSql.CountFetchesSince`,
+`HealthOptions.CollectorPulse` (2 saat), `CheckCollectionAsync`'te ikinci soru,
+`config/tr-messages.json`. 2 yeni test; biri bu hafta sonunun kendisi.

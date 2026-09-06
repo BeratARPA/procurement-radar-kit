@@ -70,6 +70,16 @@ internal static class HealthSql
         WHERE first_seen_at >= @Since
         """;
 
+    // The collector's pulse. raw_fetch gets a row whenever a page came back
+    // with content we had not archived before, which on this system happens
+    // several hundred times a day and never stopped for two hours together
+    // except when the worker was dead.
+    internal const string CountFetchesSince = """
+        SELECT count(*)::int
+        FROM raw_fetch
+        WHERE fetched_at >= @Since
+        """;
+
     // Uses the partial index the schema already carries for unprocessed rows.
     // Fetched for long enough to have had many chances, and nothing to show for
     // it. The join is on the archive rather than on a column, because there is

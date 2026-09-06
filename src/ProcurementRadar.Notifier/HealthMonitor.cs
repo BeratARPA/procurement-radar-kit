@@ -69,6 +69,18 @@ public sealed record HealthOptions
     public TimeSpan ParserWindow { get; init; } = TimeSpan.FromHours(24);
 
     /// <summary>
+    /// How recently the collector must have archived something for it to count
+    /// as alive.
+    /// </summary>
+    /// <remarks>
+    /// Two hours against a fifteen minute poll interval, tripled to
+    /// forty-five between 02:00 and 05:00. Over a measured month the only
+    /// stretches of two hours with nothing archived at all were the day the
+    /// worker was dead and an afternoon the machine was asleep.
+    /// </remarks>
+    public TimeSpan CollectorPulse { get; init; } = TimeSpan.FromHours(2);
+
+    /// <summary>
     /// How long the same alarm stays quiet after being raised. An alarm that
     /// repeats every minute gets the channel muted, and a muted channel costs
     /// the alarms that matter.
@@ -307,12 +319,53 @@ public sealed class HealthMonitor
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// The catch-all in spec.md Bölüm 11: the system quietly returning nothing.
+    /// </summary>
+    /// <remarks>
+    /// It asks two questions, because one was not enough. "Nothing new in the
+    /// window" on its own is also what a quiet weekend looks like: the
+    /// authorities publish nothing on a Saturday and there is nothing to find.
+    /// The window was widened to 48 hours for exactly that reason and it was
+    /// still not enough - the longest silence in the archive is 48.8 hours, and
+    /// the weekend this was written on was heading past 60. A threshold set
+    /// below the quiet it is meant to tolerate does not tolerate it.
+    ///
+    /// So the second question is whether the collector is working at all, and
+    /// it separates the two states cleanly. While that 48 hour silence ran, the
+    /// parser was still reading twenty thousand notices a day and every one of
+    /// them was already known; during the day the worker was dead, not one page
+    /// was archived for twenty-three hours.
+    ///
+    /// What this gives up: every source fetching normally while every parser
+    /// returns nothing would no longer raise this alarm. That case has its own,
+    /// per source, and it is the more informative of the two because it names
+    /// the source.
+    /// </remarks>
     private async Task<int> CheckCollectionAsync(CancellationToken cancellationToken)
     {
-        var since = _timeProvider.GetUtcNow() - _options.CollectionWindow;
+        var now = _timeProvider.GetUtcNow();
+        var since = now - _options.CollectionWindow;
 
         if (await _health.CountNoticesSinceAsync(since, cancellationToken).ConfigureAwait(false) > 0)
         {
+            return 0;
+        }
+
+        var pulse = await _health
+            .CountFetchesSinceAsync(now - _options.CollectorPulse, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (pulse > 0)
+        {
+            // Reading everything and finding nothing new. That is a quiet week,
+            // not a broken one.
+            _logger.LogInformation(
+                "No new notice in {Hours}h, but {Fetches} page(s) archived in the last {Pulse}h: nothing new to find rather than nothing working",
+                (int)_options.CollectionWindow.TotalHours,
+                pulse,
+                (int)_options.CollectorPulse.TotalHours);
+
             return 0;
         }
 

@@ -166,9 +166,15 @@ public sealed class HealthMonitorTests
         // that skips the weekend cannot report a collector that died on Saturday
         // morning until Monday.
         //
-        // So the window knows nothing about days and is simply long enough. The
-        // longest silence this system has ever had while working is 39 hours -
-        // this weekend - and 48 clears it.
+        // So the window knows nothing about days and is simply long enough.
+        //
+        // "Long enough" turned out not to be a length. 39 hours was the longest
+        // silence in the archive when this was written; a later look found 48.8,
+        // and the weekend of 5 September went past 60 with nothing wrong. A
+        // threshold set below the quiet it has to tolerate does not tolerate it,
+        // and raising it only trades a false alarm for a slower true one. What
+        // separates the two states is whether the collector is working, which is
+        // the second question CheckCollectionAsync now asks.
         _time.SetUtcNow(new DateTimeOffset(2026, 8, 23, 6, 12, 0, TimeSpan.Zero));
 
         // Friday's notices, the last before the quiet stretch.
@@ -195,6 +201,41 @@ public sealed class HealthMonitorTests
         await Monitor().RunAsync(CancellationToken.None);
 
         Assert.Contains("KRİTİK", Assert.Single(_alerts.Messages), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_weekend_longer_than_the_window_is_still_not_an_alarm_while_pages_arrive()
+    {
+        // Sunday 6 September 2026, and the last new notice was Friday at 18:25:
+        // more than 48 hours, so the window alone would have raised this. Nothing
+        // was wrong. The collector fetched 1,404 pages on the Saturday and 695 by
+        // that afternoon, and the parser read 20,463 notices off them - every one
+        // already known, because the authorities had published nothing.
+        //
+        // This is the case a window can never get right on its own: the silence
+        // was real, longer than any measured before it, and completely benign.
+        _time.SetUtcNow(new DateTimeOffset(2026, 9, 6, 11, 20, 0, TimeSpan.Zero));
+        _health.NoticeTimes.Add(new DateTimeOffset(2026, 9, 4, 15, 25, 0, TimeSpan.Zero));
+        _health.FetchesInPulse = 29;
+
+        await Monitor().RunAsync(CancellationToken.None);
+
+        Assert.Empty(_alerts.Messages);
+    }
+
+    [Fact]
+    public async Task One_page_arriving_is_enough_to_say_the_collector_lives()
+    {
+        // The pulse is a yes-or-no question, not a rate. A slow hour is not a
+        // dead one, and a threshold on the count would be a second number to get
+        // wrong - the first one is what this whole change is about.
+        _time.SetUtcNow(new DateTimeOffset(2026, 9, 6, 11, 20, 0, TimeSpan.Zero));
+        _health.NoticeTimes.Add(new DateTimeOffset(2026, 9, 4, 15, 25, 0, TimeSpan.Zero));
+        _health.FetchesInPulse = 1;
+
+        await Monitor().RunAsync(CancellationToken.None);
+
+        Assert.Empty(_alerts.Messages);
     }
 
     [Fact]
@@ -378,6 +419,17 @@ public sealed class HealthMonitorTests
         /// want, because they are about the alarm and not about the clock.
         /// </remarks>
         public List<DateTimeOffset> NoticeTimes { get; } = [];
+
+        /// <summary>
+        /// Pages archived in the pulse window. Zero by default, which is the
+        /// dead collector every existing test in this file was written against:
+        /// they assert the alarm fires, and it still does when nothing is being
+        /// fetched.
+        /// </summary>
+        public int FetchesInPulse { get; set; }
+
+        public Task<int> CountFetchesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
+            => Task.FromResult(FetchesInPulse);
 
         public Task<int> CountNoticesSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
         {
