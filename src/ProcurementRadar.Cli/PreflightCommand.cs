@@ -111,6 +111,24 @@ internal static class PreflightCommand
             await new AwardRepository(connectionFactory, TimeProvider.System)
                 .ListRecentAsync(1, cancellationToken).ConfigureAwait(false));
 
+        // The four queries the alarms in spec Bölüm 11 are built on. None of
+        // them had ever run here, and they are the worst place for a typo to
+        // hide: the only moment one of these is asked in anger is the moment
+        // something is already wrong and nobody is watching. The counts are not
+        // asserted - what is being proved is that Npgsql and Dapper can run the
+        // statement and give back the type the caller declared.
+        await CheckAsync(problems, "health.counts", async () =>
+        {
+            var health = new HealthRepository(connectionFactory, TimeProvider.System);
+            var since = DateTimeOffset.UtcNow - TimeSpan.FromHours(48);
+
+            await health.CountNoticesSinceAsync(since, cancellationToken).ConfigureAwait(false);
+            await health.CountFetchesSinceAsync(since, cancellationToken).ConfigureAwait(false);
+            await health.CountUnparsedSinceAsync(since, cancellationToken).ConfigureAwait(false);
+
+            return await health.ListSilentAsync(since, cancellationToken).ConfigureAwait(false);
+        });
+
         // 1b. An active source with no selectors can only fail. Eleven of them
         //     were switched on at once and spent an evening fetching pages
         //     nothing could read - one of them thirty-three times - and the only
