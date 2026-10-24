@@ -22,3 +22,7 @@ tests/ProcurementRadar.Parsers.Tests/fixtures/** -text
 *.gz -text
 *.zip -text
 *.pdf -text
+
+# Saved third-party web pages used only as parser fixtures; keep them out of language stats.
+tests/**/fixtures/** linguist-vendored
+docs/measurements/** linguist-vendored
